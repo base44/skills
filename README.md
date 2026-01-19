@@ -1,5 +1,7 @@
 # Base44 SDK Skills
 
+> 🚧 **Under Active Development** — Feedback and suggestions are welcome on [GitHub Discussions](https://github.com/orgs/base44/discussions).
+
 Agent skills for [Base44 SDK](https://docs.base44.com) development. Install these skills onto your coding agents to enhance Base44 app development workflows.
 
 Compatible with **Cursor**, **Claude Code**, **Codex**, **OpenCode**, and [10+ more agents](https://github.com/vercel-labs/add-skill#available-agents).
