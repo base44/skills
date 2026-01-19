@@ -2,6 +2,26 @@
 
 Base44 entities are defined locally in your project and then pushed to the Base44 backend.
 
+## Table of Contents
+
+- [Creating Entities](#creating-entities)
+  - [Table of Contents](#table-of-contents)
+  - [Entity Directory](#entity-directory)
+  - [How to Create an Entity](#how-to-create-an-entity)
+  - [Entity Schema Structure](#entity-schema-structure)
+  - [Supported Field Types](#supported-field-types)
+    - [String](#string)
+    - [String with Enum](#string-with-enum)
+    - [Number](#number)
+    - [Boolean](#boolean)
+    - [Array of Strings](#array-of-strings)
+    - [Array of Objects](#array-of-objects)
+  - [Field Properties](#field-properties)
+  - [Complete Example](#complete-example)
+  - [Naming Conventions](#naming-conventions)
+  - [Relationships Between Entities](#relationships-between-entities)
+  - [Pushing Entities](#pushing-entities)
+
 ## Entity Directory
 
 All entity definitions must be placed in the `base44/entities/` folder in your project root. Each entity is defined in its own `.jsonc` file.
@@ -224,7 +244,7 @@ To create relationships between entities, use ID reference fields:
 The `entities push` command will push all entities that exist in the `base44/entities` folder.
 
 ```bash
-npm run base44 entities push
+npx base44 entities push
 ```
 
 For more details on the push command, see [entities-push.md](entities-push.md).

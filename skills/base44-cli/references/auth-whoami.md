@@ -5,11 +5,7 @@ Display the currently authenticated user.
 ## Syntax
 
 ```bash
-npm run base44 whoami
-# or
-yarn base44 whoami
-# or
-pnpm base44 whoami
+npx base44 whoami
 ```
 
 ## Authentication
@@ -24,7 +20,7 @@ pnpm base44 whoami
 ## Output
 
 ```bash
-$ npm run base44 whoami
+$ npx base44 whoami
 Logged in as: user@example.com
 ```
 

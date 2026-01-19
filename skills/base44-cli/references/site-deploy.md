@@ -2,14 +2,23 @@
 
 Deploy built site files to Base44 hosting.
 
+## Table of Contents
+
+- [Syntax](#syntax)
+- [Authentication](#authentication)
+- [Prerequisites](#prerequisites)
+- [How It Works](#how-it-works)
+- [Interactive Flow](#interactive-flow)
+- [Typical Workflow](#typical-workflow)
+- [Configuration](#configuration)
+- [Error Handling](#error-handling)
+- [Use Cases](#use-cases)
+- [Notes](#notes)
+
 ## Syntax
 
 ```bash
-npm run base44 site deploy
-# or
-yarn base44 site deploy
-# or
-pnpm base44 site deploy
+npx base44 site deploy
 ```
 
 ## Authentication
@@ -34,7 +43,7 @@ pnpm base44 site deploy
 ## Interactive Flow
 
 ```bash
-$ npm run base44 site deploy
+$ npx base44 site deploy
 
 Deploy site from ./dist? (yes/no) yes
 
@@ -54,7 +63,7 @@ Visit your site at: https://my-app.base44.app
 npm run build
 
 # 2. Deploy to Base44
-npm run base44 site deploy
+npx base44 site deploy
 ```
 
 ## Configuration
@@ -70,7 +79,7 @@ The `site.outputDirectory` in your project configuration should point to where y
 
 If site configuration is missing:
 ```bash
-$ npm run base44 site deploy
+$ npx base44 site deploy
 Error: No site configuration found in project
 ```
 
@@ -94,21 +103,3 @@ Deployment cancelled
 - Make sure your build completed successfully before deploying
 - Previous deployments are preserved (versioned) in Base44
 - Deployment is immediate and updates your live site
-
-## Recommended: Add Script to package.json
-
-For convenience, add this to your `package.json`:
-
-```json
-{
-  "scripts": {
-    "base44:deploy": "base44 site deploy",
-    "deploy": "npm run build && npm run base44:deploy"
-  }
-}
-```
-
-Then run:
-```bash
-npm run deploy  # Builds and deploys in one command
-```

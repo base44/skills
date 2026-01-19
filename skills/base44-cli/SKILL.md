@@ -16,30 +16,16 @@ The Base44 CLI provides command-line tools for authentication, creating projects
 Install the Base44 CLI as a dev dependency in your project:
 
 ```bash
-# Using npm
 npm install --save-dev base44
-
-# Using yarn
-yarn add -D base44
-
-# Using pnpm
-pnpm add -D base44
 ```
 
-Then run commands using your package manager:
+Then run commands using `npx`:
 
 ```bash
-# Using npm
-npm run base44 <command>
-
-# Using yarn
-yarn base44 <command>
-
-# Using pnpm
-pnpm base44 <command>
+npx base44 <command>
 ```
 
-**Note:** When using the CLI through package managers, all commands in this documentation should be prefixed with `npm run`, `yarn`, or `pnpm` as shown above.
+**Note:** All commands in this documentation use `npx base44`. You can also use `yarn base44`, or `pnpm base44` if preferred.
 
 ## Available Commands
 
@@ -53,9 +39,9 @@ pnpm base44 <command>
 
 ### Project Management
 
-| Command                 | Description                                  | Reference                         |
-| ----------------------- | -------------------------------------------- | --------------------------------- |
-| `base44 project create` | Create a new Base44 app (framework-agnostic) | [create.md](references/create.md) |
+| Command         | Description                                  | Reference                         |
+| --------------- | -------------------------------------------- | --------------------------------- |
+| `base44 create` | Create a new Base44 app (framework-agnostic) | [create.md](references/create.md) |
 
 ### Entity Management
 
@@ -79,22 +65,22 @@ pnpm base44 <command>
 
 2. Authenticate with Base44:
    ```bash
-   npm run base44 login
+   npx base44 login
    ```
 
 3. Create a new project (interactive prompts will guide you):
    ```bash
-   npm run base44 project create
+   npx base44 create
    ```
 
 4. Push entities to Base44:
    ```bash
-   npm run base44 entities push
+   npx base44 entities push
    ```
 
 5. Deploy your site:
    ```bash
-   npm run base44 site deploy
+   npx base44 site deploy
    ```
 
 ## Common Workflows
@@ -102,17 +88,17 @@ pnpm base44 <command>
 ### Starting a New Project
 ```bash
 # Login first
-npm run base44 login
+npx base44 login
 
 # Create project with template
-npm run base44 project create
+npx base44 create
 # Follow interactive prompts to select template, name, and configure project
 ```
 
 ### Updating Entity Schema
 ```bash
 # After modifying entities in base44/entities/
-npm run base44 entities push
+npx base44 entities push
 ```
 
 ### Deploying Changes
@@ -121,7 +107,7 @@ npm run base44 entities push
 npm run build
 
 # Deploy to Base44
-npm run base44 site deploy
+npx base44 site deploy
 ```
 
 ### Recommended package.json Scripts
@@ -135,18 +121,27 @@ Add these scripts to your `package.json` for easier CLI usage:
     "base44:login": "base44 login",
     "base44:push": "base44 entities push",
     "base44:deploy": "base44 site deploy",
-    "deploy": "npm run build && npm run base44:deploy"
+    "deploy": "npm run build && npx base44:deploy"
   }
 }
 ```
 
 Then use them like:
 ```bash
-npm run base44:login
-npm run base44:push
-npm run deploy  # Builds and deploys in one command
+npx base44:login
+npx base44:push
+npx deploy  # Builds and deploys in one command
 ```
 
 ## Authentication
 
 Most commands require authentication. If you're not logged in, the CLI will automatically prompt you to login. Your session is stored locally and persists across CLI sessions.
+
+## Troubleshooting
+
+| Error                       | Solution                                                          |
+| --------------------------- | ----------------------------------------------------------------- |
+| Not authenticated           | Run `npx base44 login` first                                      |
+| No entities found           | Ensure entities exist in `base44/entities/` directory             |
+| No site configuration found | Check that `site.outputDirectory` is configured in project config |
+| Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded      |

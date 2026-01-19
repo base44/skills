@@ -5,11 +5,7 @@ Authenticate with Base44 using device code flow.
 ## Syntax
 
 ```bash
-npm run base44 login
-# or
-yarn base44 login
-# or
-pnpm base44 login
+npx base44 login
 ```
 
 ## Authentication
@@ -31,7 +27,7 @@ The login command uses OAuth 2.0 device code flow for authentication:
 ## Interactive Flow
 
 ```bash
-$ npm run base44 login
+$ npx base44 login
 
 Please visit: https://auth.base44.com/device
 Enter code: ABCD-EFGH
@@ -48,28 +44,11 @@ Logged in as: user@example.com
 - Tokens include expiration timestamps
 - The session persists across CLI sessions
 - Other commands will automatically use your stored credentials
-- Use `npm run base44 logout` to clear your session
-- Use `npm run base44 whoami` to check your current authentication status
+- Use `npx base44 logout` to clear your session
+- Use `npx base44 whoami` to check your current authentication status
 
 ## Notes
 
 - You only need to login once per device
 - If your session expires, you'll be prompted to login again when running authenticated commands
 - The CLI automatically prompts for login when you run commands that require authentication
-
-## Recommended: Add Script to package.json
-
-For convenience, add this to your `package.json`:
-
-```json
-{
-  "scripts": {
-    "base44:login": "base44 login"
-  }
-}
-```
-
-Then run:
-```bash
-npm run base44:login
-```

@@ -5,11 +5,7 @@ Logout from current device and clear stored authentication data.
 ## Syntax
 
 ```bash
-npm run base44 logout
-# or
-yarn base44 logout
-# or
-pnpm base44 logout
+npx base44 logout
 ```
 
 ## Authentication
@@ -25,12 +21,12 @@ pnpm base44 logout
 ## Output
 
 ```bash
-$ npm run base44 logout
+$ npx base44 logout
 Logged out successfully
 ```
 
 ## Notes
 
 - You can logout even if you're not currently logged in (no error)
-- After logout, you'll need to run `npm run base44 login` again to use authenticated commands
+- After logout, you'll need to run `npx base44 login` again to use authenticated commands
 - This only affects the current device; your Base44 account remains active

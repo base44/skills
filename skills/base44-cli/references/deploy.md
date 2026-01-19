@@ -5,7 +5,7 @@ Deploys your Base44 app.
 ## Syntax
 
 ```bash
-npm run base44 deploy [options]
+npx base44 deploy [options]
 ```
 
 ## Options

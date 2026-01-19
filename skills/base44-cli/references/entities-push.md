@@ -5,11 +5,7 @@ Push local entity definitions to Base44.
 ## Syntax
 
 ```bash
-npm run base44 entities push
-# or
-yarn base44 entities push
-# or
-pnpm base44 entities push
+npx base44 entities push
 ```
 
 ## Authentication
@@ -32,7 +28,7 @@ pnpm base44 entities push
 ## Output
 
 ```bash
-$ npm run base44 entities push
+$ npx base44 entities push
 
 Found 3 entities to push
 Pushing entities to Base44...
@@ -56,7 +52,7 @@ The push operation synchronizes your local entity schema with Base44:
 
 If no entities are found in your project configuration:
 ```bash
-$ npm run base44 entities push
+$ npx base44 entities push
 Error: No entities found in project configuration
 ```
 
@@ -73,20 +69,5 @@ Error: No entities found in project configuration
 - Changes are applied to your Base44 project immediately
 - Make sure to test entity changes in a development environment first
 - Entity definitions are located in the `base44/entities/` directory
-
-## Recommended: Add Script to package.json
-
-For convenience, add this to your `package.json`:
-
-```json
-{
-  "scripts": {
-    "base44:push": "base44 entities push"
-  }
-}
-```
-
-Then run:
-```bash
-npm run base44:push
+npx base44:push
 ```
