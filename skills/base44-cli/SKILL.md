@@ -17,13 +17,13 @@ Install the Base44 CLI as a dev dependency in your project:
 
 ```bash
 # Using npm
-npm install --save-dev @base44/cli
+npm install --save-dev base44
 
 # Using yarn
-yarn add -D @base44/cli
+yarn add -D base44
 
 # Using pnpm
-pnpm add -D @base44/cli
+pnpm add -D base44
 ```
 
 Then run commands using your package manager:
@@ -59,9 +59,10 @@ pnpm base44 <command>
 
 ### Entity Management
 
-| Command                | Description                   | Reference                                       |
-| ---------------------- | ----------------------------- | ----------------------------------------------- |
-| `base44 entities push` | Push local entities to Base44 | [entities-push.md](references/entities-push.md) |
+| Action / Command       | Description                                 | Reference                                           |
+| ---------------------- | ------------------------------------------- | --------------------------------------------------- |
+| Create Entities        | Define entities in `base44/entities` folder | [entities-create.md](references/entities-create.md) |
+| `base44 entities push` | Push local entities to Base44               | [entities-push.md](references/entities-push.md)     |
 
 ### Site Deployment
 
@@ -73,7 +74,7 @@ pnpm base44 <command>
 
 1. Install the CLI in your project:
    ```bash
-   npm install --save-dev @base44/cli
+   npm install --save-dev base44
    ```
 
 2. Authenticate with Base44:
@@ -110,7 +111,7 @@ npm run base44 project create
 
 ### Updating Entity Schema
 ```bash
-# After modifying entities in your project config
+# After modifying entities in base44/entities/
 npm run base44 entities push
 ```
 

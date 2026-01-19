@@ -18,8 +18,8 @@ pnpm base44 entities push
 
 ## What It Does
 
-1. Reads entity configuration from your local project config
-2. Validates that entities exist in your configuration
+1. Pushes all entities that exist in the `base44/entities` folder
+2. Validates that entities exist in the folder
 3. Displays the count of entities to be pushed
 4. Uploads entities to the Base44 backend
 5. Reports the results: created, updated, and deleted entities
@@ -27,7 +27,7 @@ pnpm base44 entities push
 ## Prerequisites
 
 - Must be run from a Base44 project directory
-- Project must have entity definitions in the configuration
+- Project must have entity definitions in the `base44/entities` folder
 
 ## Output
 
@@ -72,7 +72,7 @@ Error: No entities found in project configuration
 - This command syncs the entity schema/structure, not the actual data
 - Changes are applied to your Base44 project immediately
 - Make sure to test entity changes in a development environment first
-- Entity definitions are typically in your project's Base44 configuration file
+- Entity definitions are located in the `base44/entities/` directory
 
 ## Recommended: Add Script to package.json
 
