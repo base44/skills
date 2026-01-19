@@ -42,6 +42,7 @@ npx base44 site deploy -y
 - Must be run from a Base44 project directory
 - Project must have `site.outputDirectory` configured in project config
 - Site must be built before deploying (run your build command first)
+- **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
 
 ## How It Works
 

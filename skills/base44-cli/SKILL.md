@@ -94,6 +94,8 @@ For complete documentation, see [entities-create.md](references/entities-create.
 | -------------------- | ----------------------------------------- | ------------------------------------------- |
 | `base44 site deploy` | Deploy built site files to Base44 hosting | [site-deploy.md](references/site-deploy.md) |
 
+**SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
+
 ## Quick Start
 
 1. Install the CLI in your project:
