@@ -2,6 +2,19 @@
 
 Base44 entities are defined locally in your project and then pushed to the Base44 backend.
 
+## Critical: File Naming
+
+Entity files MUST use kebab-case naming: `{kebab-case-name}.jsonc`
+
+| Entity Name | File Name |
+|-------------|-----------|
+| `Task` | `task.jsonc` |
+| `TeamMember` | `team-member.jsonc` |
+| `ActivityLog` | `activity-log.jsonc` |
+
+WRONG: `TeamMember.jsonc`, `teamMember.jsonc`
+RIGHT: `team-member.jsonc`
+
 ## Table of Contents
 
 - [Creating Entities](#creating-entities)

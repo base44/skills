@@ -1,15 +1,26 @@
 ---
 name: base44-cli
-description: Manage Base44 apps using the Base44 CLI tool. Use when working with app deployment, project scaffolding, authentication, entity management, or CLI-based Base44 operations. Triggers include creating projects, deploying sites, pushing entities, managing authentication, or any Base44 CLI command.
+description: Base44 CLI for project management, deployment, and entity schemas. ACTIVATE when (1) INTENT - user wants to deploy a Base44 project (site/app/page are equivalent), create a new Base44 project, push/sync entity schemas, or authenticate with Base44 via terminal; (2) TECHNICAL - mentions npx/yarn/pnpm base44, works with base44/entities/*.jsonc files, or references CLI commands like "base44 login", "site deploy", "entities push". This skill handles terminal/CLI operations. For JavaScript SDK code (base44.entities.*, base44.auth.*), use base44-coder instead.
 ---
 
 # Base44 CLI
 
-Manage Base44 apps using the Base44 CLI tool.
+Create and manage Base44 apps (projects) using the Base44 CLI tool.
+
+## Critical: Local Installation Only
+
+NEVER call `base44` directly. The CLI is installed locally as a dev dependency and must be accessed via a package manager:
+
+- `npx base44 <command>` (npm - recommended)
+- `yarn base44 <command>` (yarn)
+- `pnpm base44 <command>` (pnpm)
+
+WRONG: `base44 login`
+RIGHT: `npx base44 login`
 
 ## Overview
 
-The Base44 CLI provides command-line tools for authentication, creating projects, managing entities, and deploying Base44 applications. All commands use interactive prompts for a user-friendly experience.
+The Base44 CLI provides command-line tools for authentication, creating projects, managing entities, and deploying Base44 applications. It is framework-agnostic and works with popular frontend frameworks like Vite, Next.js, and Create React App, Svelte, Vue, and more.
 
 ## Installation
 
@@ -50,6 +61,33 @@ npx base44 <command>
 | Create Entities        | Define entities in `base44/entities` folder | [entities-create.md](references/entities-create.md) |
 | `base44 entities push` | Push local entities to Base44               | [entities-push.md](references/entities-push.md)     |
 
+#### Entity Schema (Quick Reference)
+
+ALWAYS follow this exact structure when creating entity files:
+
+**File naming:** `base44/entities/{kebab-case-name}.jsonc` (e.g., `team-member.jsonc` for `TeamMember`)
+
+**Schema template:**
+```jsonc
+{
+  "name": "EntityName",
+  "type": "object",
+  "properties": {
+    "field_name": {
+      "type": "string",
+      "description": "Field description"
+    }
+  },
+  "required": ["field_name"]
+}
+```
+
+**Field types:** `string`, `number`, `boolean`, `array`
+**String formats:** `date`, `date-time`, `email`, `uri`, `richtext`
+**For enums:** Add `"enum": ["value1", "value2"]` and optionally `"default": "value1"`
+
+For complete documentation, see [entities-create.md](references/entities-create.md).
+
 ### Site Deployment
 
 | Command              | Description                               | Reference                                   |
@@ -68,9 +106,9 @@ npx base44 <command>
    npx base44 login
    ```
 
-3. Create a new project (interactive prompts will guide you):
+3. Create a new project (ALWAYS use `--name` and `--path` flags):
    ```bash
-   npx base44 create
+   npx base44 create -n my-app -p .
    ```
 
 4. Push entities to Base44:
@@ -80,7 +118,7 @@ npx base44 <command>
 
 5. Deploy your site:
    ```bash
-   npx base44 site deploy
+   npx base44 site deploy -y
    ```
 
 ## Common Workflows
@@ -90,9 +128,11 @@ npx base44 <command>
 # Login first
 npx base44 login
 
-# Create project with template
-npx base44 create
-# Follow interactive prompts to select template, name, and configure project
+# Create project (ALWAYS use --name and --path flags)
+npx base44 create -n my-app -p .
+
+# Or create and deploy in one step
+npx base44 create -n my-app -p . --deploy
 ```
 
 ### Updating Entity Schema
@@ -106,8 +146,8 @@ npx base44 entities push
 # Build your project first (using your framework's build command)
 npm run build
 
-# Deploy to Base44
-npx base44 site deploy
+# Deploy to Base44 (use -y to skip confirmation)
+npx base44 site deploy -y
 ```
 
 ### Recommended package.json Scripts
@@ -117,20 +157,19 @@ Add these scripts to your `package.json` for easier CLI usage:
 ```json
 {
   "scripts": {
-    "base44": "base44",
     "base44:login": "base44 login",
     "base44:push": "base44 entities push",
-    "base44:deploy": "base44 site deploy",
-    "deploy": "npm run build && npx base44:deploy"
+    "base44:deploy": "base44 site deploy -y",
+    "deploy": "npm run build && npm run base44:deploy"
   }
 }
 ```
 
 Then use them like:
 ```bash
-npx base44:login
-npx base44:push
-npx deploy  # Builds and deploys in one command
+npm run base44:login
+npm run base44:push
+npm run deploy  # Builds and deploys in one command
 ```
 
 ## Authentication

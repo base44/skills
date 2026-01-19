@@ -18,7 +18,19 @@ Deploy built site files to Base44 hosting.
 ## Syntax
 
 ```bash
-npx base44 site deploy
+npx base44 site deploy [options]
+```
+
+## Options
+
+| Option       | Description               |
+| ------------ | ------------------------- |
+| `-y, --yes`  | Skip confirmation prompt  |
+
+Use `-y` flag for non-interactive/automated deployments:
+
+```bash
+npx base44 site deploy -y
 ```
 
 ## Authentication

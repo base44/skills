@@ -1,6 +1,6 @@
 ---
 name: base44-coder
-description: Build and modify apps on the Base44 platform using the Base44 JavaScript SDK. Use when working with Base44 apps, Base44 SDK, entities (CRUD operations), user authentication, AI agents/conversations, backend functions, integrations, or OAuth connectors. Triggers include creating/editing Base44 apps, working with data entities, implementing auth flows, calling backend functions, or integrating third-party services.
+description: Base44 JavaScript SDK for building frontend projects. ACTIVATE when (1) INTENT - user wants to build a Base44 project (site/app/page are equivalent), store/retrieve data with Base44 entities, add user authentication, integrate AI agents, or call backend functions; (2) TECHNICAL - code contains Base44 imports ("@/api/base44Client", "@base44/sdk"), uses base44.entities.*, base44.auth.*, base44.agents.*, or base44.functions.*. This skill handles SDK/JavaScript code. For CLI operations (deploy, push, login commands), use base44-cli instead.
 ---
 
 # Base44 Coder

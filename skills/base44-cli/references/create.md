@@ -1,57 +1,70 @@
 # base44 create
 
-Creates a new Base44 app. This command is framework-agnostic and does NOT initialize a local npm project.
+Creates a new Base44 project. This command is framework-agnostic and does NOT initialize a local npm project.
+
+## Critical: Non-Interactive Mode Required
+
+ALWAYS use `--name` AND `--path` flags together. Without both flags, the command opens an interactive TUI which agents cannot use properly.
+
+WRONG: `npx base44 create`
+WRONG: `npx base44 create -n my-app`
+RIGHT: `npx base44 create -n my-app -p ./my-app`
 
 ## Syntax
 
 ```bash
-npx base44 create [options]
+npx base44 create --name <name> --path <path> [options]
 ```
 
 ## Options
 
-| Option                            | Description                                           |
-| --------------------------------- | ----------------------------------------------------- |
-| `-t, --template <template>`       | Template to use                                       |
-| `-n, --name <name>`               | Project name                                          |
-| `-d, --description <description>` | Project description                                   |
-| `-p, --path <path>`               | Path where to create the project                      |
-| `--deploy`                        | Build and deploy the site (includes pushing entities) |
+| Option                            | Description                                           | Required |
+| --------------------------------- | ----------------------------------------------------- | -------- |
+| `-n, --name <name>`               | Project name                                          | Yes*     |
+| `-p, --path <path>`               | Path where to create the project                      | Yes*     |
+| `-d, --description <description>` | Project description                                   | No       |
+| `--deploy`                        | Build and deploy the site (includes pushing entities) | No       |
 
-## The `-p, --path` flag (project path)
+*Required for non-interactive mode. Both `--name` and `--path` must be provided together.
 
-- **Default behavior:** If not specified, uses current working directory (cwd)
-  ```bash
-  npx base44 create -n my-app
-  # Uses current directory
-  ```
-- **For existing projects:** Use `-p .` or omit the flag (defaults to cwd)
+## The `--path` Flag
+
+- **For existing projects:** Use `-p .` to use current directory
   ```bash
   npx base44 create -n my-app -p .
   ```
-- **For new projects:** Point to the subfolder created by the framework scaffolding tool
+- **For new projects:** Point to where project files exist
   ```bash
-  # Example: Vite creates a subfolder named after the project
+  # Example: After Vite creates a subfolder
   npm create vite@latest my-react-app -- --template react
   npx base44 create -n my-app -p ./my-react-app
   ```
-- **Custom location:** When user specifies "my project is located at ..." or provides a specific path
+- **Custom location:**
   ```bash
   npx base44 create -n my-app -p /path/to/project
   ```
-
-The path specified with `-p` should point to where your project files actually exist after framework initialization.
 
 ## Examples
 
 ```bash
 # Create app in current directory
-npx base44 create -n my-app -d "My awesome app"
+npx base44 create -n my-app -p .
 
-# Create app with template and deploy immediately
-npx base44 create -n my-app -t starter --deploy
+# Create app with description
+npx base44 create -n my-app -p . -d "My awesome app"
+
+# Create app and deploy immediately
+npx base44 create -n my-app -p . --deploy
 
 # Create app from existing Vite project
 npm create vite@latest my-react-app -- --template react
-npx base44 create -n my-app -p ./my-react-app
+npx base44 create -n my-app -p ./my-react-app --deploy
 ```
+
+## What It Does
+
+1. Creates a `base44/` folder in your project with configuration files
+2. Registers the project with Base44 backend
+3. If `--deploy` is used:
+   - Pushes any entities defined in `base44/entities/`
+   - Builds and deploys the site (if site config exists)
