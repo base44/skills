@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Validate all skills in the repository using skills-cli
+# Validate all skills in the repository using skills-ref
 #
 # Usage: ./scripts/validate.sh [skill-path]
 #   If no argument provided, validates all skills in skills/ directory
@@ -26,7 +26,7 @@ validate_skill() {
     
     echo -e "${YELLOW}Validating:${NC} $skill_dir"
     
-    if skills validate "$skill_dir"; then
+    if skills-ref validate "$skill_dir"; then
         echo -e "${GREEN}✓${NC} $skill_name passed validation"
         ((PASSED++))
     else
@@ -41,9 +41,9 @@ validate_skill() {
 # Change to repo root
 cd "$(dirname "$0")/.."
 
-# Check if skills-cli is installed
-if ! command -v skills &> /dev/null; then
-    echo -e "${RED}Error:${NC} skills-cli is not installed"
+# Check if skills-ref is installed
+if ! command -v skills-ref &> /dev/null; then
+    echo -e "${RED}Error:${NC} skills-ref is not installed"
     echo "Install it with: pip install -r requirements.txt"
     exit 1
 fi
