@@ -22,6 +22,52 @@ RIGHT: `npx base44 login`
 
 The Base44 CLI provides command-line tools for authentication, creating projects, managing entities, and deploying Base44 applications. It is framework-agnostic and works with popular frontend frameworks like Vite, Next.js, and Create React App, Svelte, Vue, and more.
 
+## Project Structure
+
+A Base44 project combines a standard frontend project with a `base44/` configuration folder:
+
+```
+my-app/
+├── base44/                      # Base44 configuration (created by CLI)
+│   ├── config.jsonc             # Project settings, site config
+│   ├── entities/                # Entity schema definitions
+│   │   ├── task.jsonc
+│   │   └── board.jsonc
+│   ├── functions/               # Backend functions (optional)
+│   │   └── my-function/
+│   │       ├── function.jsonc
+│   │       └── index.ts
+│   └── agents/                  # AI agents (optional)
+│       └── assistant.jsonc
+├── src/                         # Frontend source code
+│   ├── api/
+│   │   └── base44Client.js      # Base44 SDK client
+│   ├── pages/
+│   ├── components/
+│   └── main.jsx
+├── index.html                   # SPA entry point
+├── package.json
+└── vite.config.js               # Or your framework's config
+```
+
+**Key files:**
+- `base44/config.jsonc` - Project name, description, site build settings
+- `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
+- `src/api/base44Client.js` - Pre-configured SDK client for frontend use
+
+**config.jsonc example:**
+```jsonc
+{
+  "name": "My App",
+  "description": "App description",
+  "site": {
+    "buildCommand": "npm run build",
+    "serveCommand": "npm run dev",
+    "outputDirectory": "./dist"
+  }
+}
+```
+
 ## Installation
 
 Install the Base44 CLI as a dev dependency in your project:
