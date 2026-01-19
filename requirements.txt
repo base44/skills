@@ -1,1 +1,1 @@
-skills-ref>=0.1.1
+skills-cli>=0.1.3
