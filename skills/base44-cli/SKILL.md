@@ -16,9 +16,9 @@ This skill activates on ANY mention of "base44" or when a `base44/` folder exist
 2. If **NO** (new project scenario):
    - This skill (base44-cli) handles the request
    - Guide user through project initialization
-   - Do NOT activate base44-coder yet
+   - Do NOT activate base44-sdk yet
 3. If **YES** (existing project scenario):
-   - Transfer to base44-coder skill for implementation
+   - Transfer to base44-sdk skill for implementation
    - This skill only handles CLI commands (login, deploy, entities push)
 
 ## Critical: Local Installation Only
@@ -59,7 +59,7 @@ RIGHT: `npx base44 login`
 
 The Base44 CLI provides command-line tools for authentication, creating projects, managing entities, and deploying Base44 applications. It is framework-agnostic and works with popular frontend frameworks like Vite, Next.js, and Create React App, Svelte, Vue, and more.
 
-## When to Use This Skill vs base44-coder
+## When to Use This Skill vs base44-sdk
 
 **Use base44-cli when:**
 - Creating a **NEW** Base44 project from scratch
@@ -69,7 +69,7 @@ The Base44 CLI provides command-line tools for authentication, creating projects
 - Deploying, pushing entities, or authenticating via CLI
 - Working with CLI commands (`npx base44 ...`)
 
-**Use base44-coder when:**
+**Use base44-sdk when:**
 - Building features in an **EXISTING** Base44 project
 - `base44/config.jsonc` already exists
 - Writing JavaScript/TypeScript code using Base44 SDK
@@ -77,9 +77,9 @@ The Base44 CLI provides command-line tools for authentication, creating projects
 - User mentions: "implement", "build a feature", "add functionality", "write code"
 
 **Skill Dependencies:**
-- `base44-cli` is a **prerequisite** for `base44-coder` in new projects
+- `base44-cli` is a **prerequisite** for `base44-sdk` in new projects
 - If user wants to "create an app" and no Base44 project exists, use `base44-cli` first
-- `base44-coder` assumes a Base44 project is already initialized
+- `base44-sdk` assumes a Base44 project is already initialized
 
 **State Check Logic:**
 Before selecting a skill, check:
@@ -87,7 +87,7 @@ Before selecting a skill, check:
   - IF (directory is empty OR no `base44/config.jsonc` exists):
     → Use **base44-cli** (project initialization needed)
   - ELSE:
-    → Use **base44-coder** (project exists, build features)
+    → Use **base44-sdk** (project exists, build features)
 
 ## Project Structure
 
