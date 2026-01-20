@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: Base44 CLI for project management, deployment, and entity schemas. ACTIVATE when (1) INTENT - user wants to deploy a Base44 project (site/app/page are equivalent), create a new Base44 project, push/sync entity schemas, or authenticate with Base44 via terminal; (2) TECHNICAL - mentions npx/yarn/pnpm base44, works with base44/entities/*.jsonc files, or references CLI commands like "base44 login", "site deploy", "entities push". This skill handles terminal/CLI operations. For JavaScript SDK code (base44.entities.*, base44.auth.*), use base44-coder instead.
+description: Base44 CLI for project management, deployment, and entity schemas. ACTIVATE when (1) INTENT - user wants to deploy a Base44 project (site/app/page are equivalent), create a new Base44 project, push/sync entity schemas, or authenticate with Base44 via terminal; (2) TECHNICAL - mentions npx/yarn/pnpm base44, works with base44/entities/*.jsonc or base44/config.jsonc files, or references CLI commands like "base44 login", "base44 create", "base44 whoami", "base44 logout", "site deploy", "entities push". This skill handles terminal/CLI operations. For JavaScript SDK code (base44.entities.*, base44.auth.*), use base44-coder instead.
 ---
 
 # Base44 CLI
@@ -226,9 +226,10 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 
 ## Troubleshooting
 
-| Error                       | Solution                                                          |
-| --------------------------- | ----------------------------------------------------------------- |
-| Not authenticated           | Run `npx base44 login` first                                      |
-| No entities found           | Ensure entities exist in `base44/entities/` directory             |
-| No site configuration found | Check that `site.outputDirectory` is configured in project config |
-| Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded      |
+| Error                       | Solution                                                                            |
+| --------------------------- | ----------------------------------------------------------------------------------- |
+| Not authenticated           | Run `npx base44 login` first                                                        |
+| No entities found           | Ensure entities exist in `base44/entities/` directory                               |
+| Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
+| No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
+| Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded                        |
