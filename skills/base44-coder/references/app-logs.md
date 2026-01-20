@@ -1,10 +1,10 @@
 # App Logs Module
 
-Log and fetch app usage data via `base44.appLogs`.
+Log user activity in your app via `base44.appLogs`.
 
 ## Contents
 - [Methods](#methods)
-- [Examples](#examples) (Log Activity, Fetch Logs, Get Stats)
+- [Examples](#examples)
 - [Use Cases](#use-cases)
 
 ## Methods
@@ -12,8 +12,6 @@ Log and fetch app usage data via `base44.appLogs`.
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `logUserInApp(pageName)` | `Promise<void>` | Log user activity on a page |
-| `fetchLogs(params?)` | `Promise<any>` | Fetch app usage logs |
-| `getStats(params?)` | `Promise<any>` | Get app usage statistics |
 
 ## Examples
 
@@ -26,61 +24,41 @@ await base44.appLogs.logUserInApp("dashboard");
 // Log specific page visits
 await base44.appLogs.logUserInApp("settings");
 await base44.appLogs.logUserInApp("profile");
+
+// Log feature usage
+await base44.appLogs.logUserInApp("export-button-click");
 ```
 
-### Fetch Logs
-
-```javascript
-// Fetch all logs
-const logs = await base44.appLogs.fetchLogs();
-
-// Fetch with parameters
-const filteredLogs = await base44.appLogs.fetchLogs({
-  limit: 100,
-  skip: 0
-});
-```
-
-### Get Statistics
-
-```javascript
-// Get app usage statistics
-const stats = await base44.appLogs.getStats();
-
-// Get stats with parameters
-const filteredStats = await base44.appLogs.getStats({
-  start_date: "2024-01-01",
-  end_date: "2024-01-31"
-});
-```
+The page name doesn't have to be an actual page - it can be any string you want to track.
 
 ## Use Cases
 
-### Track Page Views
+### Track Page Views in React
 
 ```javascript
-// In a React app, log page views on route change
+// Log page views on route change
 useEffect(() => {
   base44.appLogs.logUserInApp(window.location.pathname);
 }, [location.pathname]);
 ```
 
-### Admin Dashboard
+### Track Feature Usage
 
 ```javascript
-// Display usage statistics in admin panel
-async function loadDashboard() {
-  const stats = await base44.appLogs.getStats();
-  const recentLogs = await base44.appLogs.fetchLogs({ limit: 50 });
-  
-  // Display stats and logs
-  console.log("App Statistics:", stats);
-  console.log("Recent Activity:", recentLogs);
+// Log when user uses specific features
+function handleExport() {
+  base44.appLogs.logUserInApp("export-data");
+  // ... export logic
+}
+
+function handleSettingsChange() {
+  base44.appLogs.logUserInApp("settings-updated");
+  // ... save settings
 }
 ```
 
 ## Notes
 
-- App logs are separate from analytics - they track app-level usage
-- Use `analytics.track()` for custom events, `appLogs.logUserInApp()` for page-level activity
-- Logs are useful for understanding user navigation patterns and app health
+- Logs appear in the Analytics page of your app dashboard
+- App logs track page-level and feature-level activity
+- Use `analytics.track()` for custom events with properties, `appLogs.logUserInApp()` for simple page/feature tracking

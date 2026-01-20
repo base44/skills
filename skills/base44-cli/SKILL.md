@@ -1,11 +1,25 @@
 ---
 name: base44-cli
-description: Base44 PROJECT SETUP AND DEPLOYMENT - Use for initializing new projects, deploying, and managing entity schemas via CLI. ACTIVATE when: (1) INTENT - User wants to create a NEW Base44 project, initialize a project, deploy, push/sync entity schemas, or authenticate with Base44 via terminal; (2) CONTEXT - Empty directory OR missing base44/config.jsonc AND user mentions "create/build/make an app/project/site"; (3) TECHNICAL - mentions npx/yarn/pnpm base44, base44/entities/*.jsonc files, or CLI commands like "base44 login", "base44 create", "base44 whoami", "base44 logout", "site deploy", "entities push". KEYWORDS: "new project", "initialize project", "setup a project", "start a new Base44 app/site", "create a [type] app in base44" (when directory is empty). SKILL DEPENDENCIES: base44-cli is a prerequisite for base44-coder in new projects. If user wants to "create an app" and no Base44 project exists, trigger base44-cli first. This skill handles terminal/CLI operations. For JavaScript SDK code (base44.entities.*, base44.auth.*) in EXISTING projects, use base44-coder instead.
+description: "**ALWAYS ACTIVATE** if ANY of these conditions are true: (1) User's prompt contains the word 'base44' or 'Base44' in ANY context; (2) Current directory contains a 'base44/' subfolder; (3) User mentions CLI commands: npx/yarn/pnpm base44, login, logout, whoami, create, entities push, site deploy. **ACTIVATION IS MANDATORY** - do not hesitate, do not search the web, do not read documentation files first. ACTIVATE IMMEDIATELY and let the skill instructions handle the context. This skill handles: project initialization, CLI operations, deployment, entity schema management, and authentication. The skill itself will determine the appropriate action based on whether base44/config.jsonc exists or not."
 ---
 
 # Base44 CLI
 
 Create and manage Base44 apps (projects) using the Base44 CLI tool.
+
+## ⚡ IMMEDIATE ACTION REQUIRED - Read This First
+
+This skill activates on ANY mention of "base44" or when a `base44/` folder exists. **DO NOT read documentation files or search the web before acting.**
+
+**Your first action MUST be:**
+1. Check if `base44/config.jsonc` exists in the current directory
+2. If **NO** (new project scenario):
+   - This skill (base44-cli) handles the request
+   - Guide user through project initialization
+   - Do NOT activate base44-coder yet
+3. If **YES** (existing project scenario):
+   - Transfer to base44-coder skill for implementation
+   - This skill only handles CLI commands (login, deploy, entities push)
 
 ## Critical: Local Installation Only
 
