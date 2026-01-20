@@ -32,14 +32,25 @@ npm install @base44/sdk
 ```javascript
 import { createClient } from "@base44/sdk";
 
+// IMPORTANT: The parameter name is 'appId' (NOT 'clientId', NOT 'id')
+// IMPORTANT: onError must be nested inside 'options' object
 const base44 = createClient({
-  appId: "your-app-id",
-  token: "optional-user-token",  // for pre-authenticated requests
-  onError: (error) => {          // optional error handler
-    console.error("Base44 error:", error);
+  appId: "your-app-id",          // Required: Use 'appId' parameter
+  token: "optional-user-token",  // Optional: for pre-authenticated requests
+  options: {                      // Optional: configuration options
+    onError: (error) => {         // Optional: error handler (must be in options)
+      console.error("Base44 error:", error);
+    }
   }
 });
 ```
+
+**Common Mistakes:**
+- ❌ `createClient({ clientId: "..." })` - WRONG parameter name
+- ❌ `createClient({ id: "..." })` - WRONG parameter name
+- ❌ `createClient({ appId: "...", onError: ... })` - WRONG: onError must be in options
+- ✅ `createClient({ appId: "..." })` - CORRECT parameter name
+- ✅ `createClient({ appId: "...", options: { onError: ... } })` - CORRECT: onError in options
 
 ## In Backend Functions
 
@@ -135,8 +146,14 @@ base44.asServiceRole.connectors
 
 ```javascript
 createClient({
-  appId: "your-app-id",      // Required
+  appId: "your-app-id",      // Required: MUST use 'appId' (not 'clientId' or 'id')
   token: "jwt-token",        // Optional: pre-set auth token
-  onError: (error) => {},    // Optional: global error handler
+  options: {                 // Optional: configuration options
+    onError: (error) => {}   // Optional: global error handler (must be in options)
+  }
 });
 ```
+
+**⚠️ Critical:**
+- The parameter name is `appId`, not `clientId` or `id`. Using the wrong parameter name will cause errors.
+- The `onError` handler must be nested inside the `options` object, not at the top level.

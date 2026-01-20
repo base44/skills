@@ -26,6 +26,7 @@ const user = await base44.auth.me();
 // External apps
 import { createClient } from "@base44/sdk";
 
+// IMPORTANT: Use 'appId' (NOT 'clientId' or 'id')
 const base44 = createClient({ appId: "your-app-id" });
 await base44.auth.loginViaEmailPassword("user@example.com", "password");
 ```
@@ -42,6 +43,40 @@ await base44.auth.loginViaEmailPassword("user@example.com", "password");
 | `connectors` | OAuth tokens (service role only) | [connectors.md](references/connectors.md) |
 
 For client setup and authentication modes, see [client.md](references/client.md).
+
+## Creating a Client (External Apps)
+
+When creating a client in external apps, **ALWAYS use `appId` as the parameter name**:
+
+```javascript
+import { createClient } from "@base44/sdk";
+
+// ✅ CORRECT
+const base44 = createClient({ appId: "your-app-id" });
+
+// ❌ WRONG - Do NOT use these:
+// const base44 = createClient({ clientId: "your-app-id" });  // WRONG
+// const base44 = createClient({ id: "your-app-id" });        // WRONG
+```
+
+**Required parameter:** `appId` (string) - Your Base44 application ID
+
+**Optional parameters:**
+- `token` (string) - Pre-authenticated user token
+- `options` (object) - Configuration options
+  - `options.onError` (function) - Global error handler
+
+**Example with error handler:**
+```javascript
+const base44 = createClient({
+  appId: "your-app-id",
+  options: {
+    onError: (error) => {
+      console.error("Base44 error:", error);
+    }
+  }
+});
+```
 
 ## Module Selection
 
