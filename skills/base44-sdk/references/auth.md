@@ -4,7 +4,7 @@ User authentication, registration, and session management via `base44.auth`.
 
 ## Contents
 - [Methods](#methods)
-- [Examples](#examples) (Register, Login, Get User, Update, Logout, Protected Routes, OTP, Password Reset)
+- [Examples](#examples) (Register Flow, Login, Get User, Update, Logout, Protected Routes, OTP, Password Reset)
 - [Auth Providers](#auth-providers)
 - [App Visibility](#app-visibility)
 - [Limitations](#limitations)
@@ -30,16 +30,41 @@ User authentication, registration, and session management via `base44.auth`.
 
 ## Examples
 
-### Register New User
+### Register New User (Full Flow)
+
+Registration requires email verification before the user can log in. The complete flow is:
+
+1. **Register** - Create the user account
+2. **Verification email sent** - User receives an OTP code via email
+3. **Verify OTP** - User enters the code to verify their email
+4. **Login** - User can now log in with email/password
 
 ```javascript
+// Step 1: Register the user
 await base44.auth.register({
   email: "user@example.com",
   password: "securePassword123",
   referral_code: "OPTIONAL_CODE",    // optional
   turnstile_token: "CAPTCHA_TOKEN"   // optional, for bot protection
 });
+// A verification email with OTP code is automatically sent
+
+// Step 2: User receives email with OTP code (e.g., "123456")
+
+// Step 3: Verify the OTP code from the email
+await base44.auth.verifyOtp({
+  email: "user@example.com",
+  otpCode: "123456"  // code from verification email
+});
+
+// Step 4: Now the user can log in
+await base44.auth.loginViaEmailPassword(
+  "user@example.com",
+  "securePassword123"
+);
 ```
+
+> **Important**: Users cannot log in until they complete OTP verification. Attempting to call `loginViaEmailPassword` before verification will fail.
 
 ### Login
 
@@ -133,14 +158,16 @@ await base44.auth.inviteUser("newuser@example.com", "user");
 
 ### OTP Verification
 
+OTP verification is required after registration (see [Register New User](#register-new-user-full-flow) for the complete flow).
+
 ```javascript
-// After registration, verify the OTP sent to user's email
+// Verify the OTP code sent to user's email
 await base44.auth.verifyOtp({
   email: "user@example.com",
   otpCode: "123456"
 });
 
-// Resend OTP if needed
+// Resend OTP if the user didn't receive it or it expired
 await base44.auth.resendOtp("user@example.com");
 ```
 

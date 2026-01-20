@@ -13,12 +13,9 @@ How to create and configure the Base44 client.
 
 ## In Base44-Generated Apps
 
-The client is pre-configured. Just import:
+The client is pre-configured and available as `base44`. Just use it:
 
 ```javascript
-import { base44 } from "@/api/base44Client";
-
-// Ready to use
 const tasks = await base44.entities.Task.list();
 ```
 

@@ -12,7 +12,7 @@ Invite users to the app via `base44.users`.
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `inviteUser(email, role)` | `Promise<any>` | Invite a user to the app |
+| `inviteUser(user_email, role)` | `Promise<any>` | Invite a user to the app |
 
 ## Examples
 
@@ -43,24 +43,24 @@ for (const user of usersToInvite) {
 
 ## Roles
 
-The `role` parameter must be one of the roles defined in your app:
+The `role` parameter must be one of:
 
 | Role | Description |
 |------|-------------|
 | `"user"` | Standard user with default permissions |
 | `"admin"` | Administrator with elevated permissions |
 
-Custom roles can be configured in the Base44 dashboard.
+**Note:** Only `"user"` and `"admin"` are valid role values. An error will be thrown if you pass any other value.
 
 ## Notes
 
 - **Email invitation**: The invited user receives an email with a link to join the app
 - **Duplicate handling**: Inviting an existing user will re-send the invitation
 - **Also available in auth**: `base44.auth.inviteUser()` provides the same functionality
-- **Role validation**: The role must match a role defined in your app settings
+- **Role validation**: Only `"user"` or `"admin"` are accepted
 
 ```javascript
 // These are equivalent:
-await base44.users.inviteUser("user@example.com", "user");
-await base44.auth.inviteUser("user@example.com", "user");
+await base44.users.inviteUser("newuser@example.com", "user");
+await base44.auth.inviteUser("newuser@example.com", "user");
 ```

@@ -4,7 +4,7 @@ Track custom events and user activity via `base44.analytics`.
 
 ## Contents
 - [Methods](#methods)
-- [Examples](#examples) (Track Event, Cleanup)
+- [Examples](#examples)
 - [Automatic Tracking](#automatic-tracking)
 - [Best Practices](#best-practices)
 
@@ -13,7 +13,6 @@ Track custom events and user activity via `base44.analytics`.
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `track(params)` | `void` | Track a custom event |
-| `cleanup()` | `void` | Stop analytics and clean up resources |
 
 ## Examples
 
@@ -56,13 +55,6 @@ base44.analytics.track({
     format: "csv"
   }
 });
-```
-
-### Cleanup
-
-```javascript
-// Stop tracking and clean up (e.g., on component unmount)
-base44.analytics.cleanup();
 ```
 
 ## Automatic Tracking
