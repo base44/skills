@@ -9,8 +9,33 @@ Before analyzing, read these resources to understand skill writing principles:
 2. `.cursor/references/skill-creator/references/workflows.md` - Workflow patterns (if relevant)
 3. `.cursor/references/skill-creator/references/output-patterns.md` - Output patterns (if relevant)
 
-For additional reference, review well-written examples from Anthropic's GitHub repository using web_search:
-- https://github.com/anthropics/skills/tree/main/skills
+### Reference Examples from Anthropic (REQUIRED)
+
+You MUST read reference skills from Anthropic's repository before analyzing. This is essential for calibrating your review.
+
+1. **Ensure cache is available**: Check if `.cursor/cache/anthropics-skills/` exists. If not (or if stale), run:
+   ```bash
+   python scripts/download_anthropics_skills.py
+   ```
+
+2. **Read at least 3 reference skills**: Before analyzing, read these SKILL.md files from `.cursor/cache/anthropics-skills/skills/`:
+
+   **Always read these high-quality examples:**
+   - `pdf/SKILL.md` - Well-structured workflow skill with clear triggers
+   - `docx/SKILL.md` - Good example of document processing patterns
+   - `skill-creator/SKILL.md` - Meta-skill showing best practices
+
+   **Then read 1-2 skills similar to the one being reviewed:**
+   - For workflow-based skills: `xlsx/SKILL.md`, `pptx/SKILL.md`
+   - For tool/API skills: `mcp-builder/SKILL.md`
+   - For creative/design skills: `brand-guidelines/SKILL.md`, `frontend-design/SKILL.md`
+   - For testing skills: `webapp-testing/SKILL.md`
+
+3. **Note patterns to compare**: As you read, note:
+   - How descriptions are structured (trigger patterns)
+   - Length and depth of SKILL.md body
+   - How references are organized and used
+   - Balance between brevity and completeness
 
 ## Steps
 
@@ -29,7 +54,7 @@ Read the complete skill structure:
 
 ### Step 3: Analyze the Skill
 
-Perform analysis in three areas, using guidelines from skill-creator as your reference:
+Perform analysis in three areas, comparing against the reference skills you read from Anthropic's repository:
 
 #### A. Length Analysis
 
@@ -83,6 +108,9 @@ Summarize findings with actionable recommendations for:
 
 ```
 ## Skill Review: [Skill Name]
+
+### Reference Skills Compared
+- [List the 3-5 Anthropic skills you read before this review]
 
 ### Summary
 [1-2 sentence overview]

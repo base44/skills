@@ -4,7 +4,7 @@ User authentication, registration, and session management via `base44.auth`.
 
 ## Contents
 - [Methods](#methods)
-- [Examples](#examples) (Register, Login, Get User, Update, Logout, Protected Routes)
+- [Examples](#examples) (Register, Login, Get User, Update, Logout, Protected Routes, OTP, Password Reset)
 - [Auth Providers](#auth-providers)
 - [App Visibility](#app-visibility)
 - [Limitations](#limitations)
@@ -14,12 +14,19 @@ User authentication, registration, and session management via `base44.auth`.
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `register(params)` | `Promise<any>` | Create new user account |
-| `loginViaEmailPassword(email, password, turnstileToken?)` | `Promise<any>` | Authenticate user |
+| `loginViaEmailPassword(email, password, turnstileToken?)` | `Promise<LoginResponse>` | Authenticate user |
 | `me()` | `Promise<User \| null>` | Get current user |
-| `updateMe(data)` | `Promise<any>` | Update current user's profile |
+| `updateMe(data)` | `Promise<User>` | Update current user's profile |
 | `logout(redirectUrl?)` | `void` | Clear session, optionally redirect |
 | `redirectToLogin(nextUrl)` | `void` | Redirect to hosted login page |
-| `isAuthenticated()` | `boolean` | Check if user is logged in |
+| `isAuthenticated()` | `Promise<boolean>` | Check if user is logged in |
+| `setToken(token, saveToStorage?)` | `void` | Set authentication token |
+| `inviteUser(email, role)` | `Promise<any>` | Invite a user to the app |
+| `verifyOtp(params)` | `Promise<any>` | Verify OTP code |
+| `resendOtp(email)` | `Promise<any>` | Resend OTP code to email |
+| `resetPasswordRequest(email)` | `Promise<any>` | Request password reset email |
+| `resetPassword(params)` | `Promise<any>` | Reset password with token |
+| `changePassword(params)` | `Promise<any>` | Change user password |
 
 ## Examples
 
@@ -99,11 +106,66 @@ if (!user) return;
 ### Check Authentication Status
 
 ```javascript
-if (base44.auth.isAuthenticated()) {
+const isLoggedIn = await base44.auth.isAuthenticated();
+if (isLoggedIn) {
   // Show user dashboard
 } else {
   // Show login button
 }
+```
+
+### Set Authentication Token
+
+```javascript
+// Set token and save to localStorage (default)
+base44.auth.setToken("jwt-token-here");
+
+// Set token without saving to localStorage
+base44.auth.setToken("jwt-token-here", false);
+```
+
+### Invite User
+
+```javascript
+await base44.auth.inviteUser("newuser@example.com", "user");
+// Sends invitation email to the user
+```
+
+### OTP Verification
+
+```javascript
+// After registration, verify the OTP sent to user's email
+await base44.auth.verifyOtp({
+  email: "user@example.com",
+  otpCode: "123456"
+});
+
+// Resend OTP if needed
+await base44.auth.resendOtp("user@example.com");
+```
+
+### Password Reset Flow
+
+```javascript
+// Step 1: Request password reset (sends email with reset token)
+await base44.auth.resetPasswordRequest("user@example.com");
+
+// Step 2: Reset password using token from email
+await base44.auth.resetPassword({
+  resetToken: "token-from-email",
+  newPassword: "newSecurePassword123"
+});
+```
+
+### Change Password
+
+```javascript
+// Change password for authenticated user
+await base44.auth.changePassword({
+  userId: "user-id-123",
+  currentPassword: "oldPassword123",
+  newPassword: "newSecurePassword456"
+});
 ```
 
 ## Auth Providers
