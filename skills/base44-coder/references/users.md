@@ -1,0 +1,66 @@
+# Users Module
+
+Invite users to the app via `base44.users`.
+
+## Contents
+- [Methods](#methods)
+- [Examples](#examples) (Invite User)
+- [Roles](#roles)
+- [Notes](#notes)
+
+## Methods
+
+| Method | Signature | Description |
+|--------|-----------|-------------|
+| `inviteUser(email, role)` | `Promise<any>` | Invite a user to the app |
+
+## Examples
+
+### Invite User
+
+```javascript
+// Invite a user with "user" role
+await base44.users.inviteUser("newuser@example.com", "user");
+
+// Invite an admin
+await base44.users.inviteUser("admin@example.com", "admin");
+```
+
+### Invite Multiple Users
+
+```javascript
+const usersToInvite = [
+  { email: "user1@example.com", role: "user" },
+  { email: "user2@example.com", role: "user" },
+  { email: "manager@example.com", role: "admin" }
+];
+
+for (const user of usersToInvite) {
+  await base44.users.inviteUser(user.email, user.role);
+  console.log(`Invited ${user.email} as ${user.role}`);
+}
+```
+
+## Roles
+
+The `role` parameter must be one of the roles defined in your app:
+
+| Role | Description |
+|------|-------------|
+| `"user"` | Standard user with default permissions |
+| `"admin"` | Administrator with elevated permissions |
+
+Custom roles can be configured in the Base44 dashboard.
+
+## Notes
+
+- **Email invitation**: The invited user receives an email with a link to join the app
+- **Duplicate handling**: Inviting an existing user will re-send the invitation
+- **Also available in auth**: `base44.auth.inviteUser()` provides the same functionality
+- **Role validation**: The role must match a role defined in your app settings
+
+```javascript
+// These are equivalent:
+await base44.users.inviteUser("user@example.com", "user");
+await base44.auth.inviteUser("user@example.com", "user");
+```

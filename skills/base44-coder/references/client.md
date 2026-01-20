@@ -8,6 +8,7 @@ How to create and configure the Base44 client.
 - [In Backend Functions](#in-backend-functions)
 - [Authentication Modes](#authentication-modes) (Anonymous, User, Service Role)
 - [Available Modules](#available-modules)
+- [Client Methods](#client-methods)
 - [Client Configuration Options](#client-configuration-options)
 
 ## In Base44-Generated Apps
@@ -134,12 +135,49 @@ base44.auth          // Authentication
 base44.agents        // AI conversations
 base44.functions     // Backend function invocation
 base44.integrations  // Third-party services
-base44.appLogs       // Logging
+base44.analytics     // Event tracking
+base44.appLogs       // App usage logging
+base44.users         // User invitations
 
 // Service role only (backend)
 base44.asServiceRole.entities
+base44.asServiceRole.agents
 base44.asServiceRole.functions
+base44.asServiceRole.integrations
+base44.asServiceRole.appLogs
 base44.asServiceRole.connectors
+```
+
+## Client Methods
+
+The client provides these methods:
+
+```javascript
+// Set authentication token for all subsequent requests
+base44.setToken(newToken);
+
+// Cleanup WebSocket connections (call when done with client)
+base44.cleanup();
+```
+
+### setToken
+
+Updates the authentication token for all subsequent API requests and WebSocket connections.
+
+```javascript
+// After receiving a token (e.g., from external auth)
+base44.setToken("new-jwt-token");
+```
+
+### cleanup
+
+Disconnects WebSocket connections. Call when you're done with the client or when the component unmounts.
+
+```javascript
+// Cleanup on component unmount (React example)
+useEffect(() => {
+  return () => base44.cleanup();
+}, []);
 ```
 
 ## Client Configuration Options

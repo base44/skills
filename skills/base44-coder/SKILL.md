@@ -1,6 +1,6 @@
 ---
 name: base44-coder
-description: Base44 JavaScript SDK for building frontend projects. ACTIVATE when (1) INTENT - user wants to build a Base44 project (site/app/page are equivalent), store/retrieve data with Base44 entities, add user authentication, integrate AI agents, or call backend functions; (2) TECHNICAL - code contains Base44 imports ("@/api/base44Client", "@base44/sdk"), uses base44.entities.*, base44.auth.*, base44.agents.*, or base44.functions.*. This skill handles SDK/JavaScript code. For CLI operations (deploy, push, login commands), use base44-cli instead.
+description: Base44 JavaScript/TypeScript SDK for building frontend and backend applications. Use when working with Base44 projects (React/Vue/Next.js), Base44 imports ("@base44/sdk", "@/api/base44Client"), or Base44 SDK modules (entities, auth, agents, functions, integrations, analytics). For CLI commands (deploy, push, login), use base44-cli instead.
 ---
 
 # Base44 Coder
@@ -41,6 +41,9 @@ await base44.auth.loginViaEmailPassword("user@example.com", "password");
 | `functions` | Backend function invocation | [functions.md](references/functions.md) |
 | `integrations` | Third-party services (email, AI, custom) | [integrations.md](references/integrations.md) |
 | `connectors` | OAuth tokens (service role only) | [connectors.md](references/connectors.md) |
+| `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
+| `appLogs` | Log and fetch app usage data | [app-logs.md](references/app-logs.md) |
+| `users` | Invite users to the app | [users.md](references/users.md) |
 
 For client setup and authentication modes, see [client.md](references/client.md).
 
@@ -83,14 +86,17 @@ const base44 = createClient({
 **Working with app data?**
 - Create/read/update/delete records → `entities`
 - Import data from file → `entities.importEntities()`
+- Realtime updates → `entities.EntityName.subscribe()`
 
 **User management?**
 - Login/register/logout → `auth`
 - Get current user → `auth.me()`
 - Update user profile → `auth.updateMe()`
+- Invite users → `users.inviteUser()`
 
 **AI features?**
 - Chat with AI agents → `agents`
+- Create new conversation → `agents.createConversation()`
 - Manage conversations → `agents.getConversations()`
 
 **Custom backend logic?**
@@ -101,6 +107,11 @@ const base44 = createClient({
 - Built-in integrations (email, AI) → `integrations`
 - OAuth services (Google, Slack) → `connectors` (backend only)
 
+**Tracking and analytics?**
+- Track custom events → `analytics.track()`
+- Log page views → `appLogs.logUserInApp()`
+- Get usage stats → `appLogs.getStats()`
+
 ## Common Patterns
 
 ### Filter and Sort Data
@@ -108,7 +119,7 @@ const base44 = createClient({
 ```javascript
 const pendingTasks = await base44.entities.Task.filter(
   { status: "pending", assignedTo: userId },  // query
-  { created_date: -1 },                        // sort (descending)
+  "-created_date",                             // sort (descending)
   10,                                          // limit
   0                                            // skip
 );
@@ -167,6 +178,9 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `agents` | Yes | Yes |
 | `functions.invoke()` | Yes | Yes |
 | `integrations` | Yes | Yes |
+| `analytics` | Yes | Yes |
+| `appLogs` | Yes | Yes |
+| `users` | Yes | Yes |
 | `asServiceRole.*` | No | Yes |
 | `connectors` | No | Yes |
 
