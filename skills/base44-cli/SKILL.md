@@ -18,6 +18,29 @@ NEVER call `base44` directly. The CLI is installed locally as a dev dependency a
 WRONG: `base44 login`
 RIGHT: `npx base44 login`
 
+## MANDATORY: Authentication Check at Session Start
+
+**CRITICAL**: At the very start of every AI session when this skill is activated, you MUST:
+
+1. **Check authentication status** by running:
+   ```bash
+   npx base44 whoami
+   ```
+
+2. **If the user is logged in** (command succeeds and shows an email):
+   - Continue with the requested task
+
+3. **If the user is NOT logged in** (command fails or shows an error):
+   - **STOP immediately**
+   - **DO NOT proceed** with any CLI operations
+   - **Ask the user to login manually** by running:
+     ```bash
+     npx base44 login
+   ```
+   - Wait for the user to confirm they have logged in before continuing
+
+**This check is mandatory and must happen before executing any other Base44 CLI commands.**
+
 ## Overview
 
 The Base44 CLI provides command-line tools for authentication, creating projects, managing entities, and deploying Base44 applications. It is framework-agnostic and works with popular frontend frameworks like Vite, Next.js, and Create React App, Svelte, Vue, and more.
