@@ -4,7 +4,7 @@
 
 Agent skills for [Base44 SDK](https://docs.base44.com) development. Install these skills onto your coding agents to enhance Base44 app development workflows.
 
-Compatible with **Cursor**, **Claude Code**, **Codex**, **OpenCode**, and [10+ more agents](https://github.com/vercel-labs/add-skill#available-agents).
+Compatible with **Cursor(Nightly)**, **Claude Code**, **Codex**, **OpenCode**, and [10+ more agents](https://github.com/vercel-labs/add-skill#available-agents).
 
 ## Installation
 
@@ -12,39 +12,22 @@ Install skills using [`add-skill`](https://github.com/vercel-labs/add-skill):
 
 ```bash
 # Install all skills
-npx add-skill <owner>/skills
-
-# List available skills
-npx add-skill <owner>/skills --list
-
-# Install specific skills
-npx add-skill <owner>/skills --skill <skill-name>
+npx add-skill base44/skills
 
 # Install globally (user-level)
-npx add-skill <owner>/skills -g
-
-# Install to specific agents
-npx add-skill <owner>/skills -a cursor -a claude-code
+npx add-skill base44/skills -g
 ```
 
 ## Available Skills
 
 | Skill | Description |
 |-------|-------------|
-| *Coming soon* | Skills for Base44 SDK development |
-
-## Directory Structure
-
-```
-skills/
-├── .curated/        # Production-ready, tested skills
-├── .experimental/   # Work-in-progress skills
-└── _template/       # Template for creating new skills
-```
+| `base44-cli` | Create and manage Base44 projects using the CLI - handles initialization, deployment, entity schema management, and authentication |
+| `base44-sdk` | Build apps using the Base44 JavaScript SDK - covers entities, auth, agents, functions, integrations, and analytics |
 
 ## What are Agent Skills?
 
-Agent skills are reusable instruction sets that extend your coding agent's capabilities. They're defined in `SKILL.md` files with YAML frontmatter containing a `name` and `description`.
+Agent skills are reusable instruction sets that extend your coding agent's capabilities. They're defined in `SKILL.md` files with YAML frontmatter containing a `name` and `description`. See the [Agent Skills Specification](https://agentskills.io/specification) for the complete format.
 
 Skills help agents perform specialized tasks like:
 
