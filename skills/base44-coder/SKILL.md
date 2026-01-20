@@ -1,11 +1,41 @@
 ---
 name: base44-coder
-description: Base44 JavaScript/TypeScript SDK for building frontend and backend applications. Use when working with Base44 projects (React/Vue/Next.js), Base44 imports ("@base44/sdk", "@/api/base44Client"), or Base44 SDK modules (entities, auth, agents, functions, integrations, analytics). For CLI commands (deploy, push, login), use base44-cli instead.
+description: Base44 APPLICATION DEVELOPMENT - Use for writing app code, implementing features in EXISTING Base44 projects. ACTIVATE when: (1) INTENT - Building features, writing code, implementing functionality in an EXISTING Base44 project; (2) CONTEXT - base44/config.jsonc exists OR Base44 SDK imports are present; (3) TECHNICAL - working with Base44 projects (React/Vue/Next.js), Base44 imports ("@base44/sdk", "@/api/base44Client"), or Base44 SDK modules (entities, auth, agents, functions, integrations, analytics). KEYWORDS: "implement", "build a feature", "add functionality", "write code for", "create a [type] app" (when base44 project already exists). DO NOT ACTIVATE: For brand new projects in empty directories - use base44-cli first. DO NOT USE for: Initializing new Base44 projects (use base44-cli), empty directories without Base44 configuration, when user says "create a new Base44 project/app/site" and no project exists. SKILL DEPENDENCIES: base44-coder assumes a Base44 project is already initialized. For CLI commands (deploy, push, login), use base44-cli instead.
 ---
 
 # Base44 Coder
 
 Build apps on the Base44 platform using the Base44 JavaScript SDK.
+
+## When to Use This Skill vs base44-cli
+
+**Use base44-coder when:**
+- Building features in an **EXISTING** Base44 project
+- `base44/config.jsonc` already exists in the project
+- Base44 SDK imports are present (`@base44/sdk`, `@/api/base44Client`)
+- Writing JavaScript/TypeScript code using Base44 SDK modules
+- Implementing functionality, components, or features
+- User mentions: "implement", "build a feature", "add functionality", "write code for"
+- User says "create a [type] app" **and** a Base44 project already exists
+
+**DO NOT USE base44-coder for:**
+- ❌ Initializing new Base44 projects (use `base44-cli` instead)
+- ❌ Empty directories without Base44 configuration
+- ❌ When user says "create a new Base44 project/app/site" and no project exists
+- ❌ CLI commands like `npx base44 create`, `npx base44 deploy`, `npx base44 login` (use `base44-cli`)
+
+**Skill Dependencies:**
+- `base44-coder` assumes a Base44 project is **already initialized**
+- `base44-cli` is a **prerequisite** for `base44-coder` in new projects
+- If user wants to "create an app" and no Base44 project exists, use `base44-cli` first
+
+**State Check Logic:**
+Before selecting this skill, verify:
+- IF (user mentions "create/build app" OR "make a project"):
+  - IF (directory is empty OR no `base44/config.jsonc` exists):
+    → Use **base44-cli** (project initialization needed)
+  - ELSE:
+    → Use **base44-coder** (project exists, build features)
 
 ## Quick Start
 

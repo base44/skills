@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: Base44 CLI for project management, deployment, and entity schemas. ACTIVATE when (1) INTENT - user wants to deploy a Base44 project (site/app/page are equivalent), create a new Base44 project, push/sync entity schemas, or authenticate with Base44 via terminal; (2) TECHNICAL - mentions npx/yarn/pnpm base44, works with base44/entities/*.jsonc or base44/config.jsonc files, or references CLI commands like "base44 login", "base44 create", "base44 whoami", "base44 logout", "site deploy", "entities push". This skill handles terminal/CLI operations. For JavaScript SDK code (base44.entities.*, base44.auth.*), use base44-coder instead.
+description: Base44 PROJECT SETUP AND DEPLOYMENT - Use for initializing new projects, deploying, and managing entity schemas via CLI. ACTIVATE when: (1) INTENT - User wants to create a NEW Base44 project, initialize a project, deploy, push/sync entity schemas, or authenticate with Base44 via terminal; (2) CONTEXT - Empty directory OR missing base44/config.jsonc AND user mentions "create/build/make an app/project/site"; (3) TECHNICAL - mentions npx/yarn/pnpm base44, base44/entities/*.jsonc files, or CLI commands like "base44 login", "base44 create", "base44 whoami", "base44 logout", "site deploy", "entities push". KEYWORDS: "new project", "initialize project", "setup a project", "start a new Base44 app/site", "create a [type] app in base44" (when directory is empty). SKILL DEPENDENCIES: base44-cli is a prerequisite for base44-coder in new projects. If user wants to "create an app" and no Base44 project exists, trigger base44-cli first. This skill handles terminal/CLI operations. For JavaScript SDK code (base44.entities.*, base44.auth.*) in EXISTING projects, use base44-coder instead.
 ---
 
 # Base44 CLI
@@ -44,6 +44,36 @@ RIGHT: `npx base44 login`
 ## Overview
 
 The Base44 CLI provides command-line tools for authentication, creating projects, managing entities, and deploying Base44 applications. It is framework-agnostic and works with popular frontend frameworks like Vite, Next.js, and Create React App, Svelte, Vue, and more.
+
+## When to Use This Skill vs base44-coder
+
+**Use base44-cli when:**
+- Creating a **NEW** Base44 project from scratch
+- Initializing a project in an empty directory
+- Directory is missing `base44/config.jsonc`
+- User mentions: "create a new project", "initialize project", "setup a project", "start a new Base44 app"
+- Deploying, pushing entities, or authenticating via CLI
+- Working with CLI commands (`npx base44 ...`)
+
+**Use base44-coder when:**
+- Building features in an **EXISTING** Base44 project
+- `base44/config.jsonc` already exists
+- Writing JavaScript/TypeScript code using Base44 SDK
+- Implementing functionality, components, or features
+- User mentions: "implement", "build a feature", "add functionality", "write code"
+
+**Skill Dependencies:**
+- `base44-cli` is a **prerequisite** for `base44-coder` in new projects
+- If user wants to "create an app" and no Base44 project exists, use `base44-cli` first
+- `base44-coder` assumes a Base44 project is already initialized
+
+**State Check Logic:**
+Before selecting a skill, check:
+- IF (user mentions "create/build app" OR "make a project"):
+  - IF (directory is empty OR no `base44/config.jsonc` exists):
+    → Use **base44-cli** (project initialization needed)
+  - ELSE:
+    → Use **base44-coder** (project exists, build features)
 
 ## Project Structure
 
