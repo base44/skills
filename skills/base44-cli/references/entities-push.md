@@ -69,5 +69,3 @@ Error: No entities found in project configuration
 - Changes are applied to your Base44 project immediately
 - Make sure to test entity changes in a development environment first
 - Entity definitions are located in the `base44/entities/` directory
-npx base44:push
-```
