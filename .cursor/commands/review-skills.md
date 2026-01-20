@@ -9,8 +9,23 @@ Before analyzing, read these resources to understand skill writing principles:
 2. `.cursor/references/skill-creator/references/workflows.md` - Workflow patterns (if relevant)
 3. `.cursor/references/skill-creator/references/output-patterns.md` - Output patterns (if relevant)
 
-For additional reference, review well-written examples from Anthropic's GitHub repository using web_search:
-- https://github.com/anthropics/skills/tree/main/skills
+### Reference Examples from Anthropic
+
+For additional reference, use the local cache of Anthropic's skills repository:
+
+1. **Ensure cache is available**: Check if `.cursor/cache/anthropics-skills/` exists. If not (or if stale), run:
+   ```bash
+   python scripts/download_anthropics_skills.py
+   ```
+
+2. **Browse available skills**: Read `.cursor/cache/anthropics-skills/INDEX.md` to see all available reference skills.
+
+3. **Compare against similar skills**: When reviewing, find 1-2 similar skills from the cache to compare against:
+   - For workflow-based skills: look at `docx`, `pdf`, or similar document processing skills
+   - For tool/API skills: look at `bigquery`, `linear`, or similar integration skills
+   - For guidelines skills: look at `brand-voice`, `product-management`, or similar
+
+4. **Read reference examples**: Read the `SKILL.md` files from similar skills in `.cursor/cache/anthropics-skills/skills/` to understand good patterns.
 
 ## Steps
 
