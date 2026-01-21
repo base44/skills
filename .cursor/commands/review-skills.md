@@ -6,8 +6,10 @@ Review and analyze a skill against best practices for length, intent scope, and 
 
 Before analyzing, read these resources to understand skill writing principles:
 1. `.cursor/references/skill-creator/SKILL.md` - Core principles, anatomy, and progressive disclosure
-2. `.cursor/references/skill-creator/references/workflows.md` - Workflow patterns (if relevant)
-3. `.cursor/references/skill-creator/references/output-patterns.md` - Output patterns (if relevant)
+2. `.cursor/references/spec.md` - **Complete Agent Skills specification** (required for compliance checks)
+3. `.cursor/references/validate.md` - **Validation checklist** (used in Step 2)
+4. `.cursor/references/skill-creator/references/workflows.md` - Workflow patterns (if relevant)
+5. `.cursor/references/skill-creator/references/output-patterns.md` - Output patterns (if relevant)
 
 ### Reference Examples from Anthropic (REQUIRED)
 
@@ -44,7 +46,26 @@ You MUST read reference skills from Anthropic's repository before analyzing. Thi
 The user must provide a skill folder/path to review. If not provided, prompt:
 > "Please provide the path to the skill folder you want to review (e.g., `.claude/skills/my-skill/`)"
 
-### Step 2: Read the Skill
+### Step 2: Validate Skill Structure
+
+Using the validation checklist (`.cursor/references/validate.md`), verify the skill passes all basic checks:
+
+1. **File Structure**: SKILL.md exists
+2. **Frontmatter Format**: Valid YAML between `---` delimiters
+3. **Allowed Properties**: Only `name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools`
+4. **Name Validation**:
+   - Hyphen-case only (lowercase, digits, hyphens)
+   - No start/end hyphens, no consecutive hyphens (`--`)
+   - Max 64 characters
+   - Matches directory name
+5. **Description Validation**:
+   - No angle brackets (`<` or `>`)
+   - Max 1024 characters
+   - Non-empty
+
+**If validation fails**: Stop the review and report the specific validation error(s). The skill must pass basic validation before proceeding with the full review.
+
+### Step 3: Read the Skill
 
 Read the complete skill structure:
 - `SKILL.md` (frontmatter and body)
@@ -52,9 +73,44 @@ Read the complete skill structure:
 
 **IMPORTANT**: Only analyze the skill provided by the user.
 
-### Step 3: Analyze the Skill
+### Step 4: Verify Spec Compliance
 
-Perform analysis in three areas, comparing against the reference skills you read from Anthropic's repository:
+Check that the skill follows the Agent Skills specification (`.cursor/references/spec.md`). Verify:
+
+#### Directory Structure
+- Skill is in a directory matching the `name` field
+- Contains required `SKILL.md` file
+- Optional directories follow conventions: `scripts/`, `references/`, `assets/`
+
+#### Frontmatter Compliance
+| Field | Check |
+|-------|-------|
+| `name` | 1-64 chars, lowercase alphanumeric + hyphens, no start/end hyphens, no `--`, matches directory name |
+| `description` | 1-1024 chars, non-empty, describes what and when |
+| `license` | If present, short (license name or file reference) |
+| `compatibility` | If present, max 500 chars |
+| `metadata` | If present, string keys to string values |
+| `allowed-tools` | If present, space-delimited tool list |
+
+#### Body Content
+- Markdown format after frontmatter
+- Recommended: step-by-step instructions, examples, edge cases
+- Under 500 lines (move detailed content to references)
+
+#### Progressive Disclosure
+- Metadata (~100 tokens): name + description loaded at startup
+- Instructions (<5000 tokens recommended): SKILL.md body loaded on activation
+- Resources (as needed): scripts/references/assets loaded on demand
+
+#### File References
+- Use relative paths from skill root
+- Keep references one level deep (avoid deeply nested chains)
+
+**If spec violations found**: Document them clearly in the review output with specific fixes.
+
+### Step 5: Analyze the Skill
+
+Perform analysis in four areas, comparing against the reference skills you read from Anthropic's repository:
 
 #### A. Length Analysis
 
@@ -97,12 +153,13 @@ Good trigger pattern example:
 ACTIVATE when (1) INTENT - user wants to [action]; (2) TECHNICAL - code contains [patterns], uses [APIs]; (3) CONTEXT - project has [structure/files]
 ```
 
-### Step 4: Provide Recommendations
+### Step 6: Provide Recommendations
 
 Summarize findings with actionable recommendations for:
-1. **Length**: What should be trimmed or split?
-2. **Intent Scope**: Should it be split or combined?
-3. **Triggers**: How can the description be improved?
+1. **Spec Compliance**: What needs to be fixed to follow the spec?
+2. **Length**: What should be trimmed or split?
+3. **Intent Scope**: Should it be split or combined?
+4. **Triggers**: How can the description be improved?
 
 ## Output Format
 
@@ -114,6 +171,19 @@ Summarize findings with actionable recommendations for:
 
 ### Summary
 [1-2 sentence overview]
+
+### Validation Result
+- **Status**: [Pass/Fail]
+- **Details**: [Validation output or errors]
+
+### Spec Compliance
+- Directory structure: [Pass/Fail - details]
+- Frontmatter fields: [Pass/Fail - details]
+- Body content: [Pass/Recommendations]
+- Progressive disclosure: [Pass/Recommendations]
+- File references: [Pass/Recommendations]
+- **Assessment**: [Compliant/Partially compliant/Non-compliant]
+- **Fixes Required**: [List of specific fixes if any]
 
 ### Length Analysis
 - Description: X words
@@ -135,7 +205,8 @@ Summarize findings with actionable recommendations for:
 - **Recommendations**: [Specific description improvements]
 
 ### Overall Recommendations
-1. [Priority 1 action item]
+1. [Priority 1 action item - spec compliance fixes if any]
 2. [Priority 2 action item]
 3. [Priority 3 action item]
+4. [Priority 4 action item]
 ```
