@@ -39,7 +39,9 @@ RIGHT: `team-member.jsonc`
     - [Built-in Entity Attributes](#built-in-entity-attributes)
     - [Rule Types](#rule-types)
     - [RLS Examples](#rls-examples)
+    - [Common RLS Patterns](#common-rls-patterns)
     - [Limitations](#limitations)
+  - [Field Level Security (FLS)](#field-level-security-fls)
   - [Pushing Entities](#pushing-entities)
 
 ## Entity Directory
@@ -265,6 +267,8 @@ Row Level Security (RLS) rules are MongoDB-style queries that filter access base
 
 **Important:** If no RLS is defined, all records are accessible to all users.
 
+For real-world examples (todo apps, subscription systems, social apps, enterprise systems), see [rls-examples.md](rls-examples.md).
+
 ### RLS Operations
 
 RLS supports four operations:
@@ -275,8 +279,6 @@ RLS supports four operations:
 | `read` | Control who can view records |
 | `update` | Control who can modify existing records |
 | `delete` | Control who can remove records |
-
-**Note:** For legacy compatibility, `write` exists as an alias for both `update` and `delete` (not `create`). If specific `update` or `delete` rules are not defined, the system will check for a `write` rule as fallback.
 
 ### Template Fields
 
@@ -302,16 +304,20 @@ Every entity record has these built-in attributes that can be used in RLS rules:
 
 ### Rule Types
 
-There are two valid RLS rule styles:
+There are three valid RLS rule styles:
 
-1. **Role/attribute check using `user_condition`:**
+1. **Boolean values:**
+   - `true` - Allow all (including anonymous/unauthenticated users)
+   - `false` - Block all access
+
+2. **Role/attribute check using `user_condition`:**
 ```jsonc
 {
   "user_condition": { "role": "admin" }
 }
 ```
 
-2. **Entity-User field comparison:**
+3. **Entity-User field comparison:**
 ```jsonc
 {
   "created_by": "{{user.email}}"
@@ -391,12 +397,107 @@ You can combine rules using `$and`, `$or`, `$in`, `$nin`, etc.
 }
 ```
 
+### Common RLS Patterns
+
+**Public create, admin-only read (e.g., contact forms, waitlists):**
+```jsonc
+{
+  "rls": {
+    "create": true,
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
+```
+
+**Owner-only access:**
+```jsonc
+{
+  "rls": {
+    "create": true,
+    "read": { "created_by": "{{user.email}}" },
+    "update": { "created_by": "{{user.email}}" },
+    "delete": { "created_by": "{{user.email}}" }
+  }
+}
+```
+
 ### Limitations
 
 - **Unsupported operators:** `$regex`, `$expr`, `$where`
 - **No entity field filtering:** You cannot filter by entity field values (e.g., `{"status": "published"}`). Only user-related conditions are allowed.
 - **Template arrays:** Template values resolving to arrays are only valid inside `$in`, `$all`, etc.
 - **No deeply nested templates:** Templates like `{{user.data.profile.department}}` are not supported unless explicitly handled.
+
+## Field Level Security (FLS)
+
+FLS controls access to individual fields within records. Define `rls` rules at the field level inside `properties`.
+
+### FLS Structure
+
+```jsonc
+{
+  "properties": {
+    "public_field": {
+      "type": "string"
+    },
+    "admin_only_field": {
+      "type": "string",
+      "rls": {
+        "read": { "user_condition": { "role": "admin" } },
+        "write": { "user_condition": { "role": "admin" } }
+      }
+    }
+  }
+}
+```
+
+### FLS Operations
+
+- `read` - Controls who can see the field value
+- `write` - Controls who can set/update the field value
+
+### FLS Examples
+
+**Admin-only notes:**
+```jsonc
+{
+  "admin_notes": {
+    "type": "string",
+    "rls": {
+      "read": { "user_condition": { "role": "admin" } },
+      "write": { "user_condition": { "role": "admin" } }
+    }
+  }
+}
+```
+
+**Owner-only private field:**
+```jsonc
+{
+  "private_notes": {
+    "type": "string",
+    "rls": {
+      "read": { "created_by": "{{user.email}}" },
+      "write": { "created_by": "{{user.email}}" }
+    }
+  }
+}
+```
+
+**Completely hidden field:**
+```jsonc
+{
+  "internal_score": {
+    "type": "number",
+    "rls": {
+      "read": false,
+      "write": false
+    }
+  }
+}
+```
 
 ## Pushing Entities
 
