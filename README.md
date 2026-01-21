@@ -1,8 +1,8 @@
-# Agent Skills for Base44 and Baas
+# Agent Skills for Base44
 
 > 🚧 **Under Active Development** — Feedback and suggestions are welcome on [GitHub Discussions](https://github.com/orgs/base44/discussions).
 
-Install these skills so your coding agents can assist with [Base44 SDK](https://docs.base44.com/) development.
+Install these skills so your coding agents can assist with [Base44](https://docs.base44.com/) development.
 
 Supports [many AI coding agents](https://github.com/vercel-labs/add-skill#available-agents), including Cursor, Claude Code, Codex, and OpenCode.
 
