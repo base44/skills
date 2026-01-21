@@ -100,12 +100,10 @@ my-app/
 │   ├── entities/                # Entity schema definitions
 │   │   ├── task.jsonc
 │   │   └── board.jsonc
-│   ├── functions/               # Backend functions (optional)
-│   │   └── my-function/
-│   │       ├── function.jsonc
-│   │       └── index.ts
-│   └── agents/                  # AI agents (optional)
-│       └── assistant.jsonc
+│   └── functions/               # Backend functions (optional)
+│       └── my-function/
+│           ├── function.jsonc
+│           └── index.ts
 ├── src/                         # Frontend source code
 │   ├── api/
 │   │   └── base44Client.js      # Base44 SDK client
@@ -127,7 +125,10 @@ my-app/
 {
   "name": "My App",
   "description": "App description",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
   "site": {
+    "installCommand": "npm install",
     "buildCommand": "npm run build",
     "serveCommand": "npm run dev",
     "outputDirectory": "./dist"
@@ -200,6 +201,13 @@ ALWAYS follow this exact structure when creating entity files:
 **For enums:** Add `"enum": ["value1", "value2"]` and optionally `"default": "value1"`
 
 For complete documentation, see [entities-create.md](references/entities-create.md).
+
+### Function Management
+
+| Action / Command          | Description                                   | Reference                                               |
+| ------------------------- | --------------------------------------------- | ------------------------------------------------------- |
+| Create Functions          | Define functions in `base44/functions` folder | [functions-create.md](references/functions-create.md)   |
+| `base44 functions deploy` | Deploy local functions to Base44              | [functions-deploy.md](references/functions-deploy.md)   |
 
 ### Site Deployment
 
@@ -274,6 +282,7 @@ Add these scripts to your `package.json` for easier CLI usage:
   "scripts": {
     "base44:login": "base44 login",
     "base44:push": "base44 entities push",
+    "base44:functions": "base44 functions deploy",
     "base44:deploy": "base44 site deploy -y",
     "deploy": "npm run build && npm run base44:deploy"
   }
@@ -298,5 +307,6 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | Not authenticated           | Run `npx base44 login` first                                                        |
 | No entities found           | Ensure entities exist in `base44/entities/` directory                               |
 | Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
+| No functions found          | Ensure functions exist in `base44/functions/` with valid `function.jsonc` configs   |
 | No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
 | Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded                        |
