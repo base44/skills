@@ -1,8 +1,8 @@
-# Base44 SDK Skills
+# Agent Skills for Base44 and Baas
 
 > 🚧 **Under Active Development** — Feedback and suggestions are welcome on [GitHub Discussions](https://github.com/orgs/base44/discussions).
 
-Agent skills for [Base44 SDK](https://docs.base44.com) development. Install these skills onto your coding agents to enhance Base44 app development workflows.
+Install these skills so your coding agents can assist with [Base44](https://docs.base44.com) and Baas development.
 
 Compatible with **Cursor(Nightly)**, **Claude Code**, **Codex**, **OpenCode**, and [10+ more agents](https://github.com/vercel-labs/add-skill#available-agents).
 
@@ -18,35 +18,18 @@ npx add-skill base44/skills
 npx add-skill base44/skills -g
 ```
 
-## Available Skills
+## Available skills
 
 | Skill | Description |
 |-------|-------------|
-| `base44-cli` | Create and manage Base44 projects using the CLI - handles initialization, deployment, entity schema management, and authentication |
-| `base44-sdk` | Build apps using the Base44 JavaScript SDK - covers entities, auth, agents, functions, integrations, and analytics |
+| `base44-cli` | Create and manage Base44 projects using the CLI. Handles initialization, deployment, entity schema management, and authentication. |
+| `base44-coder` | Build apps using the Base44 JavaScript SDK. Covers entities, auth, agents, functions, integrations, and connectors. |
 
-## What are Agent Skills?
+## About agent skills
 
-Agent skills are reusable instruction sets that extend your coding agent's capabilities. They're defined in `SKILL.md` files with YAML frontmatter containing a `name` and `description`. See the [Agent Skills Specification](https://agentskills.io/specification) for the complete format.
+Agent skills are reusable instruction sets that extend your coding agent's capabilities. They're defined in `SKILL.md` files following the <a href="https://agentskills.io/specification" target="_blank">Agent Skills specification <Icon icon="arrow-up-right-from-square" /></a>.
 
-Skills help agents perform specialized tasks like:
-
-- Working with Base44 entities and CRUD operations
-- Setting up authentication flows
-- Integrating third-party APIs via connectors
-- Writing backend functions
-- Managing AI agents within Base44 apps
-
-## Base44 SDK Overview
-
-The [Base44 SDK](https://docs.base44.com/sdk-getting-started/overview) provides programmatic access to:
-
-- **auth** - User authentication and session management
-- **entities** - CRUD operations on app data models
-- **functions** - Custom backend logic execution
-- **connectors** - OAuth-based third-party integrations
-- **integrations** - API calls via shared integrations
-- **agents** - AI agent interactions and conversations
+For more about how agent extensions work with Base44, see [About agent extensions](https://base44-nav-anchors.mintlify.app/developers/references/external-integrations/about-agent-extensions).
 
 ## Contributing
 
