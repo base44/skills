@@ -164,10 +164,16 @@ const allTasks = await base44.asServiceRole.entities.Task.list();
 const allUsers = await base44.asServiceRole.entities.User.list();
 ```
 
-## Permissions
+## Permissions (RLS & FLS)
 
-Data access depends on:
+Data access is controlled by **Row Level Security (RLS)** and **Field Level Security (FLS)** rules defined in entity schemas.
+
 1. **Authentication level**: anonymous, authenticated, or service role
-2. **Entity security settings**: configured in app dashboard
+2. **RLS rules**: Control which records (rows) users can create/read/update/delete
+3. **FLS rules**: Control which fields users can read/write within accessible records
 
 Operations succeed or fail based on these rules - no partial results.
+
+RLS and FLS are configured in entity schema files (`base44/entities/*.jsonc`). See [entities-create.md](../../base44-cli/references/entities-create.md#row-level-security-rls) for configuration details.
+
+**Note:** `asServiceRole` sets the user's role to `"admin"` but does NOT bypass RLS. Your RLS rules must include admin access (e.g., `{ "user_condition": { "role": "admin" } }`) for service role operations to succeed.
