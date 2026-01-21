@@ -1,6 +1,6 @@
 # Creating Functions
 
-Base44 functions are serverless backend functions defined locally in your project and deployed to the Base44 backend.
+Base44 functions are serverless backend functions that run on Deno. They are defined locally in your project and deployed to the Base44 backend.
 
 ## Function Directory
 
@@ -46,23 +46,32 @@ Each function requires a `function.jsonc` configuration file:
 
 ## Entry Point File
 
-The entry point file must export a default async function that handles requests:
+Functions run on Deno and must export using `Deno.serve()`. Use `npm:` prefix for npm packages.
 
 ```typescript
-export default async function main(req: Request) {
-  // Parse request body if needed
-  const body = await req.json();
+import { createClientFromRequest } from "npm:@base44/sdk";
+
+Deno.serve(async (req) => {
+  // Get authenticated client from request
+  const base44 = createClientFromRequest(req);
   
-  // Your function logic here
+  // Parse input
+  const { orderId, action } = await req.json();
   
-  // Return a Response
-  return new Response(JSON.stringify({ success: true }));
-}
+  // Your logic here
+  const order = await base44.entities.Orders.get(orderId);
+  
+  // Return response
+  return Response.json({
+    success: true,
+    order: order
+  });
+});
 ```
 
 ### Request Object
 
-The function receives a standard `Request` object with:
+The function receives a standard Deno `Request` object:
 - `req.json()` - Parse JSON body
 - `req.text()` - Get raw text body
 - `req.headers` - Access request headers
@@ -70,19 +79,17 @@ The function receives a standard `Request` object with:
 
 ### Response Object
 
-Return a standard `Response` object:
+Return using `Response.json()` for JSON responses:
 
 ```typescript
-// JSON response
-return new Response(JSON.stringify({ data: result }), {
-  headers: { "Content-Type": "application/json" }
-});
+// Success response
+return Response.json({ data: result });
 
-// Error response
-return new Response(JSON.stringify({ error: "Something went wrong" }), {
-  status: 400,
-  headers: { "Content-Type": "application/json" }
-});
+// Error response with status code
+return Response.json({ error: "Something went wrong" }, { status: 400 });
+
+// Not found
+return Response.json({ error: "Order not found" }, { status: 404 });
 ```
 
 ## Complete Example
@@ -106,28 +113,85 @@ base44/
 
 ### index.ts
 ```typescript
-export default async function main(req: Request) {
-  const body = await req.json();
-  
-  // Validate the order
-  if (!body.orderId) {
-    return new Response(JSON.stringify({ error: "Order ID is required" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" }
+import { createClientFromRequest } from "npm:@base44/sdk";
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const { orderId } = await req.json();
+    
+    // Validate input
+    if (!orderId) {
+      return Response.json(
+        { error: "Order ID is required" },
+        { status: 400 }
+      );
+    }
+    
+    // Fetch and process the order
+    const order = await base44.entities.Orders.get(orderId);
+    if (!order) {
+      return Response.json(
+        { error: "Order not found" },
+        { status: 404 }
+      );
+    }
+    
+    return Response.json({
+      success: true,
+      orderId: order.id,
+      processedAt: new Date().toISOString()
     });
+    
+  } catch (error) {
+    return Response.json(
+      { error: error.message },
+      { status: 500 }
+    );
+  }
+});
+```
+
+## Using Service Role Access
+
+For admin-level operations, use `asServiceRole`:
+
+```typescript
+import { createClientFromRequest } from "npm:@base44/sdk";
+
+Deno.serve(async (req) => {
+  const base44 = createClientFromRequest(req);
+  
+  // Check user is authenticated
+  const user = await base44.auth.me();
+  if (!user) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
   
-  // Process the order
-  const result = {
-    success: true,
-    orderId: body.orderId,
-    processedAt: new Date().toISOString()
-  };
+  // Use service role for admin operations
+  const allOrders = await base44.asServiceRole.entities.Orders.list();
   
-  return new Response(JSON.stringify(result), {
-    headers: { "Content-Type": "application/json" }
+  return Response.json({ orders: allOrders });
+});
+```
+
+## Using Secrets
+
+Access environment variables configured in the app dashboard:
+
+```typescript
+Deno.serve(async (req) => {
+  // Access environment variables (configured in app settings)
+  const apiKey = Deno.env.get("STRIPE_API_KEY");
+  
+  const response = await fetch("https://api.stripe.com/v1/charges", {
+    headers: {
+      "Authorization": `Bearer ${apiKey}`
+    }
   });
-}
+  
+  return Response.json(await response.json());
+});
 ```
 
 ## Naming Conventions
@@ -148,7 +212,8 @@ For more details on deploying, see [functions-deploy.md](functions-deploy.md).
 
 ## Notes
 
-- Functions are deployed as serverless functions on Base44's infrastructure
-- Each function runs in its own isolated environment
-- Functions support TypeScript out of the box
+- Functions run on Deno runtime, not Node.js
+- Use `npm:` prefix for npm packages (e.g., `npm:@base44/sdk`)
+- Use `createClientFromRequest(req)` to get a client that inherits the caller's auth context
+- Configure secrets via app dashboard for API keys
 - Make sure to handle errors gracefully and return appropriate HTTP status codes
