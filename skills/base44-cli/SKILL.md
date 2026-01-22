@@ -144,6 +144,8 @@ Install the Base44 CLI as a dev dependency in your project:
 npm install --save-dev base44
 ```
 
+**Important:** Never assume or hardcode the `base44` package version. Always install without a version specifier to get the latest version.
+
 Then run commands using `npx`:
 
 ```bash
