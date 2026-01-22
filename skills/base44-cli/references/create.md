@@ -81,3 +81,4 @@ npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
    - Pushes any entities defined in `base44/entities/`
    - Runs install and build commands (for templates with frontend)
    - Deploys the site to Base44 hosting
+   - Builds and deploys the site (if site config exists)
