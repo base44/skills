@@ -1,0 +1,1 @@
+skills-ref @ git+https://github.com/agentskills/agentskills.git#subdirectory=skills-ref
