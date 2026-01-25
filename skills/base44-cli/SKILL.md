@@ -164,9 +164,17 @@ npx base44 <command>
 
 ### Project Management
 
-| Command         | Description                                  | Reference                         |
-| --------------- | -------------------------------------------- | --------------------------------- |
-| `base44 create` | Create a new Base44 app (framework-agnostic) | [create.md](references/create.md) |
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) |
+| `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
+| `base44 dashboard` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
+
+### Deployment
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 deploy` | Deploy all resources (entities, functions, site) | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 
@@ -234,15 +242,16 @@ For complete documentation, see [entities-create.md](references/entities-create.
    npx base44 create -n my-app -p .
    ```
 
-4. Push entities to Base44:
+4. Build and deploy everything:
    ```bash
-   npx base44 entities push
+   npm run build
+   npx base44 deploy -y
    ```
 
-5. Deploy your site:
-   ```bash
-   npx base44 site deploy -y
-   ```
+Or deploy individual resources:
+- `npx base44 entities push` - Push entities only
+- `npx base44 functions deploy` - Deploy functions only
+- `npx base44 site deploy -y` - Deploy site only
 
 ## Common Workflows
 
@@ -254,23 +263,41 @@ npx base44 login
 # Create project (ALWAYS use --name and --path flags)
 npx base44 create -n my-app -p .
 
-# Or create and deploy in one step
-npx base44 create -n my-app -p . --deploy
+# Or create with full-stack template and deploy in one step
+npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
 ```
 
-### Updating Entity Schema
+### Linking an Existing Project
 ```bash
-# After modifying entities in base44/entities/
-npx base44 entities push
+# If you have base44/config.jsonc but no .app.jsonc
+npx base44 link --create --name my-app
 ```
 
-### Deploying Changes
+### Deploying All Changes
 ```bash
-# Build your project first (using your framework's build command)
+# Build your project first
 npm run build
 
-# Deploy to Base44 (use -y to skip confirmation)
+# Deploy everything (entities, functions, and site)
+npx base44 deploy -y
+```
+
+### Deploying Individual Resources
+```bash
+# Push only entities
+npx base44 entities push
+
+# Deploy only functions
+npx base44 functions deploy
+
+# Deploy only site
 npx base44 site deploy -y
+```
+
+### Opening the Dashboard
+```bash
+# Open app dashboard in browser
+npx base44 dashboard
 ```
 
 ### Recommended package.json Scripts
@@ -283,7 +310,8 @@ Add these scripts to your `package.json` for easier CLI usage:
     "base44:login": "base44 login",
     "base44:push": "base44 entities push",
     "base44:functions": "base44 functions deploy",
-    "base44:deploy": "base44 site deploy -y",
+    "base44:site": "base44 site deploy -y",
+    "base44:deploy": "base44 deploy -y",
     "deploy": "npm run build && npm run base44:deploy"
   }
 }
@@ -293,7 +321,7 @@ Then use them like:
 ```bash
 npm run base44:login
 npm run base44:push
-npm run deploy  # Builds and deploys in one command
+npm run deploy  # Builds and deploys everything in one command
 ```
 
 ## Authentication
