@@ -21,12 +21,12 @@ Before analyzing, read these resources to understand skill writing principles:
 
 You MUST read reference skills from Anthropic's repository before analyzing. This is essential for calibrating your review.
 
-1. **Ensure cache is available**: Check if `./cache/anthropics-skills/` exists. If not (or if stale), run:
+1. **Ensure cache is available**: Check if `./.cache/anthropics-skills/` exists. If not (or if stale), run:
    ```bash
    python scripts/download_anthropics_skills.py
    ```
 
-2. **Read at least 3 reference skills**: Before analyzing, read these SKILL.md files from `./cache/anthropics-skills/skills/`:
+2. **Read at least 3 reference skills**: Before analyzing, read these SKILL.md files from `./.cache/anthropics-skills/skills/`:
 
    **Always read these high-quality examples:**
    - `pdf/SKILL.md` - Well-structured workflow skill with clear triggers

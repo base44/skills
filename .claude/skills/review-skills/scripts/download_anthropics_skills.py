@@ -13,7 +13,7 @@ Usage:
 Options:
     --force         Force re-download even if cache is fresh (< 7 days old)
     --clean         Clear the cache directory (without downloading)
-    --cache-dir     Custom cache directory (default: ./cache/anthropics-skills)
+    --cache-dir     Custom cache directory (default: ./.cache/anthropics-skills)
 
 Examples:
     python scripts/download_anthropics_skills.py
@@ -37,7 +37,7 @@ from urllib.error import URLError, HTTPError
 
 # Configuration
 REPO_URL = "https://github.com/anthropics/skills/archive/refs/heads/main.zip"
-DEFAULT_CACHE_DIR = "./cache/anthropics-skills"
+DEFAULT_CACHE_DIR = "./.cache/anthropics-skills"
 CACHE_MAX_AGE_DAYS = 7
 METADATA_FILE = ".cache_metadata.json"
 
