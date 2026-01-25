@@ -3,7 +3,9 @@
 Download and filter anthropics/skills repository for skill review reference.
 
 Downloads the anthropics/skills repo as a ZIP from GitHub, extracts it to a cache
-directory, and filters to keep only relevant files (SKILL.md and references).
+directory in the project root, and filters to keep only relevant files (SKILL.md 
+and references). The project root is detected by looking for .claude, .cursor, or 
+.git directories.
 
 Usage:
     python scripts/download_anthropics_skills.py [--force] [--clean] [--cache-dir PATH]
@@ -11,7 +13,7 @@ Usage:
 Options:
     --force         Force re-download even if cache is fresh (< 7 days old)
     --clean         Clear the cache directory (without downloading)
-    --cache-dir     Custom cache directory (default: .cursor/cache/anthropics-skills)
+    --cache-dir     Custom cache directory (default: ./.cache/anthropics-skills)
 
 Examples:
     python scripts/download_anthropics_skills.py
@@ -35,7 +37,7 @@ from urllib.error import URLError, HTTPError
 
 # Configuration
 REPO_URL = "https://github.com/anthropics/skills/archive/refs/heads/main.zip"
-DEFAULT_CACHE_DIR = ".cursor/cache/anthropics-skills"
+DEFAULT_CACHE_DIR = "./.cache/anthropics-skills"
 CACHE_MAX_AGE_DAYS = 7
 METADATA_FILE = ".cache_metadata.json"
 
@@ -66,13 +68,17 @@ REMOVE_PATTERNS = {
 
 
 def get_workspace_root() -> Path:
-    """Find the workspace root by looking for .cursor directory."""
+    """Find the workspace root by looking for project marker directories."""
     current = Path.cwd()
     
-    # Walk up to find .cursor directory
+    # Project root markers in priority order
+    root_markers = [".claude", ".cursor", ".git"]
+    
+    # Walk up to find any project root marker
     for parent in [current] + list(current.parents):
-        if (parent / ".cursor").exists():
-            return parent
+        for marker in root_markers:
+            if (parent / marker).exists():
+                return parent
     
     # Fallback to current directory
     return current

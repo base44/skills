@@ -1,5 +1,5 @@
 # Cache directories
-.cursor/cache/
+/.cache/
 
 # Python
 __pycache__/

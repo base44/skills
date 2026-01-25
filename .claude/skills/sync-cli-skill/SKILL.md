@@ -1,3 +1,9 @@
+---
+name: sync-cli-skill
+description: Synchronize the base44-cli skill with the latest CLI source code from the Base44 CLI repository
+disable-model-invocation: true
+---
+
 # Sync CLI Skill
 
 Synchronize the `skills/base44-cli/` skill with the latest CLI source code from the Base44 CLI repository.
