@@ -11,22 +11,22 @@ Review and analyze a skill against best practices for length, intent scope, and 
 ## Prerequisites
 
 Before analyzing, read these resources to understand skill writing principles:
-1. `.cursor/references/skill-creator/SKILL.md` - Core principles, anatomy, and progressive disclosure
+1. `./references/skill-creator/SKILL.md` - Core principles, anatomy, and progressive disclosure
 2. `references/spec.md` - **Complete Agent Skills specification** (required for compliance checks)
 3. `references/validate.md` - **Validation checklist** (used in Step 2)
-4. `.cursor/references/skill-creator/references/workflows.md` - Workflow patterns (if relevant)
-5. `.cursor/references/skill-creator/references/output-patterns.md` - Output patterns (if relevant)
+4. `./references/skill-creator/references/workflows.md` - Workflow patterns (if relevant)
+5. `./references/skill-creator/references/output-patterns.md` - Output patterns (if relevant)
 
 ### Reference Examples from Anthropic (REQUIRED)
 
 You MUST read reference skills from Anthropic's repository before analyzing. This is essential for calibrating your review.
 
-1. **Ensure cache is available**: Check if `.cursor/cache/anthropics-skills/` exists. If not (or if stale), run:
+1. **Ensure cache is available**: Check if `./cache/anthropics-skills/` exists. If not (or if stale), run:
    ```bash
    python scripts/download_anthropics_skills.py
    ```
 
-2. **Read at least 3 reference skills**: Before analyzing, read these SKILL.md files from `.cursor/cache/anthropics-skills/skills/`:
+2. **Read at least 3 reference skills**: Before analyzing, read these SKILL.md files from `./cache/anthropics-skills/skills/`:
 
    **Always read these high-quality examples:**
    - `pdf/SKILL.md` - Well-structured workflow skill with clear triggers
