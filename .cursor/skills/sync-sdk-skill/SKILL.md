@@ -1,3 +1,9 @@
+---
+name: sync-sdk-skill
+description: Synchronize the base44-sdk skill with the latest SDK source code from the Base44 SDK repository
+disable-model-invocation: true
+---
+
 # Sync SDK Skill
 
 Synchronize the `skills/base44-sdk/` skill with the latest SDK source code from the Base44 SDK repository.

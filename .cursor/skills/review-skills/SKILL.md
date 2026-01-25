@@ -1,3 +1,9 @@
+---
+name: review-skills
+description: Review and analyze a skill against best practices for length, intent scope, and trigger patterns
+disable-model-invocation: true
+---
+
 # Review Skills
 
 Review and analyze a skill against best practices for length, intent scope, and trigger patterns.
@@ -6,8 +12,8 @@ Review and analyze a skill against best practices for length, intent scope, and 
 
 Before analyzing, read these resources to understand skill writing principles:
 1. `.cursor/references/skill-creator/SKILL.md` - Core principles, anatomy, and progressive disclosure
-2. `.cursor/references/spec.md` - **Complete Agent Skills specification** (required for compliance checks)
-3. `.cursor/references/validate.md` - **Validation checklist** (used in Step 2)
+2. `references/spec.md` - **Complete Agent Skills specification** (required for compliance checks)
+3. `references/validate.md` - **Validation checklist** (used in Step 2)
 4. `.cursor/references/skill-creator/references/workflows.md` - Workflow patterns (if relevant)
 5. `.cursor/references/skill-creator/references/output-patterns.md` - Output patterns (if relevant)
 
@@ -48,7 +54,7 @@ The user must provide a skill folder/path to review. If not provided, prompt:
 
 ### Step 2: Validate Skill Structure
 
-Using the validation checklist (`.cursor/references/validate.md`), verify the skill passes all basic checks:
+Using the validation checklist (`references/validate.md`), verify the skill passes all basic checks:
 
 1. **File Structure**: SKILL.md exists
 2. **Frontmatter Format**: Valid YAML between `---` delimiters
@@ -75,7 +81,7 @@ Read the complete skill structure:
 
 ### Step 4: Verify Spec Compliance
 
-Check that the skill follows the Agent Skills specification (`.cursor/references/spec.md`). Verify:
+Check that the skill follows the Agent Skills specification (`references/spec.md`). Verify:
 
 #### Directory Structure
 - Skill is in a directory matching the `name` field
