@@ -22,8 +22,8 @@ npx add-skill base44/skills -g
 
 | Skill | Description |
 |-------|-------------|
-| `base44-cli` | Create and manage Base44 projects using the CLI. Handles initialization, deployment, entity schema management, and authentication. |
-| `base44-sdk` | Build apps using the Base44 JavaScript SDK. Covers entities, auth, agents, functions, integrations, and connectors. |
+| [`base44-cli`](skills/base44-cli/SKILL.md) | Create and manage Base44 projects using the CLI. Handles initialization, deployment, entity schema management, and authentication. |
+| [`base44-sdk`](skills/base44-sdk/SKILL.md) | Build apps using the Base44 JavaScript SDK. Covers entities, auth, agents, functions, integrations, and connectors. |
 
 ## About agent skills
 
