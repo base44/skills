@@ -90,6 +90,16 @@ await base44.auth.loginViaEmailPassword("user@example.com", "password");
 
 For client setup and authentication modes, see [client.md](references/client.md).
 
+## Installation
+
+Install the Base44 SDK:
+
+```bash
+npm install @base44/sdk
+```
+
+**Important:** Never assume or hardcode the `@base44/sdk` package version. Always install without a version specifier to get the latest version.
+
 ## Creating a Client (External Apps)
 
 When creating a client in external apps, **ALWAYS use `appId` as the parameter name**:
