@@ -1,0 +1,42 @@
+name: Sync CLI Skill
+
+on:
+  repository_dispatch:
+    types: [cli-release]
+  workflow_dispatch:
+    inputs:
+      cli_version:
+        description: 'CLI version tag to sync (e.g., v0.0.16)'
+        required: false
+        default: 'main'
+
+jobs:
+  sync-skill:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout skills repo
+        uses: actions/checkout@v4
+
+      - name: Checkout CLI repo
+        uses: actions/checkout@v4
+        with:
+          repository: base44/cli
+          ref: ${{ github.event.client_payload.version || inputs.cli_version || 'main' }}
+          path: base44-cli
+
+      - name: Run Claude Code to sync skill
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          prompt: |
+            /sync-cli-skill
+
+            CLI source folder path: ./base44-cli
+            CLI version: ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }}
+
+            After syncing, create a pull request with the changes.
+            PR title: "Update base44-cli skill to ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }}"
