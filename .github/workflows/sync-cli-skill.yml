@@ -33,7 +33,7 @@ jobs:
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          allowed_tools: "Edit,Write,MultiEdit,Bash(git:*),Bash(gh pr:*),Bash(mkdir:*)"
+          claude_args: '--allowedTools "Edit,Write,MultiEdit,Bash(git:*),Bash(gh pr:*),Bash(mkdir:*)"'
           prompt: |
             /sync-cli-skill
 
