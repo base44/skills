@@ -4,10 +4,6 @@ on:
   repository_dispatch:
     types: [cli-release]
   workflow_dispatch:
-  # TEMP: Remove before merging
-  push:
-    branches:
-      - workflow-and-changes
     inputs:
       cli_version:
         description: 'CLI version tag to sync (e.g., v0.0.16)'
