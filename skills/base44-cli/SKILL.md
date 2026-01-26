@@ -158,25 +158,25 @@ npx base44 <command>
 
 ### Authentication
 
-| Command         | Description                                     | Reference                                   |
-| --------------- | ----------------------------------------------- | ------------------------------------------- |
-| `base44 login`  | Authenticate with Base44 using device code flow | [auth-login.md](references/auth-login.md)   |
-| `base44 logout` | Logout from current device                      | [auth-logout.md](references/auth-logout.md) |
-| `base44 whoami` | Display current authenticated user              | [auth-whoami.md](references/auth-whoami.md) |
+| Command         | Description                            | Reference                                   |
+| --------------- | -------------------------------------- | ------------------------------------------- |
+| `base44 login`  | Authenticate with Base44               | [auth-login.md](references/auth-login.md)   |
+| `base44 logout` | Logout from current device             | [auth-logout.md](references/auth-logout.md) |
+| `base44 whoami` | Display current authenticated user     | [auth-whoami.md](references/auth-whoami.md) |
 
 ### Project Management
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) |
-| `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
+| `base44 create` | Create a new Base44 project | [create.md](references/create.md) |
+| `base44 link` | Link a local project to a Base44 project (create new or link existing) | [link.md](references/link.md) |
 | `base44 dashboard` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 
 ### Deployment
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 deploy` | Deploy all resources (entities, functions, site) | [deploy.md](references/deploy.md) |
+| `base44 deploy` | Deploy all project resources (entities, functions, and site) | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 

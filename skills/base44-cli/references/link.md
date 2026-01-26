@@ -1,6 +1,6 @@
 # base44 link
 
-Links an existing local Base44 project to a new Base44 app in the cloud. Use this when you have a `base44/config.jsonc` but haven't connected it to a Base44 app yet.
+Link a local project to a Base44 project (create new or link existing). Use this when you have a `base44/config.jsonc` but haven't connected it to a Base44 app yet.
 
 ## Critical: When to Use Link vs Create
 
@@ -23,6 +23,7 @@ npx base44 link [options]
 | `-c, --create` | Create a new project (skip selection prompt) | No |
 | `-n, --name <name>` | Project name (required when `--create` is used) | With `--create` |
 | `-d, --description <description>` | Project description | No |
+| `-p, --projectId <id>` | Project ID to link to an existing project | No |
 
 ## Non-Interactive Mode
 
@@ -46,6 +47,9 @@ npx base44 link --create --name my-app
 
 # With description
 npx base44 link --create --name my-app --description "My awesome app"
+
+# Link to an existing project by ID
+npx base44 link --projectId abc123
 ```
 
 ## What It Does

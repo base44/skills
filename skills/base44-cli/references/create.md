@@ -25,6 +25,7 @@ npx base44 create --name <name> --path <path> [options]
 | `-d, --description <description>` | Project description | No |
 | `-t, --template <id>` | Template ID (see templates below) | No |
 | `--deploy` | Build and deploy the site (includes pushing entities) | No |
+| `--skills` | Add AI agent skills for Cursor and Claude Code | No |
 
 *Required for non-interactive mode. Both `--name` and `--path` must be provided together.
 
@@ -69,6 +70,9 @@ npx base44 create -n my-app -p . --deploy
 
 # Create full-stack and deploy in one step
 npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
+
+# Create app with AI agent skills
+npx base44 create -n my-app -p . --skills
 ```
 
 ## What It Does
