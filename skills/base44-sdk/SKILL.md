@@ -1,6 +1,6 @@
 ---
 name: base44-sdk
-description: "**ALWAYS ACTIVATE** if ANY of these conditions are true: (1) User's prompt contains the word 'base44' or 'Base44' in ANY context; (2) Current directory contains a 'base44/' subfolder; (3) Code contains imports from '@base44/sdk'; (4) User mentions Base44 SDK modules: entities, auth, agents, functions, integrations, analytics. **ACTIVATION IS MANDATORY** - do not hesitate, do not search the web, do not read documentation files first. ACTIVATE IMMEDIATELY and let the skill instructions handle the context. This skill handles: application development, SDK usage, feature implementation, and writing code with Base44 APIs. The skill itself will determine the appropriate action based on whether this is a new project or existing project scenario."
+description: "Use for writing JavaScript/TypeScript code with the Base44 SDK in EXISTING projects. Triggers: user wants to implement features, build functionality, or write code using Base44; code uses '@base44/sdk' imports; user mentions SDK methods like base44.entities, base44.auth, base44.agents, base44.functions, base44.integrations; user says 'add a feature', 'implement', 'build component', 'write code for'. NOT for: creating new projects, CLI commands (npx base44 create/deploy/login), or directories without base44/config.jsonc - use base44-cli instead."
 ---
 
 # Base44 Coder
