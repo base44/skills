@@ -22,3 +22,6 @@ Thumbs.db
 
 # Node (if applicable)
 node_modules/
+
+# CLI sync temporary directory
+base44-cli/

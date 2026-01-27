@@ -100,6 +100,8 @@ my-app/
 │   ├── entities/                # Entity schema definitions
 │   │   ├── task.jsonc
 │   │   └── board.jsonc
+│   ├── agents/                  # AI agent configurations (optional)
+│   │   └── my-agent.jsonc
 │   └── functions/               # Backend functions (optional)
 │       └── my-function/
 │           ├── function.jsonc
@@ -184,6 +186,13 @@ npx base44 <command>
 | ---------------------- | ------------------------------------------- | --------------------------------------------------- |
 | Create Entities        | Define entities in `base44/entities` folder | [entities-create.md](references/entities-create.md) |
 | `base44 entities push` | Push local entities to Base44               | [entities-push.md](references/entities-push.md)     |
+
+### Agent Management
+
+| Command               | Description                                           | Reference                                     |
+| --------------------- | ----------------------------------------------------- | --------------------------------------------- |
+| `base44 agents push`  | Push local agent configs to Base44 (replaces remote)  | [agents-push.md](references/agents-push.md)   |
+| `base44 agents pull`  | Pull agent configs from Base44 (replaces local)       | [agents-pull.md](references/agents-pull.md)   |
 
 #### Entity Schema (Quick Reference)
 
@@ -291,6 +300,15 @@ npx base44 functions deploy
 
 # Deploy only site
 npx base44 site deploy -y
+```
+
+### Managing Agents
+```bash
+# Push local agent configs to Base44
+npx base44 agents push
+
+# Pull agent configs from Base44
+npx base44 agents pull
 ```
 
 ### Opening the Dashboard
