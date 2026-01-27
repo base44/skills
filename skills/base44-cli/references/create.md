@@ -22,9 +22,9 @@ npx base44 create --name <name> --path <path> [options]
 |--------|-------------|----------|
 | `-n, --name <name>` | Project name | Yes* |
 | `-p, --path <path>` | Path where to create the project | Yes* |
-| `-d, --description <description>` | Project description | No |
 | `-t, --template <id>` | Template ID (see templates below) | No |
 | `--deploy` | Build and deploy the site (includes pushing entities) | No |
+| `--skills` | Add AI agent skills to the project | No |
 
 *Required for non-interactive mode. Both `--name` and `--path` must be provided together.
 
@@ -69,6 +69,9 @@ npx base44 create -n my-app -p . --deploy
 
 # Create full-stack and deploy in one step
 npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
+
+# Create without AI agent skills
+npx base44 create -n my-app -p . --skills false
 ```
 
 ## What It Does
@@ -81,3 +84,4 @@ npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
    - Pushes any entities defined in `base44/entities/`
    - Runs install and build commands (for templates with frontend)
    - Deploys the site to Base44 hosting
+6. Installs AI agent skills (unless `--skills false` is specified)

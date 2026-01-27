@@ -1,6 +1,6 @@
 # base44 link
 
-Links an existing local Base44 project to a new Base44 app in the cloud. Use this when you have a `base44/config.jsonc` but haven't connected it to a Base44 app yet.
+Links a local Base44 project to a Base44 app in the cloud (either create a new app or link to an existing one). Use this when you have a `base44/config.jsonc` but haven't connected it to a Base44 app yet.
 
 ## Critical: When to Use Link vs Create
 
@@ -23,13 +23,20 @@ npx base44 link [options]
 | `-c, --create` | Create a new project (skip selection prompt) | No |
 | `-n, --name <name>` | Project name (required when `--create` is used) | With `--create` |
 | `-d, --description <description>` | Project description | No |
+| `-p, --projectId <id>` | Project ID to link to an existing project (skips selection prompt) | No |
 
 ## Non-Interactive Mode
 
-For CI/CD or agent use, provide `--create` with `--name`:
+For CI/CD or agent use, you have two options:
 
+**Option 1: Create a new project**
 ```bash
 npx base44 link --create --name my-app
+```
+
+**Option 2: Link to an existing project by ID**
+```bash
+npx base44 link --projectId <your-project-id>
 ```
 
 WRONG: `npx base44 link --create` (missing --name)
@@ -46,13 +53,18 @@ npx base44 link --create --name my-app
 
 # With description
 npx base44 link --create --name my-app --description "My awesome app"
+
+# Link to existing project by ID
+npx base44 link --projectId abc123xyz
 ```
 
 ## What It Does
 
 1. Finds the `base44/config.jsonc` in the current directory (or parent directories)
 2. Verifies no `.app.jsonc` exists (project not already linked)
-3. Creates a new Base44 app in the cloud
+3. Either:
+   - Creates a new Base44 app in the cloud (if `--create` is used), or
+   - Links to an existing Base44 app (if `--projectId` is provided or selected interactively)
 4. Writes the app ID to `base44/.app.jsonc`
 
 ## Requirements
