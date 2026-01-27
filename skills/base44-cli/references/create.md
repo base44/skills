@@ -20,11 +20,13 @@ npx base44 create --name <name> --path <path> [options]
 
 | Option | Description | Required |
 |--------|-------------|----------|
-| `-n, --name <name>` | Project name | Yes* |
+| `name` | Project name (positional argument, optional) | No |
+| `-n, --name <name>` | Project name (alternative to positional argument) | Yes* |
 | `-p, --path <path>` | Path where to create the project | Yes* |
 | `-d, --description <description>` | Project description | No |
 | `-t, --template <id>` | Template ID (see templates below) | No |
 | `--deploy` | Build and deploy the site (includes pushing entities) | No |
+| `--skills` | Add AI agent skills to the project | No |
 
 *Required for non-interactive mode. Both `--name` and `--path` must be provided together.
 
@@ -58,6 +60,9 @@ npx base44 create --name <name> --path <path> [options]
 # Create backend-only config in current directory (default template)
 npx base44 create -n my-app -p .
 
+# Create using positional argument for name
+npx base44 create my-app -p .
+
 # Create full-stack project with frontend template
 npx base44 create -n my-app -p ./my-app -t backend-and-client
 
@@ -69,6 +74,12 @@ npx base44 create -n my-app -p . --deploy
 
 # Create full-stack and deploy in one step
 npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
+
+# Create app with AI agent skills
+npx base44 create -n my-app -p . --skills
+
+# Create app without AI agent skills (skills are added by default)
+npx base44 create -n my-app -p .
 ```
 
 ## What It Does
@@ -77,7 +88,14 @@ npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
 2. Creates a `base44/` folder with configuration files
 3. Registers the project with Base44 backend
 4. Creates `base44/.app.jsonc` with the app ID
-5. If `--deploy` is used:
+5. Installs AI agent skills (by default, unless `--skills=false` or in non-interactive mode without `--skills` flag)
+6. If `--deploy` is used:
    - Pushes any entities defined in `base44/entities/`
    - Runs install and build commands (for templates with frontend)
    - Deploys the site to Base44 hosting
+
+## Notes
+
+- AI agent skills are added by default in interactive mode
+- In non-interactive mode, use `--skills` flag to explicitly add AI agent skills
+- Skills installation is non-critical and won't block project creation if it fails

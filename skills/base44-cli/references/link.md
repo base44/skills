@@ -23,10 +23,14 @@ npx base44 link [options]
 | `-c, --create` | Create a new project (skip selection prompt) | No |
 | `-n, --name <name>` | Project name (required when `--create` is used) | With `--create` |
 | `-d, --description <description>` | Project description | No |
+| `-p, --projectId <id>` | Project ID to link to an existing project (skips selection prompt) | No |
 
 ## Non-Interactive Mode
 
-For CI/CD or agent use, provide `--create` with `--name`:
+For CI/CD or agent use, you have two options:
+
+### Option 1: Create a new project
+Provide `--create` with `--name`:
 
 ```bash
 npx base44 link --create --name my-app
@@ -34,6 +38,15 @@ npx base44 link --create --name my-app
 
 WRONG: `npx base44 link --create` (missing --name)
 RIGHT: `npx base44 link --create --name my-app`
+
+### Option 2: Link to an existing project
+Provide `--projectId` with a specific project ID:
+
+```bash
+npx base44 link --projectId <project-id>
+```
+
+This skips the project selection prompt and links directly to the specified project.
 
 ## Examples
 
@@ -46,6 +59,9 @@ npx base44 link --create --name my-app
 
 # With description
 npx base44 link --create --name my-app --description "My awesome app"
+
+# Link to an existing project by ID (non-interactive)
+npx base44 link --projectId abc123xyz
 ```
 
 ## What It Does
@@ -65,3 +81,5 @@ npx base44 link --create --name my-app --description "My awesome app"
 
 - After linking, you can deploy resources with `npx base44 deploy`
 - The `.app.jsonc` file should be git-ignored (contains your app ID)
+- Using `--projectId` is useful when you know the exact project ID you want to link to
+- Cannot use `--create` and `--projectId` together (they are mutually exclusive)
