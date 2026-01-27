@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: "**ALWAYS ACTIVATE** if ANY of these conditions are true: (1) User's prompt contains the word 'base44' or 'Base44' in ANY context; (2) Current directory contains a 'base44/' subfolder; (3) User mentions CLI commands: npx/yarn/pnpm base44, login, logout, whoami, create, entities push, site deploy. **ACTIVATION IS MANDATORY** - do not hesitate, do not search the web, do not read documentation files first. ACTIVATE IMMEDIATELY and let the skill instructions handle the context. This skill handles: project initialization, CLI operations, deployment, entity schema management, and authentication. The skill itself will determine the appropriate action based on whether base44/config.jsonc exists or not."
+description: "Base44 CLI for project initialization and operations. Activate when: (1) no base44/config.jsonc exists and user wants Base44 project, (2) user mentions CLI commands: npx base44, create, deploy, login, logout, entities push, (3) CLI operation keywords: initialize, create project, deploy, push schema. Handles: creating projects from templates, linking existing apps, authentication, deploying resources (entities/functions/site), schema management. Keywords: create project, initialize, deploy, push entities, npx base44. Excludes: SDK code implementation, feature development, writing application code. Use base44-sdk for those. Context: CLI tool with npx/yarn/pnpm."
 ---
 
 # Base44 CLI
@@ -9,17 +9,37 @@ Create and manage Base44 apps (projects) using the Base44 CLI tool.
 
 ## ⚡ IMMEDIATE ACTION REQUIRED - Read This First
 
-This skill activates on ANY mention of "base44" or when a `base44/` folder exists. **DO NOT read documentation files or search the web before acting.**
+This skill activates when you need to initialize a Base44 project or run CLI commands.
 
-**Your first action MUST be:**
-1. Check if `base44/config.jsonc` exists in the current directory
-2. If **NO** (new project scenario):
-   - This skill (base44-cli) handles the request
-   - Guide user through project initialization
-   - Do NOT activate base44-sdk yet
-3. If **YES** (existing project scenario):
-   - Transfer to base44-sdk skill for implementation
-   - This skill only handles CLI commands (login, deploy, entities push)
+## ⚡ MANDATORY PROJECT STATE CHECK
+
+**CRITICAL: Run this check BEFORE any action:**
+
+```bash
+test -f base44/config.jsonc && echo "✅ PROJECT EXISTS" || echo "❌ NO PROJECT"
+```
+
+### If "❌ NO PROJECT":
+
+**PROCEED** - This skill handles project initialization.
+
+**Your actions:**
+1. Guide user through Base44 project creation
+2. Check authentication status: `npx base44 whoami`
+3. If not authenticated, prompt user to run: `npx base44 login`
+4. Create project using: `npx base44 create -n <name> -p <path>`
+5. After project is created, inform user they can now implement features using the Base44 SDK
+
+### If "✅ PROJECT EXISTS":
+
+**Determine intent:**
+- If user wants **CLI operations** (deploy, push entities, authenticate):
+  - **PROCEED** - This skill handles these commands
+  - Run the requested CLI command
+- If user wants **feature implementation** (write code, implement functionality):
+  - **TRANSFER** to base44-sdk skill with context:
+    - Pass the original user request
+    - Note: "User wants to implement features, not run CLI commands"
 
 ## Critical: Local Installation Only
 
@@ -61,33 +81,34 @@ The Base44 CLI provides command-line tools for authentication, creating projects
 
 ## When to Use This Skill vs base44-sdk
 
-**Use base44-cli when:**
-- Creating a **NEW** Base44 project from scratch
-- Initializing a project in an empty directory
-- Directory is missing `base44/config.jsonc`
-- User mentions: "create a new project", "initialize project", "setup a project", "start a new Base44 app"
-- Deploying, pushing entities, or authenticating via CLI
-- Working with CLI commands (`npx base44 ...`)
+**✅ Use base44-cli when:**
+- No Base44 project (empty directory or missing config.jsonc)
+- User wants to: initialize project, create new app, run CLI commands, deploy, push schemas
+- CLI context: npx base44 commands, authentication, project setup
+- Keywords: "create project", "initialize", "deploy", "push entities", "npx base44"
 
-**Use base44-sdk when:**
-- Building features in an **EXISTING** Base44 project
-- `base44/config.jsonc` already exists
-- Writing JavaScript/TypeScript code using Base44 SDK
-- Implementing functionality, components, or features
-- User mentions: "implement", "build a feature", "add functionality", "write code"
+**❌ Use base44-sdk when:**
+- Base44 project EXISTS (base44/config.jsonc present)
+- User wants to: implement features, write SDK code, build functionality
+- Keywords: "implement", "build", "write code", "add feature", "create records"
 
-**Skill Dependencies:**
-- `base44-cli` is a **prerequisite** for `base44-sdk` in new projects
-- If user wants to "create an app" and no Base44 project exists, use `base44-cli` first
-- `base44-sdk` assumes a Base44 project is already initialized
+**Decision Logic:**
+```
+IF (user mentions CLI command explicitly):
+  → Use base44-cli
 
-**State Check Logic:**
-Before selecting a skill, check:
-- IF (user mentions "create/build app" OR "make a project"):
-  - IF (directory is empty OR no `base44/config.jsonc` exists):
-    → Use **base44-cli** (project initialization needed)
-  - ELSE:
-    → Use **base44-sdk** (project exists, build features)
+ELSE IF (user mentions "create/build app"):
+  IF (base44/config.jsonc missing):
+    → Use base44-cli (initialization needed)
+  ELSE:
+    → Use base44-sdk (project exists, implement features)
+
+ELSE IF (project exists AND user wants implementation):
+  → Use base44-sdk
+
+ELSE IF (no project OR wants setup/deploy):
+  → Use base44-cli
+```
 
 ## Project Structure
 

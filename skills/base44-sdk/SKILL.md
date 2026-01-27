@@ -1,6 +1,6 @@
 ---
 name: base44-sdk
-description: "**ALWAYS ACTIVATE** if ANY of these conditions are true: (1) User's prompt contains the word 'base44' or 'Base44' in ANY context; (2) Current directory contains a 'base44/' subfolder; (3) Code contains imports from '@base44/sdk'; (4) User mentions Base44 SDK modules: entities, auth, agents, functions, integrations, analytics. **ACTIVATION IS MANDATORY** - do not hesitate, do not search the web, do not read documentation files first. ACTIVATE IMMEDIATELY and let the skill instructions handle the context. This skill handles: application development, SDK usage, feature implementation, and writing code with Base44 APIs. The skill itself will determine the appropriate action based on whether this is a new project or existing project scenario."
+description: "Base44 SDK implementation for existing projects (requires base44/config.jsonc). Activate when: (1) config file exists, (2) @base44/sdk imports present, (3) user wants to implement features with SDK modules: entities, auth, agents, functions, integrations. Handles code implementation: data CRUD, authentication, AI integration, backend calls, file operations, analytics. Keywords: implement, build feature, write code, create records, add login. Excludes: CLI commands (npx base44 create/deploy/push), project initialization. Use base44-cli for those. Context: frontend TypeScript/JavaScript, backend Deno."
 ---
 
 # Base44 Coder
@@ -9,47 +9,71 @@ Build apps on the Base44 platform using the Base44 JavaScript SDK.
 
 ## ⚡ IMMEDIATE ACTION REQUIRED - Read This First
 
-This skill activates on ANY mention of "base44" or when a `base44/` folder exists. **DO NOT read documentation files or search the web before acting.**
+This skill activates when you need to implement features in an existing Base44 project.
 
-**Your first action MUST be:**
-1. Check if `base44/config.jsonc` exists in the current directory
-2. If **YES** (existing project scenario):
-   - This skill (base44-sdk) handles the request
-   - Implement features using Base44 SDK
-   - Do NOT use base44-cli unless user explicitly requests CLI commands
-3. If **NO** (new project scenario):
-   - Transfer to base44-cli skill for project initialization
-   - This skill cannot help until project is initialized
+## ⚡ MANDATORY PROJECT STATE CHECK
+
+**CRITICAL: Run this check BEFORE any action:**
+
+```bash
+test -f base44/config.jsonc && echo "✅ PROJECT EXISTS" || echo "❌ NO PROJECT"
+```
+
+### If "❌ NO PROJECT":
+
+**STOP IMMEDIATELY** - Do not attempt SDK operations.
+
+**User Communication:**
+```
+⚠️ No Base44 project detected in this directory.
+
+To use the Base44 SDK, you must first initialize a project.
+
+Would you like me to:
+1. Create a new Base44 project using the CLI?
+2. Help you navigate to an existing project directory?
+
+I'll transfer you to the base44-cli skill for project setup.
+```
+
+**Action:** Transfer to base44-cli skill with context:
+- Pass the original user request
+- Note: "User needs project initialization before SDK implementation"
+
+### If "✅ PROJECT EXISTS":
+
+**Proceed with SDK implementation:**
+1. Read base44/config.jsonc to understand project structure
+2. Check package.json for @base44/sdk installation status
+3. Implement requested features using Base44 SDK APIs
 
 ## When to Use This Skill vs base44-cli
 
-**Use base44-sdk when:**
-- Building features in an **EXISTING** Base44 project
-- `base44/config.jsonc` already exists in the project
-- Base44 SDK imports are present (`@base44/sdk`)
-- Writing JavaScript/TypeScript code using Base44 SDK modules
-- Implementing functionality, components, or features
-- User mentions: "implement", "build a feature", "add functionality", "write code for"
-- User says "create a [type] app" **and** a Base44 project already exists
+**✅ Use base44-sdk when:**
+- Base44 project EXISTS (base44/config.jsonc present)
+- User wants to: implement features, write SDK code, build functionality
+- Code context: @base44/sdk imports, SDK API calls
+- Keywords: "implement", "build", "write code", "add feature", "create records"
 
-**DO NOT USE base44-sdk for:**
-- ❌ Initializing new Base44 projects (use `base44-cli` instead)
-- ❌ Empty directories without Base44 configuration
-- ❌ When user says "create a new Base44 project/app/site" and no project exists
-- ❌ CLI commands like `npx base44 create`, `npx base44 deploy`, `npx base44 login` (use `base44-cli`)
+**❌ Use base44-cli when:**
+- No Base44 project (empty directory or missing config.jsonc)
+- User wants to: initialize project, run CLI commands, deploy, define schemas
+- Keywords: "create project", "npx base44", "initialize", "deploy", "push entities"
 
-**Skill Dependencies:**
-- `base44-sdk` assumes a Base44 project is **already initialized**
-- `base44-cli` is a **prerequisite** for `base44-sdk` in new projects
-- If user wants to "create an app" and no Base44 project exists, use `base44-cli` first
+**Decision Logic:**
+```
+IF (user mentions "create/build app"):
+  IF (base44/config.jsonc missing):
+    → Use base44-cli (initialization needed)
+  ELSE:
+    → Use base44-sdk (project exists, implement features)
 
-**State Check Logic:**
-Before selecting this skill, verify:
-- IF (user mentions "create/build app" OR "make a project"):
-  - IF (directory is empty OR no `base44/config.jsonc` exists):
-    → Use **base44-cli** (project initialization needed)
-  - ELSE:
-    → Use **base44-sdk** (project exists, build features)
+ELSE IF (explicit CLI command mentioned):
+  → Use base44-cli
+
+ELSE IF (SDK APIs or code implementation mentioned):
+  → Use base44-sdk (check config.jsonc exists first)
+```
 
 ## Quick Start
 
