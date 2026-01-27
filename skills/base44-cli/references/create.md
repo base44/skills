@@ -4,29 +4,29 @@ Creates a new Base44 project from a template. This command is framework-agnostic
 
 ## Critical: Non-Interactive Mode Required
 
-ALWAYS use `--name` AND `--path` flags together. Without both flags, the command opens an interactive TUI which agents cannot use properly.
+ALWAYS provide both the project name AND `--path` flag. Without both, the command opens an interactive TUI which agents cannot use properly.
 
 WRONG: `npx base44 create`
-WRONG: `npx base44 create -n my-app`
-RIGHT: `npx base44 create -n my-app -p ./my-app`
+WRONG: `npx base44 create my-app`
+RIGHT: `npx base44 create my-app -p ./my-app`
 
 ## Syntax
 
 ```bash
-npx base44 create --name <name> --path <path> [options]
+npx base44 create [name] --path <path> [options]
 ```
 
-## Options
+## Arguments & Options
 
-| Option | Description | Required |
+| Argument/Option | Description | Required |
 |--------|-------------|----------|
-| `-n, --name <name>` | Project name | Yes* |
+| `name` | Project name (positional argument) | Yes* |
 | `-p, --path <path>` | Path where to create the project | Yes* |
-| `-d, --description <description>` | Project description | No |
 | `-t, --template <id>` | Template ID (see templates below) | No |
 | `--deploy` | Build and deploy the site (includes pushing entities) | No |
+| `--skills` | Add AI agent skills (default: true) | No |
 
-*Required for non-interactive mode. Both `--name` and `--path` must be provided together.
+*Required for non-interactive mode. Both `name` and `--path` must be provided together.
 
 ## Templates
 
@@ -56,19 +56,19 @@ npx base44 create --name <name> --path <path> [options]
 
 ```bash
 # Create backend-only config in current directory (default template)
-npx base44 create -n my-app -p .
+npx base44 create my-app -p .
 
 # Create full-stack project with frontend template
-npx base44 create -n my-app -p ./my-app -t backend-and-client
-
-# Create app with description
-npx base44 create -n my-app -p . -d "My awesome app"
+npx base44 create my-app -p ./my-app -t backend-and-client
 
 # Create app and deploy immediately
-npx base44 create -n my-app -p . --deploy
+npx base44 create my-app -p . --deploy
 
 # Create full-stack and deploy in one step
-npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
+npx base44 create my-app -p ./my-app -t backend-and-client --deploy
+
+# Create without adding AI agent skills
+npx base44 create my-app -p . --skills=false
 ```
 
 ## What It Does
