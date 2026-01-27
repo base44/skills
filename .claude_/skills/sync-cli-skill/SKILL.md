@@ -65,6 +65,8 @@ Scan the CLI source folder to find all available commands. Look for:
 2. **For each command, extract:**
    - Command name and aliases
    - Description/help text
+   - **Positional arguments** (e.g., `<name>`, `<path>`) - look for `.argument()` or `.arguments()` calls
+   - **Command syntax** showing positional args (e.g., `create <name> [options]`)
    - Available options and flags
    - Usage examples (if present in source)
    - Subcommands (e.g., `entities push`, `site deploy`)
@@ -104,54 +106,72 @@ Compare discovered CLI commands with existing skill documentation:
 2. **Removed commands**: Commands in skill but not in source (verify before removing)
 3. **Changed command descriptions**: Commands with updated help text or descriptions
 
-#### Option/Argument-Level Changes (CRITICAL - check carefully)
-4. **New options**: New flags or parameters added to existing commands
-5. **Removed options**: Options that existed in docs but are no longer in source
-6. **Changed option descriptions**: Existing options with modified help text
-7. **Changed option defaults**: Options with different default values
-8. **Changed option types**: Options that changed type (e.g., string to boolean)
-9. **Changed required status**: Options that became required or optional
-10. **Changed option aliases**: Short flags that were added, removed, or changed (e.g., `-f` to `-F`)
+#### Positional Argument Changes (CRITICAL - check first)
+4. **New positional arguments**: Arguments added to command syntax (e.g., `cli <name>`)
+5. **Removed positional arguments**: Positional arguments that no longer exist
+6. **Option became positional**: An option was removed and its value became a positional argument (e.g., `cli -n my-app` → `cli my-app`)
+7. **Positional became option**: A positional argument was converted to an option
 
-#### How to Detect Option Changes
+#### Option/Flag Changes (CRITICAL - check carefully)
+8. **New options**: New flags or parameters added to existing commands
+9. **Removed options**: Options that existed in docs but are no longer in source
+10. **Changed option descriptions**: Existing options with modified help text
+11. **Changed option defaults**: Options with different default values
+12. **Changed option types**: Options that changed type (e.g., string to boolean)
+13. **Changed required status**: Options that became required or optional
+14. **Changed option aliases**: Short flags that were added, removed, or changed (e.g., `-f` to `-F`)
 
-For each command, create a detailed comparison table listing ALL options from BOTH source and docs:
+#### How to Detect Argument and Option Changes
+
+For each command, create a detailed comparison showing BOTH positional arguments AND options from source and docs:
 
 ```
-Command: deploy
+Command: create
 
+=== POSITIONAL ARGUMENTS ===
+| Argument | In Source? | In Docs? | Status |
+|----------|------------|----------|--------|
+| <name>   | ✓          | ✗        | NEW - was previously -n option |
+
+Source syntax: cli create <name> [options]
+Documented syntax: cli create -n <name> [options]
+
+BREAKING CHANGE: -n option removed, name is now a positional argument
+  Before: cli create -n my-app --template basic
+  After:  cli create my-app --template basic
+
+=== OPTIONS ===
 | Option | In Source? | In Docs? | Status |
 |--------|------------|----------|--------|
+| -n, --name | ✗ | ✓ | REMOVED - became positional arg |
 | --force | ✓ | ✓ | Changed (description) |
-| --env | ✓ | ✓ | Changed (required status) |
 | --verbose | ✓ | ✗ | NEW - add to docs |
-| --legacy | ✗ | ✓ | REMOVED - delete from docs |
 
 Source options:
   --force (-f): Force deployment [boolean, default: false]
-  --env <name>: Target environment [string, required]
   --verbose (-v): Enable verbose output [boolean, default: false]
 
 Documented options:
-  --force (-f): Force deploy without confirmation [boolean, default: false]  
-  --env <name>: Environment name [string, optional]
-  --legacy: Use legacy deployment (REMOVED - no longer in source!)
+  -n, --name <name>: App name [string, required] (REMOVED - now positional!)
+  --force (-f): Force deploy without confirmation [boolean, default: false]
 
 Changes detected:
+  - <name>: NEW positional argument (replaced -n option)
+  - -n/--name: REMOVED option (became positional argument)
   - --force: description changed
-  - --env: required status changed (required vs optional)
   - --verbose: NEW option (in source, missing from docs)
-  - --legacy: REMOVED option (in docs, not in source)
 ```
 
-#### Detecting Removed Options (IMPORTANT)
+#### Detecting Removed Options and Changed Arguments (IMPORTANT)
 
-To find removed options, you MUST:
-1. List ALL options currently documented in each reference file
-2. Check if EACH documented option still exists in source
-3. Any documented option NOT found in source = REMOVED
+To find removed options and argument changes, you MUST:
+1. **Extract command syntax from source** - Look for `.argument()`, `.arguments()`, or positional args in usage strings
+2. **Compare syntax patterns** - Check if the documented syntax `cli -n <name>` matches source syntax `cli <name>`
+3. **List ALL options currently documented** in each reference file
+4. **Check if EACH documented option still exists in source** - Any documented option NOT found in source = REMOVED
+5. **Check if removed options became positional args** - If an option like `-n <name>` is removed but `<name>` appears as a positional argument, document this as a syntax change
 
-Don't just look for new options - actively verify each existing documented option still exists!
+Don't just look for new options - actively verify each existing documented option still exists and check for option-to-positional conversions!
 
 Create a summary of changes to show the user before applying.
 
@@ -264,3 +284,5 @@ After updates, present a summary to the user:
 | Default values unclear | Look for second argument in `.option()` or `default:` property |
 | Required status unclear | Check for `.requiredOption()` or `required: true` in option config |
 | Removed args not detected | List ALL documented options first, then verify EACH exists in source - don't just scan for new ones |
+| Option became positional | Compare documented syntax with source - look for `.argument()` calls and check if removed options' values are now positional args (e.g., `-n <name>` → `<name>`) |
+| Positional args not detected | Look for `.argument('<name>')`, `.arguments()`, or usage strings showing `command <arg>` patterns in source |
