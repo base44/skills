@@ -4,18 +4,18 @@
 
 Install these skills so your coding agents can assist with [Base44](https://docs.base44.com/) development.
 
-Supports [many AI coding agents](https://github.com/vercel-labs/add-skill#available-agents), including Cursor, Claude Code, Codex, and OpenCode.
+Supports [many AI coding agents](https://github.com/vercel-labs/skills#available-agents), including Cursor, Claude Code, Codex, and OpenCode.
 
 ## Installation
 
-Install skills using [`add-skill`](https://github.com/vercel-labs/add-skill):
+Install skills using [`skills`](https://github.com/vercel-labs/skills):
 
 ```bash
 # Install all skills
-npx add-skill base44/skills
+npx skills add base44/skills
 
 # Install globally (user-level)
-npx add-skill base44/skills -g
+npx skills add base44/skills -g
 ```
 
 ## Available skills

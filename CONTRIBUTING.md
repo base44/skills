@@ -93,7 +93,7 @@ Work-in-progress skills that are:
 
 ```bash
 # From the repo root
-npx add-skill . --skill your-skill-name -a cursor
+npx skills add . --skill your-skill-name -a cursor
 ```
 
 2. Verify the skill loads in your agent
