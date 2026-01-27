@@ -62,3 +62,17 @@ function handleSettingsChange() {
 - Logs appear in the Analytics page of your app dashboard
 - App logs track page-level and feature-level activity
 - Use `analytics.track()` for custom events with properties, `appLogs.logUserInApp()` for simple page/feature tracking
+
+## Type Definitions
+
+```typescript
+/** App Logs module for tracking and analyzing app usage. */
+interface AppLogsModule {
+  /**
+   * Log user activity in the app.
+   * @param pageName - Name of the page or section being visited.
+   * @returns Promise that resolves when the log is recorded.
+   */
+  logUserInApp(pageName: string): Promise<void>;
+}
+```

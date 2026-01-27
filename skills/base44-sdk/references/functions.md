@@ -159,3 +159,22 @@ Deno.serve(async (req) => {
 | Service Role | `base44.asServiceRole.functions.invoke()` | Admin-level access |
 
 Inside the function, use `createClientFromRequest(req)` to get a client that inherits the caller's auth context.
+
+## Type Definitions
+
+```typescript
+/** Functions module for invoking custom backend functions. */
+interface FunctionsModule {
+  /**
+   * Invokes a custom backend function by name.
+   *
+   * If any parameter is a File object, the request will automatically be
+   * sent as multipart/form-data. Otherwise, it will be sent as JSON.
+   *
+   * @param functionName - The name of the function to invoke.
+   * @param data - An object containing named parameters for the function.
+   * @returns Promise resolving to the function's response.
+   */
+  invoke(functionName: string, data: Record<string, any>): Promise<any>;
+}
+```

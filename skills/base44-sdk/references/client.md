@@ -192,3 +192,66 @@ createClient({
 **⚠️ Critical:**
 - The parameter name is `appId`, not `clientId` or `id`. Using the wrong parameter name will cause errors.
 - The `onError` handler must be nested inside the `options` object, not at the top level.
+
+## Type Definitions
+
+### CreateClientConfig
+
+```typescript
+/** Configuration for creating a Base44 client. */
+interface CreateClientConfig {
+  /** The Base44 app ID (required). */
+  appId: string;
+  /** User authentication token. Used to authenticate as a specific user. */
+  token?: string;
+  /** Service role authentication token (backend only). */
+  serviceToken?: string;
+  /** Additional client options. */
+  options?: CreateClientOptions;
+}
+
+/** Options for creating a Base44 client. */
+interface CreateClientOptions {
+  /** Optional error handler called whenever an API error occurs. */
+  onError?: (error: Error) => void;
+}
+```
+
+### Base44Client
+
+```typescript
+/** The Base44 client instance. */
+interface Base44Client {
+  /** Entities module for CRUD operations on your data models. */
+  entities: EntitiesModule;
+  /** Integrations module for calling pre-built integration endpoints. */
+  integrations: IntegrationsModule;
+  /** Auth module for user authentication and management. */
+  auth: AuthModule;
+  /** Functions module for invoking custom backend functions. */
+  functions: FunctionsModule;
+  /** Agents module for managing AI agent conversations. */
+  agents: AgentsModule;
+  /** App logs module for tracking app usage. */
+  appLogs: AppLogsModule;
+  /** Analytics module for tracking custom events. */
+  analytics: AnalyticsModule;
+
+  /** Cleanup function to disconnect WebSocket connections. */
+  cleanup(): void;
+
+  /** Sets a new authentication token for all subsequent requests. */
+  setToken(newToken: string): void;
+
+  /** Provides access to modules with elevated service role permissions (backend only). */
+  readonly asServiceRole: {
+    entities: EntitiesModule;
+    integrations: IntegrationsModule;
+    connectors: ConnectorsModule;
+    functions: FunctionsModule;
+    agents: AgentsModule;
+    appLogs: AppLogsModule;
+    cleanup(): void;
+  };
+}
+```

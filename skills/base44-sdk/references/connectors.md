@@ -91,3 +91,23 @@ Deno.serve(async (req) => {
 - **Service role required**: Must use `base44.asServiceRole.connectors`
 - **You handle the API calls**: Base44 only provides the token; you make the actual API requests
 - **Token refresh**: Base44 handles token refresh automatically
+
+## Type Definitions
+
+```typescript
+/**
+ * The type of external integration/connector.
+ * Examples: 'googlecalendar', 'slack', 'github', 'notion', etc.
+ */
+type ConnectorIntegrationType = string;
+
+/** Connectors module for managing OAuth tokens for external services. */
+interface ConnectorsModule {
+  /**
+   * Retrieves an OAuth access token for a specific external integration type.
+   * @param integrationType - The type of integration (e.g., 'googlecalendar', 'slack').
+   * @returns Promise resolving to the access token string.
+   */
+  getAccessToken(integrationType: ConnectorIntegrationType): Promise<string>;
+}
+```

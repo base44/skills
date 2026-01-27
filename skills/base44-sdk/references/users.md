@@ -64,3 +64,19 @@ The `role` parameter must be one of:
 await base44.users.inviteUser("newuser@example.com", "user");
 await base44.auth.inviteUser("newuser@example.com", "user");
 ```
+
+## Type Definitions
+
+```typescript
+/** Users module for inviting users to the app. */
+interface UsersModule {
+  /**
+   * Invite a user to the application.
+   * @param user_email - User's email address.
+   * @param role - User's role ('user' or 'admin').
+   * @returns Promise resolving when the invitation is sent.
+   * @throws Error if role is not 'user' or 'admin'.
+   */
+  inviteUser(user_email: string, role: "user" | "admin"): Promise<any>;
+}
+```
