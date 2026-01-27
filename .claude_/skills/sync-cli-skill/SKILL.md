@@ -84,10 +84,38 @@ skills/base44-cli/
 
 Compare discovered CLI commands with existing skill documentation:
 
+#### Command-Level Changes
 1. **New commands**: Commands in source but not in skill references
-2. **Updated commands**: Commands with changed options, descriptions, or behavior
-3. **Removed commands**: Commands in skill but not in source (verify before removing)
+2. **Removed commands**: Commands in skill but not in source (verify before removing)
+3. **Changed command descriptions**: Commands with updated help text or descriptions
+
+#### Option/Argument-Level Changes (CRITICAL - check carefully)
 4. **New options**: New flags or parameters added to existing commands
+5. **Removed options**: Options that existed in docs but are no longer in source
+6. **Changed option descriptions**: Existing options with modified help text
+7. **Changed option defaults**: Options with different default values
+8. **Changed option types**: Options that changed type (e.g., string to boolean)
+9. **Changed required status**: Options that became required or optional
+10. **Changed option aliases**: Short flags that were added, removed, or changed (e.g., `-f` to `-F`)
+
+#### How to Detect Option Changes
+
+For each command, create a detailed comparison:
+
+```
+Command: deploy
+Source options:
+  --force (-f): Force deployment [boolean, default: false]
+  --env <name>: Target environment [string, required]
+
+Documented options:
+  --force (-f): Force deploy without confirmation [boolean, default: false]  
+  --env <name>: Environment name [string, optional]
+
+Changes detected:
+  - --force: description changed ("Force deployment" vs "Force deploy without confirmation")
+  - --env: required status changed (required vs optional)
+```
 
 Create a summary of changes to show the user before applying.
 
@@ -156,10 +184,19 @@ After updates, present a summary to the user:
 - references/deploy.md (updated options)
 - SKILL.md (updated command table)
 
-### Changes Made
-- Added new command: `base44 new-command`
-- Updated `deploy` command: added `--force` flag
-- Removed deprecated `--legacy` option from `create`
+### Commands Added/Removed
+- Added: `base44 new-command`
+- Removed: `base44 legacy-cmd` (deprecated)
+
+### Option Changes
+- `deploy --force`: description changed
+- `deploy --env`: now required (was optional)
+- `create --template`: added new option
+- `create --legacy`: removed deprecated option
+- `entities push --dry-run`: default changed from true to false
+
+### Description Updates
+- `deploy`: command description updated
 
 ### Manual Review Recommended
 - [List any changes that need verification]
@@ -181,3 +218,6 @@ After updates, present a summary to the user:
 | Options not detected | Look for `.option(` patterns in commander.js files |
 | Missing descriptions | Check for `description:` properties or `.description(` calls |
 | Subcommand structure | Commands like `entities push` may be in `entities/push.ts` |
+| Changed args not detected | Compare each option property: name, alias, description, default, required, type |
+| Default values unclear | Look for second argument in `.option()` or `default:` property |
+| Required status unclear | Check for `.requiredOption()` or `required: true` in option config |
