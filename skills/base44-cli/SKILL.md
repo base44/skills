@@ -239,9 +239,9 @@ For complete documentation, see [entities-create.md](references/entities-create.
    npx base44 login
    ```
 
-3. Create a new project (ALWAYS use `--name` and `--path` flags):
+3. Create a new project (ALWAYS provide name and `--path` flag):
    ```bash
-   npx base44 create -n my-app -p .
+   npx base44 create my-app -p .
    ```
 
 4. Build and deploy everything:
@@ -262,11 +262,11 @@ Or deploy individual resources:
 # Login first
 npx base44 login
 
-# Create project (ALWAYS use --name and --path flags)
-npx base44 create -n my-app -p .
+# Create project (ALWAYS provide name and --path flag)
+npx base44 create my-app -p .
 
 # Or create with full-stack template and deploy in one step
-npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
+npx base44 create my-app -p ./my-app -t backend-and-client --deploy
 ```
 
 ### Linking an Existing Project
