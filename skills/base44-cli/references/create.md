@@ -28,44 +28,72 @@ npx base44 create [name] --path <path> [options]
 
 *Required for non-interactive mode. Both `name` and `--path` must be provided together.
 
-## Templates
+## Template Selection (CRITICAL - Choose Appropriately)
 
-| Template ID | Description |
-|-------------|-------------|
-| `backend-only` | Base44 configuration only (default) - use with existing frontend projects |
-| `backend-and-client` | Full-stack template with Vite + React + Tailwind + shadcn/ui |
+**You MUST select the most appropriate template based on user requirements:**
+
+| Template ID | When to Use | Example Scenarios |
+|-------------|-------------|-------------------|
+| `backend-and-client` | Creating a NEW full-stack web app from scratch | "Create a task app", "Build me a dashboard", "Make a SaaS app" |
+| `backend-only` | Adding Base44 to an EXISTING project OR using a different framework (Next.js, Vue, Svelte, etc.) | "Add Base44 to my project", "I want to use Next.js", "I already have a frontend" |
+
+**Default Choice:** When the user asks to "create an app" or "build a project" without specifying a particular framework, use `backend-and-client` to provide a complete, production-ready application with Vite + React + Tailwind + shadcn/ui.
 
 ## The `--path` Flag
 
-- **For existing projects:** Use `-p .` to use current directory
+- **For `backend-and-client` template (new projects):** Use a new subfolder path
   ```bash
-  npx base44 create -n my-app -p .
+  npx base44 create my-app -p ./my-app -t backend-and-client
   ```
-- **For new projects:** Point to where project files exist
+- **For `backend-only` template (existing projects):** Use `-p .` in the current directory
   ```bash
-  # Example: After Vite creates a subfolder
-  npm create vite@latest my-react-app -- --template react
-  npx base44 create -n my-app -p ./my-react-app
+  npx base44 create my-app -p .
   ```
-- **Custom location:**
-  ```bash
-  npx base44 create -n my-app -p /path/to/project
-  ```
+
+## Workflow: Using `backend-only` with External Frameworks
+
+**CRITICAL: The project folder MUST exist BEFORE running `base44 create` with `backend-only`**
+
+The `backend-only` template only adds Base44 configuration files - it does NOT create a frontend. If you need a frontend with a specific framework:
+
+```bash
+# Step 1: Initialize the frontend project FIRST
+npm create vite@latest my-app -- --template react  # or vue, svelte, etc.
+# OR: npx create-next-app@latest my-app
+# OR: any other framework's init command
+
+# Step 2: Navigate into the created folder
+cd my-app
+
+# Step 3: Install Base44 CLI
+npm install --save-dev base44
+
+# Step 4: Add Base44 configuration
+npx base44 create my-app -p .
+```
+
+**WARNING:** Do NOT:
+- Create an empty folder manually, then try to run `npx create vite` inside it (will fail - folder exists)
+- Run `base44 create` with `backend-only` expecting it to create a frontend (it won't)
+
+**DO:**
+- Run the external framework's init command FIRST (it creates its own folder)
+- Then run `base44 create` inside that folder with `-p .`
 
 ## Examples
 
 ```bash
-# Create backend-only config in current directory (default template)
-npx base44 create my-app -p .
-
-# Create full-stack project with frontend template
+# RECOMMENDED: Create full-stack project (for new apps)
 npx base44 create my-app -p ./my-app -t backend-and-client
-
-# Create app and deploy immediately
-npx base44 create my-app -p . --deploy
 
 # Create full-stack and deploy in one step
 npx base44 create my-app -p ./my-app -t backend-and-client --deploy
+
+# Add Base44 to EXISTING project (must be inside the project folder)
+npx base44 create my-app -p .
+
+# Add Base44 to existing project and deploy
+npx base44 create my-app -p . --deploy
 
 # Create without adding AI agent skills
 npx base44 create my-app -p . --skills=false
