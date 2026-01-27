@@ -115,22 +115,43 @@ Compare discovered CLI commands with existing skill documentation:
 
 #### How to Detect Option Changes
 
-For each command, create a detailed comparison:
+For each command, create a detailed comparison table listing ALL options from BOTH source and docs:
 
 ```
 Command: deploy
+
+| Option | In Source? | In Docs? | Status |
+|--------|------------|----------|--------|
+| --force | ✓ | ✓ | Changed (description) |
+| --env | ✓ | ✓ | Changed (required status) |
+| --verbose | ✓ | ✗ | NEW - add to docs |
+| --legacy | ✗ | ✓ | REMOVED - delete from docs |
+
 Source options:
   --force (-f): Force deployment [boolean, default: false]
   --env <name>: Target environment [string, required]
+  --verbose (-v): Enable verbose output [boolean, default: false]
 
 Documented options:
   --force (-f): Force deploy without confirmation [boolean, default: false]  
   --env <name>: Environment name [string, optional]
+  --legacy: Use legacy deployment (REMOVED - no longer in source!)
 
 Changes detected:
-  - --force: description changed ("Force deployment" vs "Force deploy without confirmation")
+  - --force: description changed
   - --env: required status changed (required vs optional)
+  - --verbose: NEW option (in source, missing from docs)
+  - --legacy: REMOVED option (in docs, not in source)
 ```
+
+#### Detecting Removed Options (IMPORTANT)
+
+To find removed options, you MUST:
+1. List ALL options currently documented in each reference file
+2. Check if EACH documented option still exists in source
+3. Any documented option NOT found in source = REMOVED
+
+Don't just look for new options - actively verify each existing documented option still exists!
 
 Create a summary of changes to show the user before applying.
 
@@ -203,11 +224,17 @@ After updates, present a summary to the user:
 - Added: `base44 new-command`
 - Removed: `base44 legacy-cmd` (deprecated)
 
-### Option Changes
+### Options Added
+- `deploy --verbose`: new option for verbose output
+- `create --template`: new option for project template
+
+### Options Removed (VERIFY BEFORE DELETING)
+- `deploy --legacy`: no longer in source code
+- `create --no-git`: deprecated and removed
+
+### Options Changed
 - `deploy --force`: description changed
 - `deploy --env`: now required (was optional)
-- `create --template`: added new option
-- `create --legacy`: removed deprecated option
 - `entities push --dry-run`: default changed from true to false
 
 ### Description Updates
@@ -236,3 +263,4 @@ After updates, present a summary to the user:
 | Changed args not detected | Compare each option property: name, alias, description, default, required, type |
 | Default values unclear | Look for second argument in `.option()` or `default:` property |
 | Required status unclear | Check for `.requiredOption()` or `required: true` in option config |
+| Removed args not detected | List ALL documented options first, then verify EACH exists in source - don't just scan for new ones |
