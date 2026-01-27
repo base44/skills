@@ -244,6 +244,8 @@ For complete documentation, see [entities-create.md](references/entities-create.
    npx base44 create -n my-app -p .
    ```
 
+   By default, AI agent skills are added automatically. To skip skills: `--skills=false`
+
 4. Build and deploy everything:
    ```bash
    npm run build
@@ -271,8 +273,11 @@ npx base44 create -n my-app -p ./my-app -t backend-and-client --deploy
 
 ### Linking an Existing Project
 ```bash
-# If you have base44/config.jsonc but no .app.jsonc
+# Create a new project and link
 npx base44 link --create --name my-app
+
+# Or link to an existing project by ID (non-interactive)
+npx base44 link --projectId abc123xyz
 ```
 
 ### Deploying All Changes

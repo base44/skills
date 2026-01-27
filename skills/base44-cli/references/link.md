@@ -23,6 +23,7 @@ npx base44 link [options]
 | `-c, --create` | Create a new project (skip selection prompt) | No |
 | `-n, --name <name>` | Project name (required when `--create` is used) | With `--create` |
 | `-d, --description <description>` | Project description | No |
+| `-p, --projectId <id>` | Project ID to link to an existing project (skips selection prompt) | No |
 
 ## Non-Interactive Mode
 
@@ -46,13 +47,19 @@ npx base44 link --create --name my-app
 
 # With description
 npx base44 link --create --name my-app --description "My awesome app"
+
+# Link to existing project by ID (non-interactive)
+npx base44 link --projectId abc123xyz
 ```
 
 ## What It Does
 
 1. Finds the `base44/config.jsonc` in the current directory (or parent directories)
 2. Verifies no `.app.jsonc` exists (project not already linked)
-3. Creates a new Base44 app in the cloud
+3. Either:
+   - Creates a new Base44 app in the cloud (with `--create`)
+   - Prompts to select an existing project (interactive mode)
+   - Links to specified project (with `--projectId`)
 4. Writes the app ID to `base44/.app.jsonc`
 
 ## Requirements
