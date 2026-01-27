@@ -41,4 +41,4 @@ jobs:
             CLI version: ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }}
 
             After syncing, create a pull request with the changes.
-            PR title: "Update base44-cli skill to ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }} ${{time()}}"
+            PR title: "Update base44-cli skill to ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }} ({time})"
