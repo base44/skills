@@ -38,7 +38,22 @@ If the user provided these in the initial prompt, use those values.
 
 If validation fails, ask the user to verify the path.
 
-### Step 3: Discover CLI Commands
+### Step 3: Read CHANGELOG for Context
+
+Before diving into the source code, check for a CHANGELOG.md (or CHANGELOG, HISTORY.md, RELEASES.md) in the CLI source folder:
+
+1. **Look for changelog files** in the root directory
+2. **Read recent entries** to understand what changed in recent versions
+3. **Note any mentions of**:
+   - New commands or subcommands
+   - Changed/removed options or flags
+   - Renamed arguments
+   - Changed default values
+   - Breaking changes
+
+This provides valuable context for what to look for when comparing source with documentation.
+
+### Step 4: Discover CLI Commands
 
 Scan the CLI source folder to find all available commands. Look for:
 
@@ -59,7 +74,7 @@ Scan the CLI source folder to find all available commands. Look for:
    - Help strings and descriptions
    - Option configurations
 
-### Step 4: Read Existing Skill
+### Step 5: Read Existing Skill
 
 Read the current skill files to understand what needs updating:
 
@@ -80,7 +95,7 @@ skills/base44-cli/
     └── site-deploy.md
 ```
 
-### Step 5: Compare and Identify Changes
+### Step 6: Compare and Identify Changes
 
 Compare discovered CLI commands with existing skill documentation:
 
@@ -119,7 +134,7 @@ Changes detected:
 
 Create a summary of changes to show the user before applying.
 
-### Step 6: Fetch External Documentation (Optional)
+### Step 7: Fetch External Documentation (Optional)
 
 If a documentation URL was provided:
 
@@ -128,7 +143,7 @@ If a documentation URL was provided:
 3. Use this to supplement information from source code
 4. Cross-reference for accuracy
 
-### Step 7: Update Skill Files
+### Step 8: Update Skill Files
 
 For each change identified:
 
@@ -172,7 +187,7 @@ npx base44 {command} [options]
 4. Keep the existing structure and formatting
 5. Do NOT change the frontmatter description unless explicitly asked
 
-### Step 8: Present Summary
+### Step 9: Present Summary
 
 After updates, present a summary to the user:
 
