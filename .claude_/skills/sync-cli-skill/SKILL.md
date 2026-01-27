@@ -6,88 +6,152 @@ disable-model-invocation: true
 
 # Sync CLI Skill
 
-Synchronize the `skills/base44-cli/` skill with the latest CLI source code from the Base44 CLI repository.
+Synchronize the `skills/base44-cli/` skill with the latest CLI source code from the Base44 CLI repository using git-based change detection.
 
 ## Usage
 
-When activated, this command will ask for:
-1. **CLI source folder path** (required) - The local path to the Base44 CLI source code
-2. **Documentation URL** (optional) - URL to fetch additional documentation
+When activated, this skill will ask for:
+1. **CLI source folder path** (required) - The local path to the Base44 CLI source code (must be a git repository)
+
+## How It Works
+
+This skill uses git to efficiently detect changes:
+1. Reads the locally stored version from `CLI_VERSION` (e.g., `v0.0.17`)
+2. Compares against the CLI source repository to find changed command files
+3. Only processes commands that have actually changed
 
 ## Steps
 
 ### Step 1: Gather Input
 
-Ask the user for the required inputs using the AskQuestion tool if available, otherwise ask conversationally:
+Ask the user for the CLI source folder path using the AskQuestion tool if available, otherwise ask conversationally:
 
 **Required:**
 - CLI source folder path (e.g., `~/projects/base44-cli` or `/Users/me/base44-cli`)
 
-**Optional:**
-- Documentation URL (e.g., `https://docs.base44.com/cli`)
+If the user provided this in the initial prompt, use that value.
 
-If the user provided these in the initial prompt, use those values.
+### Step 2: Validate Source Folder and Discover Structure
 
-### Step 2: Validate Source Folder
+1. Check that the provided path exists and is a git repository (`.git/` directory exists)
+2. Check for `package.json` with CLI-related content
+3. **Discover the commands directory** - look for directories containing command files:
+   - Common patterns: `src/cli/commands/`, `src/commands/`, `commands/`, `lib/commands/`
+   - Look for files with `.command(` or `program.command` patterns
+4. **Identify the CLI source root** - the parent directory containing both commands and shared code
 
-1. Check that the provided path exists and contains CLI source code
-2. Look for these key indicators:
-   - `package.json` with CLI-related content
-   - `src/` or `commands/` directory
-   - Command implementation files (e.g., `login.ts`, `create.ts`, `deploy.ts`)
+Store these discovered paths for use in subsequent steps:
+- `<commands-path>`: Path to commands directory (e.g., `src/cli/commands`)
+- `<cli-root>`: Path to CLI source root (e.g., `src/cli`)
 
-If validation fails, ask the user to verify the path.
+If validation fails or structure is unclear, ask the user to clarify.
 
-### Step 3: Read CHANGELOG for Context
+### Step 3: Read Local Version and Detect Changes
 
-Before diving into the source code, check for a CHANGELOG.md (or CHANGELOG, HISTORY.md, RELEASES.md) in the CLI source folder:
+1. **Read the stored version** from `CLI_VERSION` in the skills repository root (e.g., `v0.0.17`)
 
-1. **Look for changelog files** in the root directory
-2. **Read recent entries** to understand what changed in recent versions
-3. **Note any mentions of**:
-   - New commands or subcommands
-   - Changed/removed options or flags
-   - Renamed arguments
-   - Changed default values
-   - Breaking changes
+2. **Get changed command files** using git in the CLI source folder:
+   ```bash
+   # From the CLI source folder, list command files changed since the stored version
+   git diff --name-only <stored-version> HEAD -- <commands-path>
+   ```
+   
+   If the stored version tag doesn't exist, fall back to:
+   ```bash
+   # List all command files if tag is missing
+   git ls-files <commands-path>
+   ```
 
-This provides valuable context for what to look for when comparing source with documentation.
+3. **Get infrastructure changes** (CLI source root excluding commands):
+   ```bash
+   # From the CLI source folder, list infra files changed since the stored version
+   git diff --name-only <stored-version> HEAD -- <cli-root> | grep -v "<commands-path>"
+   ```
 
-### Step 4: Discover CLI Commands
+4. **Present findings** to the user before proceeding:
+   ```
+   Found X changed command files since vX.X.X:
+   - <commands-path>/deploy.ts
+   - <commands-path>/entities/push.ts
+   - <commands-path>/auth/login.ts
+   
+   Found Y infrastructure changes (may affect all commands):
+   - <cli-root>/utils/api-client.ts
+   - <cli-root>/config/defaults.ts
+   ```
 
-Scan the CLI source folder to find all available commands. Look for:
+5. **If no changes detected** (neither commands nor infra): Report "No changes since version X" and exit
 
-1. **Command files** in directories like:
-   - `src/commands/`
-   - `commands/`
-   - `lib/commands/`
+### Step 4: Check Infrastructure Changes
 
-2. **For each command, extract:**
-   - Command name and aliases
-   - Description/help text
-   - Available options and flags
-   - Usage examples (if present in source)
-   - Subcommands (e.g., `entities push`, `site deploy`)
+Before processing individual commands, review any infrastructure changes that may affect **all commands**:
 
-3. **Parse command definitions** from:
-   - Commander.js/yargs/oclif style command definitions
-   - Help strings and descriptions
-   - Option configurations
+#### What to Look For
 
-### Step 5: Read Existing Skill
+Review each changed non-command file and categorize by impact type:
 
-Read the current skill files to understand what needs updating:
+| Impact Type | What to look for | Documentation Action |
+|-------------|------------------|---------------------|
+| API/Client changes | Base URLs, endpoints, headers, request/response handling | May affect multiple commands' behavior |
+| Config/Defaults | Default values, environment variables, config file paths | Update SKILL.md config section |
+| Authentication | Token handling, login flow, session management | Update auth-related references |
+| Global options | CLI-wide flags like `--verbose`, `--json`, `--help` | Update SKILL.md global options |
+| Output formatting | How results are displayed, logging behavior | Note in affected command references |
+| Types/Interfaces | Shared type definitions | Usually internal, but may indicate API changes |
+| Error handling | Exit codes, error messages, validation | Update troubleshooting section |
+| Dependencies | `package.json` changes | Check for behavior-affecting updates |
+
+**Note**: The actual file structure varies by CLI. Discover the structure by examining the git diff output rather than assuming specific paths.
+
+#### How to Handle Infra Changes
+
+1. **Read each changed infra file** to understand what changed
+2. **Identify cross-cutting impacts**:
+   - New global options → Update SKILL.md "Global Options" section
+   - Changed defaults → Note in affected command references
+   - Auth flow changes → Update auth-related references
+   - New environment variables → Document in SKILL.md
+   - API endpoint changes → May affect multiple commands
+3. **Flag for SKILL.md update** if the change affects:
+   - How users configure the CLI
+   - Prerequisites or setup steps
+   - Error messages users might see
+   - Output format
+
+#### Example Infrastructure Change
 
 ```
+Changed file: (some config/defaults file)
+
+Before:
+  export const DEFAULT_TIMEOUT = 30000;
+  
+After:
+  export const DEFAULT_TIMEOUT = 60000;
+
+Impact: All commands now have 60s timeout instead of 30s
+Action: Update SKILL.md "Configuration" or "Troubleshooting" section
+```
+
+### Step 5: Process Each Changed Command
+
+For **each changed command file**, perform the following steps:
+
+#### Step 5a: Read Existing Skill Reference
+
+Read the corresponding reference file from `skills/base44-cli/references/`:
+
+```
+Skill reference structure:
 skills/base44-cli/
 ├── SKILL.md
 └── references/
-    ├── auth-login.md
+    ├── auth-login.md      <- for <commands-path>/auth/login.ts
     ├── auth-logout.md
     ├── auth-whoami.md
-    ├── create.md
+    ├── create.md          <- for <commands-path>/create.ts
     ├── deploy.md
-    ├── entities-create.md
+    ├── entities-create.md <- for <commands-path>/entities/create.ts
     ├── entities-push.md
     ├── functions-create.md
     ├── functions-deploy.md
@@ -95,61 +159,87 @@ skills/base44-cli/
     └── site-deploy.md
 ```
 
-### Step 6: Compare and Identify Changes
+**Mapping rule**: `<commands-path>/{parent}/{name}.ts` → `references/{parent}-{name}.md`
 
-Compare discovered CLI commands with existing skill documentation:
+If no reference file exists for a new command, note it for creation.
 
-#### Command-Level Changes
-1. **New commands**: Commands in source but not in skill references
-2. **Removed commands**: Commands in skill but not in source (verify before removing)
-3. **Changed command descriptions**: Commands with updated help text or descriptions
+#### Step 5b: Compare Source with Documentation
 
-#### Option/Argument-Level Changes (CRITICAL - check carefully)
-4. **New options**: New flags or parameters added to existing commands
-5. **Removed options**: Options that existed in docs but are no longer in source
-6. **Changed option descriptions**: Existing options with modified help text
-7. **Changed option defaults**: Options with different default values
-8. **Changed option types**: Options that changed type (e.g., string to boolean)
-9. **Changed required status**: Options that became required or optional
-10. **Changed option aliases**: Short flags that were added, removed, or changed (e.g., `-f` to `-F`)
+Compare the CLI source code with the existing skill documentation:
 
-#### How to Detect Option Changes
+##### Extract from Source
+Parse the command file to extract:
+- Command name and aliases
+- Description/help text
+- Available options and flags (name, alias, description, default, required, type)
+- Usage examples (if present)
+- Subcommands
 
-For each command, create a detailed comparison:
+##### Detect Changes
+Identify differences:
+
+**Command-Level:**
+1. New commands (source exists, no reference file)
+2. Changed command descriptions
+
+**Option/Argument-Level (CRITICAL):**
+3. New options added
+4. Removed options
+5. Changed option descriptions
+6. Changed option defaults
+7. Changed option types (e.g., string to boolean)
+8. Changed required status
+9. Changed option aliases (e.g., `-f` to `-F`)
+10. **Option converted to positional argument** (e.g., `create -n my-app` → `create my-app`)
+11. **Positional argument converted to option** (e.g., `create my-app` → `create -n my-app`)
+
+**Detecting Option ↔ Positional Changes:**
+
+Look for these patterns in Commander.js:
+- Named option: `.option('-n, --name <value>', 'description')` or `.requiredOption(...)`
+- Positional argument: `.argument('<name>', 'description')` or in command definition `.command('create <name>')`
+
+When an option disappears but a positional argument with similar semantics appears (or vice versa), flag this as a **breaking change** that affects how users invoke the command.
+
+##### Document the Comparison
 
 ```
-Command: deploy
+Command: deploy (<commands-path>/deploy.ts)
+
 Source options:
   --force (-f): Force deployment [boolean, default: false]
   --env <name>: Target environment [string, required]
 
-Documented options:
+Documented options (references/deploy.md):
   --force (-f): Force deploy without confirmation [boolean, default: false]  
   --env <name>: Environment name [string, optional]
 
 Changes detected:
-  - --force: description changed ("Force deployment" vs "Force deploy without confirmation")
+  - --force: description changed
   - --env: required status changed (required vs optional)
 ```
 
-Create a summary of changes to show the user before applying.
+```
+Command: create (<commands-path>/create.ts)
 
-### Step 7: Fetch External Documentation (Optional)
+Source (current):
+  Positional: <name> - The app name [required]
+  Options: --template (-t): Template to use [string, optional]
 
-If a documentation URL was provided:
+Documented (references/create.md):
+  Options:
+    -n, --name <name>: The app name [string, required]
+    --template (-t): Template to use [string, optional]
 
-1. Fetch the documentation page
-2. Extract relevant command documentation
-3. Use this to supplement information from source code
-4. Cross-reference for accuracy
+Changes detected:
+  - BREAKING: --name (-n) option converted to positional argument <name>
+    Old syntax: npx base44 create -n my-app
+    New syntax: npx base44 create my-app
+```
 
-### Step 8: Update Skill Files
+#### Step 5c: Update Reference File
 
-For each change identified:
-
-#### Update Reference Files
-
-For each command, update or create `references/{command-name}.md`:
+Update or create `references/{command-name}.md` with the following format:
 
 ```markdown
 # base44 {command}
@@ -171,7 +261,7 @@ npx base44 {command} [options]
 ## Examples
 
 ```bash
-{example usage from source or docs}
+{example usage from source}
 ```
 
 ## Notes
@@ -179,39 +269,68 @@ npx base44 {command} [options]
 {Any important behavioral notes}
 ```
 
-#### Update SKILL.md
+### Step 6: Update Main Skill File (if needed)
 
-1. Update the **Available Commands** tables if commands changed
+After processing all changed commands:
+
+1. Update the **Available Commands** tables in `skills/base44-cli/SKILL.md` if commands were added/removed
 2. Update **Quick Start** if workflow changed
-3. Update **Common Workflows** sections
+3. Update **Common Workflows** sections if relevant
 4. Keep the existing structure and formatting
 5. Do NOT change the frontmatter description unless explicitly asked
 
-### Step 9: Present Summary
+### Step 7: Update CLI_VERSION
 
-After updates, present a summary to the user:
+After successfully updating all changed commands:
+
+1. Get the current version/commit from the CLI source:
+   ```bash
+   # Get latest tag, or HEAD commit if no tags
+   git describe --tags --always
+   ```
+
+2. Update `CLI_VERSION` in the skills repository root with the new version
+
+### Step 8: Present Summary
+
+After all updates, present a summary to the user:
 
 ```
 ## Sync Summary
 
-### Files Updated
-- references/new-command.md (created)
-- references/deploy.md (updated options)
-- SKILL.md (updated command table)
+### Version Updated
+- Previous: v0.0.17
+- Current: v0.0.20
 
-### Commands Added/Removed
-- Added: `base44 new-command`
-- Removed: `base44 legacy-cmd` (deprecated)
+### Changed Command Files Processed
+- <commands-path>/deploy.ts
+- <commands-path>/entities/push.ts
+
+### Infrastructure Changes Reviewed
+- (list infra files from git diff output)
+- Example: config.ts (timeout increased to 60s)
+- Example: api-client.ts (no user-facing changes)
+
+### Files Updated
+- references/deploy.md (updated options)
+- references/entities-push.md (updated description)
+- SKILL.md (updated command table, added timeout note)
+- CLI_VERSION (v0.0.17 → v0.0.20)
+
+### Breaking Changes (highlight prominently)
+- `create`: `-n, --name` option converted to positional argument
+  - Old: `npx base44 create -n my-app`
+  - New: `npx base44 create my-app`
 
 ### Option Changes
-- `deploy --force`: description changed
 - `deploy --env`: now required (was optional)
-- `create --template`: added new option
-- `create --legacy`: removed deprecated option
 - `entities push --dry-run`: default changed from true to false
 
-### Description Updates
-- `deploy`: command description updated
+### New Commands
+- (none)
+
+### Removed Commands  
+- (none)
 
 ### Manual Review Recommended
 - [List any changes that need verification]
@@ -219,6 +338,7 @@ After updates, present a summary to the user:
 
 ## Important Notes
 
+- **Git-based detection**: This skill relies on git tags/commits to detect changes. Ensure the CLI source folder is a valid git repository.
 - **Preserve existing content**: Don't remove detailed explanations, examples, or warnings unless they're outdated
 - **Keep formatting consistent**: Match the existing style of SKILL.md and reference files
 - **Maintain progressive disclosure**: Keep detailed docs in references, summaries in SKILL.md
@@ -229,10 +349,14 @@ After updates, present a summary to the user:
 
 | Issue | Solution |
 |-------|----------|
+| Tag not found in CLI repo | Use `git tag -l` to list available tags, or fall back to comparing with a commit hash |
+| Infra changes not detected | Check if shared code is in non-standard directories; adjust the git diff paths |
+| Unsure if infra change affects users | Look for exports used by command files; if internal-only, note but skip documentation |
 | Can't find command files | Try searching for `.command(` or `program.command` patterns |
 | Options not detected | Look for `.option(` patterns in commander.js files |
+| Positional args not detected | Look for `.argument(` or `<argName>` in `.command('cmd <argName>')` patterns |
+| Option → positional change missed | Compare old options list with new arguments list; if an option disappeared and a similar argument appeared, it's likely a conversion |
 | Missing descriptions | Check for `description:` properties or `.description(` calls |
 | Subcommand structure | Commands like `entities push` may be in `entities/push.ts` |
 | Changed args not detected | Compare each option property: name, alias, description, default, required, type |
-| Default values unclear | Look for second argument in `.option()` or `default:` property |
-| Required status unclear | Check for `.requiredOption()` or `required: true` in option config |
+| No changes detected but expected | Verify the stored version in `CLI_VERSION` matches a valid git tag/commit |
