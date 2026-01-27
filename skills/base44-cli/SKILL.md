@@ -168,7 +168,7 @@ npx base44 <command>
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) |
+| `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
 | `base44 dashboard` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 
@@ -257,17 +257,14 @@ Or deploy individual resources:
 
 ## Common Workflows
 
-### Starting a New Project
-```bash
-# Login first
-npx base44 login
+### Creating a New Project
 
-# Create project (ALWAYS provide name and --path flag)
-npx base44 create my-app -p .
+**⚠️ MANDATORY: Before running `base44 create`, you MUST read [create.md](references/create.md) for:**
+- **Template selection** - Choose the correct template (`backend-and-client` vs `backend-only`)
+- **Correct workflow** - Different templates require different setup steps
+- **Common pitfalls** - Avoid folder creation errors that cause failures
 
-# Or create with full-stack template and deploy in one step
-npx base44 create my-app -p ./my-app -t backend-and-client --deploy
-```
+Failure to follow the create.md instructions will result in broken project scaffolding.
 
 ### Linking an Existing Project
 ```bash
