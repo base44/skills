@@ -88,3 +88,26 @@ base44.analytics.track({
   eventName: "click"
 });
 ```
+
+## Type Definitions
+
+```typescript
+/** Properties that can be attached to a tracked event. */
+type TrackEventProperties = {
+  [key: string]: string | number | boolean | null | undefined;
+};
+
+/** Parameters for the track() method. */
+interface TrackEventParams {
+  /** The name of the event to track. */
+  eventName: string;
+  /** Optional properties to attach to the event. */
+  properties?: TrackEventProperties;
+}
+
+/** The analytics module interface. */
+interface AnalyticsModule {
+  /** Track a custom event with optional properties. */
+  track(params: TrackEventParams): void;
+}
+```

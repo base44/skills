@@ -184,3 +184,179 @@ async function sendMessage(text) {
 // Cleanup on unmount
 return () => unsubscribe();
 ```
+
+## Type Definitions
+
+### AgentConversation
+
+```typescript
+/** An agent conversation containing messages exchanged with an AI agent. */
+interface AgentConversation {
+  /** Unique identifier for the conversation. */
+  id: string;
+  /** Application ID. */
+  app_id: string;
+  /** Name of the agent in this conversation. */
+  agent_name: string;
+  /** ID of the user who created the conversation. */
+  created_by_id: string;
+  /** When the conversation was created. */
+  created_date: string;
+  /** When the conversation was last updated. */
+  updated_date: string;
+  /** Array of messages in the conversation. */
+  messages: AgentMessage[];
+  /** Optional metadata associated with the conversation. */
+  metadata?: Record<string, any>;
+}
+```
+
+### AgentMessage
+
+```typescript
+/** A message in an agent conversation. */
+interface AgentMessage {
+  /** Unique identifier for the message. */
+  id: string;
+  /** Role of the message sender. */
+  role: "user" | "assistant" | "system";
+  /** When the message was created. */
+  created_date: string;
+  /** When the message was last updated. */
+  updated_date: string;
+  /** Message content. */
+  content?: string | Record<string, any>;
+  /** Optional reasoning information for the message. */
+  reasoning?: AgentMessageReasoning | null;
+  /** URLs to files attached to the message. */
+  file_urls?: string[];
+  /** Tool calls made by the agent. */
+  tool_calls?: AgentMessageToolCall[];
+  /** Token usage statistics. */
+  usage?: AgentMessageUsage;
+  /** Whether the message is hidden from the user. */
+  hidden?: boolean;
+  /** Custom context provided with the message. */
+  custom_context?: AgentMessageCustomContext[];
+  /** Model used to generate the message. */
+  model?: string;
+  /** Checkpoint ID for the message. */
+  checkpoint_id?: string;
+  /** Metadata about when and by whom the message was created. */
+  metadata?: AgentMessageMetadata;
+}
+```
+
+### Supporting Types
+
+```typescript
+/** Reasoning information for an agent message. */
+interface AgentMessageReasoning {
+  /** When reasoning started. */
+  start_date: string;
+  /** When reasoning ended. */
+  end_date?: string;
+  /** Reasoning content. */
+  content: string;
+}
+
+/** A tool call made by the agent. */
+interface AgentMessageToolCall {
+  /** Tool call ID. */
+  id: string;
+  /** Name of the tool called. */
+  name: string;
+  /** Arguments passed to the tool as JSON string. */
+  arguments_string: string;
+  /** Status of the tool call. */
+  status: "running" | "success" | "error" | "stopped";
+  /** Results from the tool call. */
+  results?: string;
+}
+
+/** Token usage statistics for an agent message. */
+interface AgentMessageUsage {
+  /** Number of tokens in the prompt. */
+  prompt_tokens?: number;
+  /** Number of tokens in the completion. */
+  completion_tokens?: number;
+}
+
+/** Custom context provided with an agent message. */
+interface AgentMessageCustomContext {
+  /** Context message. */
+  message: string;
+  /** Associated data for the context. */
+  data: Record<string, any>;
+  /** Type of context. */
+  type: string;
+}
+
+/** Metadata about when and by whom a message was created. */
+interface AgentMessageMetadata {
+  /** When the message was created. */
+  created_date: string;
+  /** Email of the user who created the message. */
+  created_by_email: string;
+  /** Full name of the user who created the message. */
+  created_by_full_name: string;
+}
+```
+
+### CreateConversationParams
+
+```typescript
+/** Parameters for creating a new conversation. */
+interface CreateConversationParams {
+  /** The name of the agent to create a conversation with. */
+  agent_name: string;
+  /** Optional metadata to attach to the conversation. */
+  metadata?: Record<string, any>;
+}
+```
+
+### ModelFilterParams
+
+```typescript
+/** Parameters for filtering, sorting, and paginating conversations. */
+interface ModelFilterParams {
+  /** Query object with field-value pairs for filtering. */
+  q?: Record<string, any>;
+  /** Sort parameter (e.g., "-created_date" for descending). */
+  sort?: string | null;
+  /** Maximum number of results to return. */
+  limit?: number | null;
+  /** Number of results to skip for pagination. */
+  skip?: number | null;
+  /** Array of field names to include in the response. */
+  fields?: string[] | null;
+}
+```
+
+### AgentsModule
+
+```typescript
+/** Agents module for managing AI agent conversations. */
+interface AgentsModule {
+  /** Gets all conversations from all agents in the app. */
+  getConversations(): Promise<AgentConversation[]>;
+
+  /** Gets a specific conversation by ID. */
+  getConversation(conversationId: string): Promise<AgentConversation | undefined>;
+
+  /** Lists conversations with filtering, sorting, and pagination. */
+  listConversations(filterParams: ModelFilterParams): Promise<AgentConversation[]>;
+
+  /** Creates a new conversation with an agent. */
+  createConversation(conversation: CreateConversationParams): Promise<AgentConversation>;
+
+  /** Adds a message to a conversation. */
+  addMessage(conversation: AgentConversation, message: Partial<AgentMessage>): Promise<AgentMessage>;
+
+  /** Subscribes to real-time updates for a conversation. Returns unsubscribe function. */
+  subscribeToConversation(conversationId: string, onUpdate?: (conversation: AgentConversation) => void): () => void;
+
+  /** Gets WhatsApp connection URL for an agent. */
+  getWhatsAppConnectURL(agentName: string): string;
+}
+```

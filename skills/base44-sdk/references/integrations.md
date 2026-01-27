@@ -221,3 +221,157 @@ const response = await base44.integrations.custom.call(
 
 - **Core integrations**: Available on all plans
 - **Catalog/Custom integrations**: Require Builder plan or higher
+
+## Type Definitions
+
+### Core Integration Parameters
+
+```typescript
+/** Parameters for the InvokeLLM function. */
+interface InvokeLLMParams {
+  /** The prompt text to send to the model. */
+  prompt: string;
+  /** If true, uses Google Search/Maps/News for real-time context. */
+  add_context_from_internet?: boolean;
+  /** JSON schema for structured output. If provided, returns object instead of string. */
+  response_json_schema?: object;
+  /** File URLs (from UploadFile) to provide as context. */
+  file_urls?: string[];
+}
+
+/** Parameters for the GenerateImage function. */
+interface GenerateImageParams {
+  /** Description of the image to generate. */
+  prompt: string;
+}
+
+/** Result from GenerateImage. */
+interface GenerateImageResult {
+  /** URL of the generated image. */
+  url: string;
+}
+
+/** Parameters for the UploadFile function. */
+interface UploadFileParams {
+  /** The file object to upload. */
+  file: File;
+}
+
+/** Result from UploadFile. */
+interface UploadFileResult {
+  /** URL of the uploaded file. */
+  file_url: string;
+}
+
+/** Parameters for the SendEmail function. */
+interface SendEmailParams {
+  /** Recipient email address. */
+  to: string;
+  /** Email subject line. */
+  subject: string;
+  /** Plain text or HTML email body. */
+  body: string;
+  /** Sender name (defaults to app name). */
+  from_name?: string;
+}
+
+/** Parameters for ExtractDataFromUploadedFile. */
+interface ExtractDataFromUploadedFileParams {
+  /** URL of the uploaded file. */
+  file_url: string;
+  /** JSON schema defining fields to extract. */
+  json_schema: object;
+}
+
+/** Parameters for UploadPrivateFile. */
+interface UploadPrivateFileParams {
+  /** The file object to upload. */
+  file: File;
+}
+
+/** Result from UploadPrivateFile. */
+interface UploadPrivateFileResult {
+  /** URI of the private file (used for signed URLs). */
+  file_uri: string;
+}
+
+/** Parameters for CreateFileSignedUrl. */
+interface CreateFileSignedUrlParams {
+  /** URI from UploadPrivateFile. */
+  file_uri: string;
+  /** Expiration time in seconds (default: 300). */
+  expires_in?: number;
+}
+
+/** Result from CreateFileSignedUrl. */
+interface CreateFileSignedUrlResult {
+  /** Temporary signed URL to access the file. */
+  signed_url: string;
+}
+```
+
+### CoreIntegrations
+
+```typescript
+/** Core package containing built-in Base44 integration functions. */
+interface CoreIntegrations {
+  InvokeLLM(params: InvokeLLMParams): Promise<string | object>;
+  GenerateImage(params: GenerateImageParams): Promise<GenerateImageResult>;
+  UploadFile(params: UploadFileParams): Promise<UploadFileResult>;
+  SendEmail(params: SendEmailParams): Promise<any>;
+  ExtractDataFromUploadedFile(params: ExtractDataFromUploadedFileParams): Promise<object>;
+  UploadPrivateFile(params: UploadPrivateFileParams): Promise<UploadPrivateFileResult>;
+  CreateFileSignedUrl(params: CreateFileSignedUrlParams): Promise<CreateFileSignedUrlResult>;
+}
+```
+
+### Custom Integrations
+
+```typescript
+/** Parameters for calling a custom integration endpoint. */
+interface CustomIntegrationCallParams {
+  /** Request body payload. */
+  payload?: Record<string, any>;
+  /** Path parameters to substitute in the URL. */
+  pathParams?: Record<string, string>;
+  /** Query string parameters. */
+  queryParams?: Record<string, any>;
+  /** Additional headers for this request. */
+  headers?: Record<string, string>;
+}
+
+/** Response from a custom integration call. */
+interface CustomIntegrationCallResponse {
+  /** Whether the external API returned a 2xx status code. */
+  success: boolean;
+  /** The HTTP status code from the external API. */
+  status_code: number;
+  /** The response data from the external API. */
+  data: any;
+}
+
+/** Module for calling custom workspace-level API integrations. */
+interface CustomIntegrationsModule {
+  /**
+   * Call a custom integration endpoint.
+   * @param slug - The integration's unique identifier.
+   * @param operationId - The operation ID from the OpenAPI spec.
+   * @param params - Optional payload, pathParams, queryParams, headers.
+   */
+  call(slug: string, operationId: string, params?: CustomIntegrationCallParams): Promise<CustomIntegrationCallResponse>;
+}
+```
+
+### IntegrationsModule
+
+```typescript
+/** Integrations module for calling integration endpoints. */
+type IntegrationsModule = {
+  /** Core package with built-in integrations. */
+  Core: CoreIntegrations;
+  /** Custom integrations module. */
+  custom: CustomIntegrationsModule;
+  /** Additional integration packages (dynamic). */
+  [packageName: string]: any;
+};
+```

@@ -177,3 +177,77 @@ Operations succeed or fail based on these rules - no partial results.
 RLS and FLS are configured in entity schema files (`base44/entities/*.jsonc`). See [entities-create.md](../../base44-cli/references/entities-create.md#row-level-security-rls) for configuration details.
 
 **Note:** `asServiceRole` sets the user's role to `"admin"` but does NOT bypass RLS. Your RLS rules must include admin access (e.g., `{ "user_condition": { "role": "admin" } }`) for service role operations to succeed.
+
+## Type Definitions
+
+### RealtimeEvent
+
+```typescript
+/** Event types for realtime entity updates. */
+type RealtimeEventType = "create" | "update" | "delete";
+
+/** Payload received when a realtime event occurs. */
+interface RealtimeEvent {
+  /** The type of change that occurred. */
+  type: RealtimeEventType;
+  /** The entity data. */
+  data: any;
+  /** The unique identifier of the affected entity. */
+  id: string;
+  /** ISO 8601 timestamp of when the event occurred. */
+  timestamp: string;
+}
+
+/** Callback function invoked when a realtime event occurs. */
+type RealtimeCallback = (event: RealtimeEvent) => void;
+
+/** Function returned from subscribe, call it to unsubscribe. */
+type Subscription = () => void;
+```
+
+### EntityHandler
+
+```typescript
+/** Entity handler providing CRUD operations for a specific entity type. */
+interface EntityHandler {
+  /** Lists records with optional pagination and sorting. */
+  list(sort?: string, limit?: number, skip?: number, fields?: string[]): Promise<any>;
+
+  /** Filters records based on a query. */
+  filter(query: Record<string, any>, sort?: string, limit?: number, skip?: number, fields?: string[]): Promise<any>;
+
+  /** Gets a single record by ID. */
+  get(id: string): Promise<any>;
+
+  /** Creates a new record. */
+  create(data: Record<string, any>): Promise<any>;
+
+  /** Updates an existing record. */
+  update(id: string, data: Record<string, any>): Promise<any>;
+
+  /** Deletes a single record by ID. */
+  delete(id: string): Promise<any>;
+
+  /** Deletes multiple records matching a query. */
+  deleteMany(query: Record<string, any>): Promise<any>;
+
+  /** Creates multiple records in a single request. */
+  bulkCreate(data: Record<string, any>[]): Promise<any>;
+
+  /** Imports records from a file (frontend only). */
+  importEntities(file: File): Promise<any>;
+
+  /** Subscribes to realtime updates. Returns unsubscribe function. */
+  subscribe(callback: RealtimeCallback): Subscription;
+}
+```
+
+### EntitiesModule
+
+```typescript
+/** Entities module for managing app data. */
+interface EntitiesModule {
+  /** Access any entity by name dynamically. */
+  [entityName: string]: EntityHandler;
+}
+```

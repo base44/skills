@@ -90,6 +90,8 @@ await base44.auth.loginViaEmailPassword("user@example.com", "password");
 
 For client setup and authentication modes, see [client.md](references/client.md).
 
+**TypeScript Support:** Each reference file includes a "Type Definitions" section with TypeScript interfaces and types for the module's methods, parameters, and return values.
+
 ## Installation
 
 Install the Base44 SDK:
