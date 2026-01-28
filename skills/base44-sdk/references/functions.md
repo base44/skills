@@ -58,11 +58,33 @@ const result = await base44.asServiceRole.functions.invoke("adminTask", {
 
 Backend functions run on Deno. Must export using `Deno.serve()`.
 
+### Required Directory Structure
+
+Each function must be in its own subdirectory under `base44/functions/` with a configuration file:
+
+```
+base44/
+  functions/
+    process-order/          # kebab-case directory name
+      function.jsonc        # required configuration
+      index.ts              # entry point
+```
+
+**function.jsonc:**
+```jsonc
+{
+  "name": "process-order",
+  "entry": "index.ts"
+}
+```
+
+For complete setup and deployment instructions, see [functions-create.md](../../base44-cli/references/functions-create.md) in base44-cli.
+
 ### Basic Structure
 
 ```javascript
-// functions/processOrder.js
-import { createClientFromRequest } from "@base44/sdk";
+// base44/functions/process-order/index.ts
+import { createClientFromRequest } from "npm:@base44/sdk";
 
 Deno.serve(async (req) => {
   // Get authenticated client from request
@@ -85,6 +107,8 @@ Deno.serve(async (req) => {
 ### With Service Role Access
 
 ```javascript
+import { createClientFromRequest } from "npm:@base44/sdk";
+
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
   
@@ -121,6 +145,8 @@ Deno.serve(async (req) => {
 ### Error Handling
 
 ```javascript
+import { createClientFromRequest } from "npm:@base44/sdk";
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);

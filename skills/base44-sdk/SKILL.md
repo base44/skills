@@ -1,6 +1,6 @@
 ---
 name: base44-sdk
-description: "Use for writing JavaScript/TypeScript code with the Base44 SDK in EXISTING projects. Triggers: user wants to implement features, build functionality, or write code using Base44; code uses '@base44/sdk' imports; user mentions SDK methods like base44.entities, base44.auth, base44.agents, base44.functions, base44.integrations; user says 'add a feature', 'implement', 'build component', 'write code for'. NOT for: creating new projects, CLI commands (npx base44 create/deploy/login), or directories without base44/config.jsonc - use base44-cli instead."
+description: "**ALWAYS ACTIVATE** if ANY of these conditions are true: (1) User's prompt contains the word 'base44' or 'Base44' in ANY context; (2) Current directory contains a 'base44/' subfolder; (3) Code contains imports from '@base44/sdk'; (4) User mentions Base44 SDK modules: entities, auth, agents, functions, integrations, analytics. **ACTIVATION IS MANDATORY** - do not hesitate, do not search the web, do not read documentation files first. ACTIVATE IMMEDIATELY and let the skill instructions handle the context. This skill handles: application development, SDK usage, feature implementation, and writing code with Base44 APIs. The skill itself will determine the appropriate action based on whether this is a new project or existing project scenario."
 ---
 
 # Base44 Coder
@@ -73,6 +73,56 @@ import { createClient } from "@base44/sdk";
 const base44 = createClient({ appId: "your-app-id" });
 await base44.auth.loginViaEmailPassword("user@example.com", "password");
 ```
+
+## ⚠️ CRITICAL: Do Not Hallucinate APIs
+
+**Before writing ANY Base44 code, verify method names against this table or [QUICK_REFERENCE.md](references/QUICK_REFERENCE.md).**
+
+Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supabase, or other SDKs.
+
+### Authentication - WRONG vs CORRECT
+
+| ❌ WRONG (hallucinated) | ✅ CORRECT |
+|------------------------|-----------|
+| `signInWithGoogle()` | `loginWithProvider('google')` |
+| `signInWithProvider('google')` | `loginWithProvider('google')` |
+| `auth.google()` | `loginWithProvider('google')` |
+| `signInWithEmailAndPassword(email, pw)` | `loginViaEmailPassword(email, pw)` |
+| `signIn(email, pw)` | `loginViaEmailPassword(email, pw)` |
+| `createUser()` / `signUp()` | `register({email, password})` |
+| `onAuthStateChanged()` | `me()` (no listener, call when needed) |
+| `currentUser` | `await auth.me()` |
+
+### Functions - WRONG vs CORRECT
+
+| ❌ WRONG (hallucinated) | ✅ CORRECT |
+|------------------------|-----------|
+| `functions.call('name', data)` | `functions.invoke('name', data)` |
+| `functions.run('name', data)` | `functions.invoke('name', data)` |
+| `callFunction('name', data)` | `functions.invoke('name', data)` |
+| `httpsCallable('name')(data)` | `functions.invoke('name', data)` |
+
+### Integrations - WRONG vs CORRECT
+
+| ❌ WRONG (hallucinated) | ✅ CORRECT |
+|------------------------|-----------|
+| `ai.generate(prompt)` | `integrations.Core.InvokeLLM({prompt})` |
+| `openai.chat(prompt)` | `integrations.Core.InvokeLLM({prompt})` |
+| `llm(prompt)` | `integrations.Core.InvokeLLM({prompt})` |
+| `sendEmail(to, subject, body)` | `integrations.Core.SendEmail({to, subject, body})` |
+| `email.send()` | `integrations.Core.SendEmail({to, subject, body})` |
+| `uploadFile(file)` | `integrations.Core.UploadFile({file})` |
+| `storage.upload(file)` | `integrations.Core.UploadFile({file})` |
+
+### Entities - WRONG vs CORRECT
+
+| ❌ WRONG (hallucinated) | ✅ CORRECT |
+|------------------------|-----------|
+| `entities.Task.find({...})` | `entities.Task.filter({...})` |
+| `entities.Task.findOne(id)` | `entities.Task.get(id)` |
+| `entities.Task.insert(data)` | `entities.Task.create(data)` |
+| `entities.Task.remove(id)` | `entities.Task.delete(id)` |
+| `entities.Task.onChange(cb)` | `entities.Task.subscribe(cb)` |
 
 ## SDK Modules
 
@@ -203,7 +253,7 @@ const result = await base44.functions.invoke("processOrder", {
 });
 
 // Backend function (Deno)
-import { createClientFromRequest } from "@base44/sdk";
+import { createClientFromRequest } from "npm:@base44/sdk";
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);

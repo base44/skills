@@ -217,3 +217,11 @@ For more details on deploying, see [functions-deploy.md](functions-deploy.md).
 - Use `createClientFromRequest(req)` to get a client that inherits the caller's auth context
 - Configure secrets via app dashboard for API keys
 - Make sure to handle errors gracefully and return appropriate HTTP status codes
+
+## Common Mistakes
+
+| Wrong | Correct | Why |
+|-------|---------|-----|
+| `functions/myFunction.js` (single file) | `functions/my-function/index.ts` + `function.jsonc` | Functions require subdirectory with config |
+| `import { ... } from "@base44/sdk"` | `import { ... } from "npm:@base44/sdk"` | Deno requires `npm:` prefix for npm packages |
+| `MyFunction` or `myFunction` directory | `my-function` directory | Use kebab-case for directory names |
