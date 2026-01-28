@@ -36,7 +36,7 @@ jobs:
           allowed_bots: 'base44-github-actions[bot]'
           claude_args: '--allowedTools "Edit,Write,MultiEdit,Bash(git:*),Bash(gh pr:*),Bash(mkdir:*)"'
           prompt: |
-            /sync-cli-skill
+            read the skill in '.claude_/skills/sync-cli-skill/SKILL.md' and follow the steps to sync the CLI skill.
 
             CLI source folder path: ./base44-cli
             CLI version: ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }}
