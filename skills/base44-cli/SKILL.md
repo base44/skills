@@ -100,10 +100,12 @@ my-app/
 │   ├── entities/                # Entity schema definitions
 │   │   ├── task.jsonc
 │   │   └── board.jsonc
-│   └── functions/               # Backend functions (optional)
-│       └── my-function/
-│           ├── function.jsonc
-│           └── index.ts
+│   ├── functions/               # Backend functions (optional)
+│   │   └── my-function/
+│   │       ├── function.jsonc
+│   │       └── index.ts
+│   └── agents/                  # Agent configurations (optional)
+│       └── support_agent.jsonc
 ├── src/                         # Frontend source code
 │   ├── api/
 │   │   └── base44Client.js      # Base44 SDK client
@@ -118,6 +120,7 @@ my-app/
 **Key files:**
 - `base44/config.jsonc` - Project name, description, site build settings
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
+- `base44/agents/*.jsonc` - Agent configurations (optional)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
 
 **config.jsonc example:**
@@ -127,6 +130,7 @@ my-app/
   "description": "App description",
   "entitiesDir": "./entities",
   "functionsDir": "./functions",
+  "agentsDir": "./agents",
   "site": {
     "installCommand": "npm install",
     "buildCommand": "npm run build",
@@ -219,6 +223,44 @@ For complete documentation, see [entities-create.md](references/entities-create.
 | Create Functions          | Define functions in `base44/functions` folder | [functions-create.md](references/functions-create.md)   |
 | `base44 functions deploy` | Deploy local functions to Base44              | [functions-deploy.md](references/functions-deploy.md)   |
 
+### Agent Management
+
+Agents are conversational AI assistants that can interact with users, access your app's entities, and call backend functions. Use these commands to manage agent configurations.
+
+| Action / Command        | Description                             | Reference                                       |
+| ----------------------- | --------------------------------------- | ----------------------------------------------- |
+| Create Agents           | Define agents in `base44/agents` folder | See Agent Schema below                          |
+| `base44 agents pull`    | Pull remote agents to local files       | [agents-pull.md](references/agents-pull.md)     |
+| `base44 agents push`    | Push local agents to Base44             | [agents-push.md](references/agents-push.md)     |
+
+**Note:** Agent commands perform full synchronization - pushing replaces all remote agents with local ones, and pulling replaces all local agents with remote ones.
+
+#### Agent Schema (Quick Reference)
+
+**File naming:** `base44/agents/{agent_name}.jsonc` (e.g., `support_agent.jsonc`)
+
+**Schema template:**
+```jsonc
+{
+  "name": "agent_name",
+  "description": "Brief description of what this agent does",
+  "instructions": "Detailed instructions for the agent's behavior",
+  "tool_configs": [
+    // Entity tool - gives agent access to entity operations
+    { "entity_name": "tasks", "allowed_operations": ["read", "create", "update", "delete"] },
+    // Backend function tool - gives agent access to a function
+    { "function_name": "send_email", "description": "Send an email notification" }
+  ],
+  "whatsapp_greeting": "Hello! How can I help you today?"
+}
+```
+
+**Naming rules:** Agent names must be lowercase alphanumeric with underscores only (e.g., `support_agent`, `order_bot`)
+
+**Tool config types:**
+- **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
+- **Backend function tools**: `function_name` + `description`
+
 ### Site Deployment
 
 | Command              | Description                               | Reference                                   |
@@ -253,6 +295,7 @@ For complete documentation, see [entities-create.md](references/entities-create.
 Or deploy individual resources:
 - `npx base44 entities push` - Push entities only
 - `npx base44 functions deploy` - Deploy functions only
+- `npx base44 agents push` - Push agents only
 - `npx base44 site deploy -y` - Deploy site only
 
 ## Common Workflows
@@ -289,6 +332,9 @@ npx base44 entities push
 # Deploy only functions
 npx base44 functions deploy
 
+# Push only agents
+npx base44 agents push
+
 # Deploy only site
 npx base44 site deploy -y
 ```
@@ -297,30 +343,6 @@ npx base44 site deploy -y
 ```bash
 # Open app dashboard in browser
 npx base44 dashboard
-```
-
-### Recommended package.json Scripts
-
-Add these scripts to your `package.json` for easier CLI usage:
-
-```json
-{
-  "scripts": {
-    "base44:login": "base44 login",
-    "base44:push": "base44 entities push",
-    "base44:functions": "base44 functions deploy",
-    "base44:site": "base44 site deploy -y",
-    "base44:deploy": "base44 deploy -y",
-    "deploy": "npm run build && npm run base44:deploy"
-  }
-}
-```
-
-Then use them like:
-```bash
-npm run base44:login
-npm run base44:push
-npm run deploy  # Builds and deploys everything in one command
 ```
 
 ## Authentication
@@ -335,5 +357,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | No entities found           | Ensure entities exist in `base44/entities/` directory                               |
 | Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
 | No functions found          | Ensure functions exist in `base44/functions/` with valid `function.jsonc` configs   |
+| No agents found             | Ensure agents exist in `base44/agents/` directory with valid `.jsonc` configs       |
+| Invalid agent name          | Agent names must be lowercase alphanumeric with underscores only                    |
 | No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
 | Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded                        |
