@@ -100,6 +100,8 @@ my-app/
 │   ├── entities/                # Entity schema definitions
 │   │   ├── task.jsonc
 │   │   └── board.jsonc
+│   ├── agents/                  # Agent configurations (optional)
+│   │   └── my-agent.jsonc
 │   └── functions/               # Backend functions (optional)
 │       └── my-function/
 │           ├── function.jsonc
@@ -118,6 +120,7 @@ my-app/
 **Key files:**
 - `base44/config.jsonc` - Project name, description, site build settings
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
+- `base44/agents/*.jsonc` - Agent configurations (optional)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
 
 **config.jsonc example:**
@@ -127,6 +130,7 @@ my-app/
   "description": "App description",
   "entitiesDir": "./entities",
   "functionsDir": "./functions",
+  "agentsDir": "./agents",
   "site": {
     "installCommand": "npm install",
     "buildCommand": "npm run build",
@@ -211,6 +215,15 @@ ALWAYS follow this exact structure when creating entity files:
 **For enums:** Add `"enum": ["value1", "value2"]` and optionally `"default": "value1"`
 
 For complete documentation, see [entities-create.md](references/entities-create.md).
+
+### Agent Management
+
+| Command               | Description                                                    | Reference                                       |
+| --------------------- | -------------------------------------------------------------- | ----------------------------------------------- |
+| `base44 agents push`  | Push local agents to Base44 (replaces all remote agents)      | [agents-push.md](references/agents-push.md)     |
+| `base44 agents pull`  | Pull agents from Base44 to local files (replaces all local)   | [agents-pull.md](references/agents-pull.md)     |
+
+**Note:** Agent commands perform full synchronization - pushing replaces all remote agents with local ones, and pulling replaces all local agents with remote ones.
 
 ### Function Management
 
