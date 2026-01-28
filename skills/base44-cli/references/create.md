@@ -37,7 +37,7 @@ npx base44 create [name] --path <path> [options]
 | `backend-and-client` | Creating a NEW full-stack web app from scratch | "Create a task app", "Build me a dashboard", "Make a SaaS app" |
 | `backend-only` | Adding Base44 to an EXISTING project OR using a different framework (Next.js, Vue, Svelte, etc.) | "Add Base44 to my project", "I want to use Next.js", "I already have a frontend" |
 
-**Default Choice:** When the user asks to "create an app" or "build a project" without specifying a particular framework, use `backend-and-client` to provide a complete, production-ready application with Vite + React + Tailwind + shadcn/ui.
+**Default Choice:** When the user asks to "create an app" or "build a project" without specifying a particular framework, use `backend-and-client` to provide a complete, production-ready application with Vite + React + Tailwind.
 
 ## The `--path` Flag
 
