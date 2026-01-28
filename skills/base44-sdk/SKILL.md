@@ -200,7 +200,7 @@ const base44 = createClient({
 - Invite users → `users.inviteUser()`
 
 **AI features?**
-- Chat with AI agents → `agents`
+- Chat with AI agents → `agents` (requires logged-in user)
 - Create new conversation → `agents.createConversation()`
 - Manage conversations → `agents.getConversations()`
 - Generate text/JSON with AI → `integrations.Core.InvokeLLM()`
