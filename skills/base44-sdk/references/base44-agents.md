@@ -2,6 +2,8 @@
 
 AI agent conversations and messages via `base44.agents`.
 
+> **Note:** This module requires a logged-in user. All agent methods work in the context of the authenticated user.
+
 ## Contents
 - [Concepts](#concepts)
 - [Methods](#methods)
