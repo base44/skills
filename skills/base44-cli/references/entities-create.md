@@ -18,29 +18,15 @@ RIGHT: `team-member.jsonc`
 ## Table of Contents
 
 - [Creating Entities](#creating-entities)
-  - [Table of Contents](#table-of-contents)
   - [Entity Directory](#entity-directory)
   - [How to Create an Entity](#how-to-create-an-entity)
   - [Entity Schema Structure](#entity-schema-structure)
   - [Supported Field Types](#supported-field-types)
-    - [String](#string)
-    - [String with Enum](#string-with-enum)
-    - [Number](#number)
-    - [Boolean](#boolean)
-    - [Array of Strings](#array-of-strings)
-    - [Array of Objects](#array-of-objects)
   - [Field Properties](#field-properties)
   - [Complete Example](#complete-example)
   - [Naming Conventions](#naming-conventions)
   - [Relationships Between Entities](#relationships-between-entities)
   - [Row Level Security (RLS)](#row-level-security-rls)
-    - [RLS Operations](#rls-operations)
-    - [Template Fields](#template-fields)
-    - [Built-in Entity Attributes](#built-in-entity-attributes)
-    - [Rule Types](#rule-types)
-    - [RLS Examples](#rls-examples)
-    - [Common RLS Patterns](#common-rls-patterns)
-    - [Limitations](#limitations)
   - [Field Level Security (FLS)](#field-level-security-fls)
   - [Pushing Entities](#pushing-entities)
 
@@ -263,11 +249,9 @@ To create relationships between entities, use ID reference fields:
 
 ## Row Level Security (RLS)
 
-Row Level Security (RLS) rules are MongoDB-style queries that filter access based on the user's identity and attributes. RLS rules are defined per entity inside the `rls` field of the schema.
+Row Level Security (RLS) controls which records users can access based on their identity and attributes. RLS rules are defined per entity inside the `rls` field of the schema.
 
 **Important:** If no RLS is defined, all records are accessible to all users.
-
-For real-world examples (todo apps, subscription systems, social apps, enterprise systems), see [rls-examples.md](rls-examples.md).
 
 ### RLS Operations
 
@@ -275,58 +259,64 @@ RLS supports four operations:
 
 | Operation | Description |
 |-----------|-------------|
-| `create` | Control who can create new records |
+| `create` | Control who can add new records |
 | `read` | Control who can view records |
-| `update` | Control who can modify existing records |
+| `update` | Control who can modify records |
 | `delete` | Control who can remove records |
 
-### Template Fields
+### Permission Values
 
-Use dynamic template fields in RLS queries to reference user attributes:
+Each operation accepts one of the following values:
+
+1. **`true`** - Allow all users (including anonymous/unauthenticated)
+2. **`false`** - Block all users
+3. **Condition object** - Allow users matching the condition
+
+### Template Variables
+
+Use template variables to reference the current user's attributes:
 
 | Template | Description |
 |----------|-------------|
 | `{{user.id}}` | The user's ID |
 | `{{user.email}}` | The user's email |
 | `{{user.role}}` | The user's role |
-| `{{user.data.field_name}}` | Any custom field inside the user's `data` object |
+| `{{user.data.field_name}}` | Custom field from the user's `data` object |
 
 ### Built-in Entity Attributes
 
-Every entity record has these built-in attributes that can be used in RLS rules:
+Every entity record has these built-in attributes available for RLS rules:
 
 | Attribute | Description |
 |-----------|-------------|
 | `id` | Unique record identifier |
 | `created_date` | Timestamp when record was created |
 | `updated_date` | Timestamp when record was last updated |
-| `created_by` | Email of the user that created the record |
+| `created_by` | Email of the user who created the record |
 
 ### Rule Types
 
-There are three valid RLS rule styles:
+There are two condition types you can use:
 
-1. **Boolean values:**
-   - `true` - Allow all (including anonymous/unauthenticated users)
-   - `false` - Block all access
-
-2. **Role/attribute check using `user_condition`:**
-```jsonc
-{
-  "user_condition": { "role": "admin" }
-}
-```
-
-3. **Entity-User field comparison:**
+**1. Entity-to-user comparison** - Compare record fields to the current user's values:
 ```jsonc
 {
   "created_by": "{{user.email}}"
 }
 ```
 
-You can combine rules using `$and`, `$or`, `$in`, `$nin`, etc.
+**2. User condition check** - Check user properties directly using `user_condition`:
+```jsonc
+{
+  "user_condition": { "role": "admin" }
+}
+```
 
-**Warning:** Never filter by entity field values directly (e.g., `{"status": "published"}`). Only use user-related conditions.
+**Important limitations:**
+- Only **simple equality** is supported (no operators like `$ne`, `$gt`, `$in`, etc.)
+- MongoDB-style operators (`$and`, `$or`, `$in`, `$nin`, `$ne`) are **NOT supported** in JSON schema RLS
+- You cannot filter by entity field values directly (e.g., `{"status": "published"}`)
+- Only user-related conditions are allowed
 
 ### RLS Examples
 
@@ -344,13 +334,10 @@ You can combine rules using `$and`, `$or`, `$in`, `$nin`, etc.
 }
 ```
 
-**Admin override with $or:**
+**Admin-only access:**
 ```jsonc
 {
-  "$or": [
-    { "data.team": "{{user.data.team}}" },
-    { "user_condition": { "role": "admin" } }
-  ]
+  "user_condition": { "role": "admin" }
 }
 ```
 
@@ -372,34 +359,17 @@ You can combine rules using `$and`, `$or`, `$in`, `$nin`, etc.
   },
   "required": ["title"],
   "rls": {
-    "create": {
-      "user_condition": { "role": { "$ne": "guest" } }
-    },
-    "read": {
-      "$or": [
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "update": {
-      "$or": [
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "delete": {
-      "$or": [
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
-      ]
-    }
+    "create": true,
+    "read": { "created_by": "{{user.email}}" },
+    "update": { "created_by": "{{user.email}}" },
+    "delete": { "created_by": "{{user.email}}" }
   }
 }
 ```
 
 ### Common RLS Patterns
 
-**Public create, admin-only read (e.g., contact forms, waitlists):**
+**Public create, admin-only management (e.g., contact forms, waitlists):**
 ```jsonc
 {
   "rls": {
@@ -423,81 +393,41 @@ You can combine rules using `$and`, `$or`, `$in`, `$nin`, etc.
 }
 ```
 
+**Logged-in users only:**
+```jsonc
+{
+  "rls": {
+    "create": { "user_condition": { "id": "{{user.id}}" } },
+    "read": true,
+    "update": { "created_by": "{{user.email}}" },
+    "delete": { "created_by": "{{user.email}}" }
+  }
+}
+```
+
 ### Limitations
 
-- **Unsupported operators:** `$regex`, `$expr`, `$where`
-- **No entity field filtering:** You cannot filter by entity field values (e.g., `{"status": "published"}`). Only user-related conditions are allowed.
-- **Template arrays:** Template values resolving to arrays are only valid inside `$in`, `$all`, etc.
-- **No deeply nested templates:** Templates like `{{user.data.profile.department}}` are not supported unless explicitly handled.
+- **No MongoDB operators:** `$and`, `$or`, `$in`, `$nin`, `$ne`, `$gt`, `$lt`, `$regex`, `$expr`, `$where` are NOT supported
+- **No entity field filtering:** Cannot filter by entity field values (e.g., `{"status": "published"}`)
+- **Simple equality only:** `user_condition` only supports exact match (e.g., `{ "role": "admin" }`)
+- **Single condition per operation:** Each operation can only have one condition (no combining multiple rules)
+- **No deeply nested templates:** Templates like `{{user.data.profile.department}}` may not work
+
+### Complex Access Patterns
+
+For complex access patterns that require multiple conditions (e.g., "owner OR admin"), you have two options:
+
+1. **Use the Base44 Dashboard UI** - The dashboard allows adding multiple rules per operation with OR logic
+2. **Use separate entities** - Split data into multiple entities with different access rules
+3. **Use backend functions** - Implement custom access logic in backend functions
 
 ## Field Level Security (FLS)
 
-FLS controls access to individual fields within records. Define `rls` rules at the field level inside `properties`.
+**Note:** Field Level Security (FLS) is **NOT currently available** in Base44. You can only set security rules for entire entities (rows/records), not for individual fields within those records.
 
-### FLS Structure
-
-```jsonc
-{
-  "properties": {
-    "public_field": {
-      "type": "string"
-    },
-    "admin_only_field": {
-      "type": "string",
-      "rls": {
-        "read": { "user_condition": { "role": "admin" } },
-        "write": { "user_condition": { "role": "admin" } }
-      }
-    }
-  }
-}
-```
-
-### FLS Operations
-
-- `read` - Controls who can see the field value
-- `write` - Controls who can set/update the field value
-
-### FLS Examples
-
-**Admin-only notes:**
-```jsonc
-{
-  "admin_notes": {
-    "type": "string",
-    "rls": {
-      "read": { "user_condition": { "role": "admin" } },
-      "write": { "user_condition": { "role": "admin" } }
-    }
-  }
-}
-```
-
-**Owner-only private field:**
-```jsonc
-{
-  "private_notes": {
-    "type": "string",
-    "rls": {
-      "read": { "created_by": "{{user.email}}" },
-      "write": { "created_by": "{{user.email}}" }
-    }
-  }
-}
-```
-
-**Completely hidden field:**
-```jsonc
-{
-  "internal_score": {
-    "type": "number",
-    "rls": {
-      "read": false,
-      "write": false
-    }
-  }
-}
-```
+If you need different access levels for different fields, the recommended approach is to split your data into separate entities:
+- Public data in one entity (with `read: true`)
+- Protected data in another entity (with appropriate RLS rules)
 
 ## Pushing Entities
 

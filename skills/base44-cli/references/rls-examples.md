@@ -1,21 +1,23 @@
-# RLS Real-World Examples
+# RLS Examples
 
 Practical Row-Level Security patterns for common application types.
 
+**Important:** Base44 RLS in JSON schema format only supports simple conditions. MongoDB-style operators (`$or`, `$and`, `$in`, etc.) are **NOT supported**. For complex access patterns, use the Base44 Dashboard UI or implement logic in backend functions.
+
 ## Contents
-- [Todo App](#todo-app)
-- [Subscription System](#subscription-system)
-- [Social App](#social-app)
-- [Dating App](#dating-app)
-- [Enterprise System](#enterprise-system)
-- [Mini Social Network](#mini-social-network)
+- [Simple Patterns (JSON Schema)](#simple-patterns-json-schema)
+- [Complex Patterns (Dashboard UI or Backend)](#complex-patterns-dashboard-ui-or-backend)
 - [Best Practices](#best-practices)
 
 ---
 
-## Todo App
+## Simple Patterns (JSON Schema)
 
-Simple ownership - users see and manage only their own tasks.
+These patterns work with the JSON schema RLS format.
+
+### Todo App - Owner-only access
+
+Users see and manage only their own tasks.
 
 ```jsonc
 {
@@ -37,13 +39,32 @@ Simple ownership - users see and manage only their own tasks.
 }
 ```
 
----
+### Contact Form - Public create, admin-only read
 
-## Subscription System
+Anyone can submit, only admins can view submissions.
 
-Separate user-editable data from protected billing data. Since there's no field-level permissions for different access levels, use separate entities.
+```jsonc
+{
+  "name": "ContactSubmission",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "email": { "type": "string", "format": "email" },
+    "message": { "type": "string" }
+  },
+  "rls": {
+    "create": true,
+    "read": { "user_condition": { "role": "admin" } },
+    "update": { "user_condition": { "role": "admin" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
+```
 
-### User Profile (user can edit)
+### User Profile - Self-management
+
+Users can only access their own profile.
+
 ```jsonc
 {
   "name": "UserProfile",
@@ -63,7 +84,30 @@ Separate user-editable data from protected billing data. Since there's no field-
 }
 ```
 
-### Subscription (user can read, only admin can modify)
+### Department Data - Same department access
+
+Users can only see records from their department.
+
+```jsonc
+{
+  "name": "DepartmentAnnouncement",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "content": { "type": "string" },
+    "department": { "type": "string" }
+  },
+  "rls": {
+    "create": { "user_condition": { "role": "manager" } },
+    "read": { "data.department": "{{user.data.department}}" },
+    "update": { "user_condition": { "role": "manager" } },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
+```
+
+### Subscription - Admin-managed, user-readable via email field
+
 ```jsonc
 {
   "name": "Subscription",
@@ -72,77 +116,29 @@ Separate user-editable data from protected billing data. Since there's no field-
     "user_email": { "type": "string" },
     "tier": { "type": "string", "enum": ["free", "basic", "pro", "enterprise"] },
     "credits": { "type": "number" },
-    "credits_used": { "type": "number" },
     "renewal_date": { "type": "string", "format": "date" }
   },
   "rls": {
     "create": { "user_condition": { "role": "admin" } },
-    "read": {
-      "$or": [
-        { "data.user_email": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
+    "read": { "data.user_email": "{{user.email}}" },
     "update": { "user_condition": { "role": "admin" } },
     "delete": { "user_condition": { "role": "admin" } }
   }
 }
 ```
 
----
+**Note:** This pattern only allows users to read their own subscription. Admins need to use the Dashboard UI to configure additional read access for themselves.
 
-## Social App
+### Private Data - Owner-only
 
-Public profiles visible to all, private data owner-only.
-
-### Public Profile
 ```jsonc
 {
-  "name": "PublicProfile",
+  "name": "PrivateNotes",
   "type": "object",
   "properties": {
-    "username": { "type": "string" },
-    "display_name": { "type": "string" },
-    "bio": { "type": "string" },
-    "avatar_url": { "type": "string" },
-    "is_public": { "type": "boolean" },
-    "follower_count": { "type": "number" }
-  },
-  "rls": {
-    "create": true,
-    "read": {
-      "$or": [
-        { "data.is_public": true },
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "moderator" } }
-      ]
-    },
-    "update": {
-      "$or": [
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "moderator" } }
-      ]
-    },
-    "delete": {
-      "$or": [
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "moderator" } }
-      ]
-    }
-  }
-}
-```
-
-### Private Profile Data
-```jsonc
-{
-  "name": "PrivateProfileData",
-  "type": "object",
-  "properties": {
-    "phone": { "type": "string" },
-    "email": { "type": "string" },
-    "date_of_birth": { "type": "string", "format": "date" },
-    "location": { "type": "string" }
+    "title": { "type": "string" },
+    "content": { "type": "string" },
+    "tags": { "type": "array", "items": { "type": "string" } }
   },
   "rls": {
     "create": true,
@@ -153,342 +149,115 @@ Public profiles visible to all, private data owner-only.
 }
 ```
 
-### Friendship (bidirectional access)
+### Public Read, Authenticated Write
+
+Anyone can read, only logged-in users can create/edit their own records.
+
 ```jsonc
 {
-  "name": "Friendship",
+  "name": "BlogPost",
   "type": "object",
   "properties": {
-    "requester_email": { "type": "string" },
-    "recipient_email": { "type": "string" },
-    "status": { "type": "string", "enum": ["pending", "accepted", "blocked"] }
+    "title": { "type": "string" },
+    "content": { "type": "string" },
+    "author_email": { "type": "string" }
   },
   "rls": {
     "create": true,
-    "read": {
-      "$or": [
-        { "data.requester_email": "{{user.email}}" },
-        { "data.recipient_email": "{{user.email}}" }
-      ]
-    },
-    "update": {
-      "$or": [
-        { "data.requester_email": "{{user.email}}" },
-        { "data.recipient_email": "{{user.email}}" }
-      ]
-    },
-    "delete": {
-      "$or": [
-        { "data.requester_email": "{{user.email}}" },
-        { "data.recipient_email": "{{user.email}}" }
-      ]
-    }
-  }
-}
-```
-
----
-
-## Dating App
-
-Profiles visible to active users, contact info protected.
-
-### Dating Profile
-```jsonc
-{
-  "name": "DatingProfile",
-  "type": "object",
-  "properties": {
-    "display_name": { "type": "string" },
-    "age": { "type": "number" },
-    "bio": { "type": "string" },
-    "photos": { "type": "array", "items": { "type": "string" } },
-    "interests": { "type": "array", "items": { "type": "string" } },
-    "is_active": { "type": "boolean" }
-  },
-  "rls": {
-    "create": true,
-    "read": {
-      "$or": [
-        { "created_by": "{{user.email}}" },
-        { "data.is_active": true },
-        { "user_condition": { "role": "moderator" } }
-      ]
-    },
+    "read": true,
     "update": { "created_by": "{{user.email}}" },
     "delete": { "created_by": "{{user.email}}" }
   }
 }
 ```
 
-### Match (both users can access)
-```jsonc
-{
-  "name": "Match",
-  "type": "object",
-  "properties": {
-    "user1_email": { "type": "string" },
-    "user2_email": { "type": "string" },
-    "user1_liked": { "type": "boolean" },
-    "user2_liked": { "type": "boolean" },
-    "matched_at": { "type": "string", "format": "date-time" }
-  },
-  "rls": {
-    "create": true,
-    "read": {
-      "$or": [
-        { "data.user1_email": "{{user.email}}" },
-        { "data.user2_email": "{{user.email}}" }
-      ]
-    },
-    "update": {
-      "$or": [
-        { "data.user1_email": "{{user.email}}" },
-        { "data.user2_email": "{{user.email}}" }
-      ]
-    },
-    "delete": {
-      "$or": [
-        { "data.user1_email": "{{user.email}}" },
-        { "data.user2_email": "{{user.email}}" }
-      ]
-    }
-  }
-}
-```
-
 ---
 
-## Enterprise System
+## Complex Patterns (Dashboard UI or Backend)
 
-Role and department-based access with admin overrides.
+These patterns require multiple conditions and **cannot be implemented in JSON schema**. Use the Base44 Dashboard UI or backend functions instead.
 
-### Employee
-```jsonc
-{
-  "name": "Employee",
-  "type": "object",
-  "properties": {
-    "employee_id": { "type": "string" },
-    "email": { "type": "string" },
-    "department": { "type": "string" },
-    "position": { "type": "string" },
-    "manager_email": { "type": "string" }
-  },
-  "rls": {
-    "create": {
-      "$or": [
-        { "user_condition": { "role": "hr" } },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "read": {
-      "$or": [
-        { "data.email": "{{user.email}}" },
-        { "data.department": "{{user.data.department}}" },
-        { "user_condition": { "role": "hr" } },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "update": {
-      "$or": [
-        { "user_condition": { "role": "hr" } },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "delete": {
-      "$or": [
-        { "user_condition": { "role": "hr" } },
-        { "user_condition": { "role": "admin" } }
-      ]
-    }
-  }
-}
-```
+### Owner OR Admin access
 
-### Department Document
-```jsonc
-{
-  "name": "DepartmentDocument",
-  "type": "object",
-  "properties": {
-    "title": { "type": "string" },
-    "content": { "type": "string" },
-    "department": { "type": "string" },
-    "classification": { "type": "string", "enum": ["public", "internal", "confidential"] }
-  },
-  "rls": {
-    "create": {
-      "$or": [
-        { "user_condition": { "role": "manager" } },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "read": {
-      "$or": [
-        {
-          "$and": [
-            { "data.department": "{{user.data.department}}" },
-            { "data.classification": "public" }
-          ]
-        },
-        {
-          "$and": [
-            { "data.department": "{{user.data.department}}" },
-            { "user_condition": { "role": { "$in": ["manager", "admin"] } } }
-          ]
-        },
-        { "created_by": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "update": {
-      "$or": [
-        {
-          "$and": [
-            { "data.department": "{{user.data.department}}" },
-            { "user_condition": { "role": "manager" } }
-          ]
-        },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "delete": { "user_condition": { "role": "admin" } }
-  }
-}
-```
+**Requirement:** Users can access their own records, OR admins can access all records.
 
-### Salary Info (highly restricted)
-```jsonc
-{
-  "name": "SalaryInfo",
-  "type": "object",
-  "properties": {
-    "employee_email": { "type": "string" },
-    "base_salary": { "type": "number" },
-    "bonus": { "type": "number" }
-  },
-  "rls": {
-    "create": {
-      "$or": [
-        { "user_condition": { "role": "hr" } },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "read": {
-      "$or": [
-        { "data.employee_email": "{{user.email}}" },
-        { "user_condition": { "role": "hr" } },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "update": {
-      "$or": [
-        { "user_condition": { "role": "hr" } },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "delete": { "user_condition": { "role": "admin" } }
-  }
-}
-```
+**JSON Schema limitation:** Cannot combine conditions with OR logic.
 
----
+**Solution options:**
+1. **Dashboard UI:** Add two rules to the read operation - one for "Creator only" and one for "User property check" with role = admin
+2. **Backend function:** Implement custom access logic that checks both conditions
 
-## Mini Social Network
+### Bidirectional Relationships (e.g., Friendships, Matches)
 
-Groups with different visibility levels and membership.
+**Requirement:** Either party in a relationship should have access.
 
-### Group
-```jsonc
-{
-  "name": "Group",
-  "type": "object",
-  "properties": {
-    "name": { "type": "string" },
-    "description": { "type": "string" },
-    "visibility": { "type": "string", "enum": ["public", "private", "secret"] },
-    "owner_email": { "type": "string" }
-  },
-  "rls": {
-    "create": true,
-    "read": {
-      "$or": [
-        { "data.visibility": "public" },
-        { "data.owner_email": "{{user.email}}" },
-        { "user_condition": { "role": "moderator" } }
-      ]
-    },
-    "update": {
-      "$or": [
-        { "data.owner_email": "{{user.email}}" },
-        { "user_condition": { "role": "moderator" } }
-      ]
-    },
-    "delete": {
-      "$or": [
-        { "data.owner_email": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
-      ]
-    }
-  }
-}
-```
+**JSON Schema limitation:** Cannot check if user matches field A OR field B.
 
-### Group Membership
-```jsonc
-{
-  "name": "GroupMembership",
-  "type": "object",
-  "properties": {
-    "group_id": { "type": "string" },
-    "member_email": { "type": "string" },
-    "role": { "type": "string", "enum": ["member", "moderator", "admin"] }
-  },
-  "rls": {
-    "create": true,
-    "read": {
-      "$or": [
-        { "data.member_email": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
-      ]
-    },
-    "update": { "user_condition": { "role": "admin" } },
-    "delete": {
-      "$or": [
-        { "data.member_email": "{{user.email}}" },
-        { "user_condition": { "role": "admin" } }
-      ]
-    }
-  }
-}
-```
+**Solution options:**
+1. **Dashboard UI:** Add multiple rules matching different fields
+2. **Backend function:** Query with custom logic
+3. **Entity redesign:** Store two records per relationship (one for each party)
+
+### Multi-role Access
+
+**Requirement:** Multiple roles (hr, admin, manager) should have access.
+
+**JSON Schema limitation:** Cannot specify multiple roles.
+
+**Solution options:**
+1. **Dashboard UI:** Add separate rules for each role
+2. **Backend function:** Check if user role is in allowed list
+
+### Conditional Field-based Access
+
+**Requirement:** Access depends on entity field value (e.g., `is_public: true`).
+
+**JSON Schema limitation:** Cannot filter by entity field values, only user-related conditions.
+
+**Solution options:**
+1. **Separate entities:** Create PublicPosts and PrivatePosts entities
+2. **Backend function:** Filter based on field values
 
 ---
 
 ## Best Practices
 
-### Entity Separation
-Since there's no field-level permissions for different access levels, split sensitive data into separate entities:
-- User-editable data in one entity
-- Protected data (subscriptions, billing) in admin-only entities
+### Entity Separation Strategy
 
-### Read vs Update Asymmetry
-Users can often read but not modify certain data:
-- Users read their subscription info but only admins modify it
-- Users see department documents but only managers update them
+Since RLS has limitations, split data strategically:
 
-### Ownership Patterns
-- Use `created_by` for simple ownership
-- Use email fields (`user_email`, `owner_email`) for explicit ownership
-- Use array fields with `$in` for multi-user access
+| Data Type | Entity | RLS Pattern |
+|-----------|--------|-------------|
+| User-editable | UserProfile | Owner-only |
+| Billing/subscription | Subscription | Admin-managed |
+| Public content | PublicPost | Read: true |
+| Private content | PrivateNote | Owner-only |
 
-### Role-Based Access
-- Use `user_condition` for role checks
-- Common roles: `admin`, `moderator`, `hr`, `manager`
-- Combine role checks with data field checks for nuanced access
+### When to Use Each Approach
 
-### Limitations
-- Cannot check relationships across entities (e.g., friendship status)
-- Cannot have different permissions for different fields in same entity
-- Complex access patterns may require backend functions
+| Requirement | Approach |
+|-------------|----------|
+| Single condition (owner, admin, department) | JSON Schema RLS |
+| Multiple OR conditions | Dashboard UI |
+| Complex business logic | Backend functions |
+| Field-value filtering | Backend functions |
+
+### Common Role Patterns
+
+| Role | Typical Access |
+|------|----------------|
+| `admin` | Full access to all records |
+| `moderator` | Read/update access, limited delete |
+| `manager` | Department-scoped access |
+| `user` | Own records only |
+
+### Limitations Summary
+
+| Not Supported | Alternative |
+|---------------|-------------|
+| `$or`, `$and` operators | Dashboard UI rules |
+| `$in`, `$nin` operators | Backend functions |
+| `$ne`, `$gt`, `$lt` operators | Backend functions |
+| Entity field filtering | Separate entities or backend |
+| Cross-entity relationships | Backend functions |
+| Field-level security | Separate entities |
