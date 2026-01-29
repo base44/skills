@@ -89,8 +89,8 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 - Invalid: `Support-Agent`, `OrderBot`, `task helper`
 
 **Tool configuration validation:**
-- **Entity tools**: The `entity_name` MUST reference an existing entity defined in `base44/entities/`
-- **Backend function tools**: The `function_name` MUST reference an existing backend function defined in `base44/functions/`
+- **Entity tools**: The `entity_name` MUST reference an existing `name` field of an entity configuration defined in `base44/entities/`
+- **Backend function tools**: The `function_name` MUST reference an existing `name` of a backend function configuration defined in `base44/functions/`
 - **Allowed operations**: Must be one or more of: `read`, `create`, `update`, `delete`
 
 ## Use Cases
