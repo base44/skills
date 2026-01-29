@@ -258,8 +258,8 @@ Agents are conversational AI assistants that can interact with users, access you
 **Naming rules:** Agent names must be lowercase alphanumeric with underscores only (e.g., `support_agent`, `order_bot`)
 
 **Tool config types:**
-- **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
-- **Backend function tools**: `function_name` + `description`
+- **Entity tools**: `entity_name` (MUST reference an existing entity in `base44/entities/`) + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
+- **Backend function tools**: `function_name` (MUST reference an existing function in `base44/functions/`) + `description`
 
 ### Site Deployment
 
