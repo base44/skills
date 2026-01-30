@@ -65,6 +65,32 @@ Each entity file follows a JSON Schema-like structure:
 }
 ```
 
+### Common Mistake: Nested Schema Property
+
+**WRONG** - Do NOT wrap properties in a `schema` object:
+```jsonc
+{
+  "name": "Task",
+  "description": "A task entity",
+  "schema": {                    // ❌ WRONG - don't use nested "schema"
+    "type": "object",
+    "properties": { ... }
+  }
+}
+```
+
+**CORRECT** - Put `type` and `properties` at the top level:
+```jsonc
+{
+  "name": "Task",
+  "description": "A task entity",
+  "type": "object",              // ✅ CORRECT - top level
+  "properties": { ... }          // ✅ CORRECT - top level
+}
+```
+
+This is a common mistake that will cause "Invalid schema: Schema must have a 'type' field" errors when pushing entities.
+
 ## Supported Field Types
 
 ### String

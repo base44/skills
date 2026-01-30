@@ -75,7 +75,7 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
   "instructions": "Detailed instructions for the agent's behavior",
   "tool_configs": [
     // Entity tool - gives agent access to entity operations
-    { "entity_name": "tasks", "allowed_operations": ["read", "create", "update", "delete"] },
+    { "entity_name": "Task", "allowed_operations": ["read", "create", "update", "delete"] },
     // Backend function tool - gives agent access to a function
     { "function_name": "send_email", "description": "Send an email notification" }
   ],
@@ -84,9 +84,54 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 ```
 
 **Naming rules:**
-- Agent names must be lowercase alphanumeric with underscores only
-- Valid: `support_agent`, `order_bot`, `task_helper`
-- Invalid: `Support-Agent`, `OrderBot`, `task helper`
+- **Agent names** must be lowercase alphanumeric with underscores only
+  - Valid: `support_agent`, `order_bot`, `task_helper`
+  - Invalid: `Support-Agent`, `OrderBot`, `task helper`
+- **Agent file names** must use underscores (matching the agent name)
+  - Valid: `support_agent.jsonc`, `order_bot.jsonc`
+  - Invalid: `support-agent.jsonc` (hyphens not allowed)
+- **Entity names in `tool_configs`** must use PascalCase (matching the entity's `name` field)
+  - Valid: `"entity_name": "Task"`, `"entity_name": "TeamMember"`
+  - Invalid: `"entity_name": "task"`, `"entity_name": "team_member"`
+
+### Common Mistake: Wrong tool_configs Format
+
+**WRONG** - Do NOT use `tools` with `type` and `entity`:
+```jsonc
+{
+  "name": "my_agent",
+  "tools": [                                    // ❌ WRONG
+    { "type": "entity_query", "entity": "Task" }
+  ]
+}
+```
+
+**CORRECT** - Use `tool_configs` with `entity_name` and `allowed_operations`:
+```jsonc
+{
+  "name": "my_agent",
+  "tool_configs": [                             // ✅ CORRECT
+    { "entity_name": "Task", "allowed_operations": ["read"] }
+  ]
+}
+```
+
+### Best Practices for Agent Instructions
+
+When giving agents access to entities, be explicit in the instructions about using the tools:
+
+```jsonc
+{
+  "name": "support_agent",
+  "instructions": "You are a helpful support agent.\n\nIMPORTANT: You have access to customer data through entity tools. When users ask about their orders or account:\n1. ALWAYS use the Order entity tool to query their order history\n2. Use the Customer entity tool to look up account details\n3. Analyze the data and provide personalized responses\n\nAlways query the relevant entities first before answering questions about user data.",
+  "tool_configs": [
+    { "entity_name": "Order", "allowed_operations": ["read"] },
+    { "entity_name": "Customer", "allowed_operations": ["read"] }
+  ]
+}
+```
+
+Without explicit instructions to use the entity tools, the agent may not proactively query user data when asked.
 
 ## Use Cases
 
