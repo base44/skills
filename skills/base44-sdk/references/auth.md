@@ -129,7 +129,7 @@ interface AuthModule {
 | `me()` | None | `Promise<User>` | Get current authenticated user |
 | `updateMe()` | `data: Partial<User>` | `Promise<User>` | Update current user's profile |
 | `logout()` | `redirectUrl?: string` | `void` | Clear session, optionally redirect |
-| `redirectToLogin()` | `nextUrl: string` | `void` | Redirect to hosted login page |
+| `redirectToLogin()` | `nextUrl: string` | `void` | ⚠️ **Avoid** - Prefer custom login UI with `loginViaEmailPassword()` or `loginWithProvider()` |
 | `isAuthenticated()` | None | `Promise<boolean>` | Check if user is logged in |
 | `setToken()` | `token: string, saveToStorage?: boolean` | `void` | Manually set auth token |
 | `inviteUser()` | `userEmail: string, role: string` | `Promise<any>` | Send invitation email |
@@ -245,8 +245,8 @@ try {
 } catch (error) {
   console.error('Failed to fetch user:', error.message);
   if (error.status === 401) {
-    // Token expired or invalid
-    base44.auth.redirectToLogin(window.location.href);
+    // Token expired or invalid - navigate to your custom login page
+    navigate('/login');
   }
 }
 ```
@@ -270,7 +270,7 @@ try {
     console.error('Invalid data provided');
   } else if (error.status === 401) {
     console.error('Authentication required');
-    base44.auth.redirectToLogin(window.location.href);
+    navigate('/login');
   }
 }
 ```
@@ -311,15 +311,14 @@ base44.auth.logout("/");
 ### Protected Route Pattern
 
 ```javascript
-async function requireAuth() {
+// Using a navigation function (e.g., React Router's useNavigate, Next.js router)
+async function requireAuth(navigate) {
   try {
     const user = await base44.auth.me();
 
     if (!user) {
-      // Redirect to login, return to this page after authentication
-      if (typeof window !== 'undefined') {
-        base44.auth.redirectToLogin(window.location.href);
-      }
+      // Navigate to your custom login page
+      navigate('/login', { state: { returnTo: window.location.pathname } });
       return null;
     }
 
@@ -327,18 +326,16 @@ async function requireAuth() {
 
   } catch (error) {
     console.error('Authentication check failed:', error.message);
-    if (typeof window !== 'undefined') {
-      base44.auth.redirectToLogin(window.location.href);
-    }
+    navigate('/login', { state: { returnTo: window.location.pathname } });
     return null;
   }
 }
 
 // Usage in your app
-async function loadProtectedPage() {
-  const user = await requireAuth();
+async function loadProtectedPage(navigate) {
+  const user = await requireAuth(navigate);
   if (!user) {
-    // Will redirect to login
+    // Will navigate to login
     return;
   }
 
@@ -505,8 +502,8 @@ try {
   const user = await base44.auth.me();
 } catch (error) {
   if (error.status === 401) {
-    // Token expired or invalid
-    base44.auth.redirectToLogin(window.location.href);
+    // Token expired or invalid - navigate to your custom login page
+    navigate('/login');
   } else if (error.status === 403) {
     // Email not verified or insufficient permissions
     console.error('Access denied:', error.message);
@@ -656,15 +653,15 @@ Control who can access your app in the app settings:
 
 ## Limitations
 
-### Hosted Authentication
-- Cannot create fully custom login/signup UI
-- Base44 provides hosted authentication pages
-- Custom branding available in app settings
+### Authentication UI Options
+- **Recommended:** Build custom login/signup UI using `loginViaEmailPassword()` and `loginWithProvider()` for full control over user experience and branding
+- **Alternative:** `redirectToLogin()` uses Base44's hosted authentication pages with limited customization
 
-### Redirect Behavior
+### Hosted Login (via redirectToLogin)
 - `redirectToLogin()` shows both login and signup options on the same page
 - No separate `redirectToSignup()` method
 - Users can switch between login/signup on the hosted page
+- ⚠️ **Note:** Prefer building custom login UI for better user experience
 
 ### Password Requirements
 - Minimum length and complexity requirements enforced
@@ -736,9 +733,29 @@ try {
   const user = await base44.auth.me();
 } catch (error) {
   if (error.status === 401) {
-    // Clear local state and redirect
+    // Clear local state and navigate to login
     localStorage.clear();
-    base44.auth.redirectToLogin(window.location.href);
+    navigate('/login');
   }
 }
+```
+
+### 7. Build Custom Login UI (Recommended)
+```javascript
+// ✅ RECOMMENDED - Custom login form with direct methods
+const handleLogin = async (email, password) => {
+  try {
+    const { user } = await base44.auth.loginViaEmailPassword(email, password);
+    navigate('/dashboard');
+  } catch (error) {
+    setError(error.message);
+  }
+};
+
+const handleGoogleLogin = () => {
+  base44.auth.loginWithProvider('google', '/dashboard');
+};
+
+// ❌ AVOID - Redirecting to hosted login page
+// base44.auth.redirectToLogin(window.location.href);
 ```
