@@ -2,6 +2,8 @@
 name: review-skills
 description: Review and analyze a skill against best practices for length, intent scope, and trigger patterns
 disable-model-invocation: true
+metadata:
+  internal: true
 ---
 
 # Review Skills
