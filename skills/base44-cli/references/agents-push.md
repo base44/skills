@@ -70,21 +70,21 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 
 ```jsonc
 {
-  "name": "agent_name",
-  "description": "Brief description of what this agent does",
-  "instructions": "Detailed instructions for the agent's behavior",
-  "tool_configs": [
+  "name": "agent_name",              // Required: lowercase alphanumeric with underscores, 1-100 chars
+  "description": "Brief description of what this agent does",  // Required: min 1 char
+  "instructions": "Detailed instructions for the agent's behavior",  // Required: min 1 char
+  "tool_configs": [                  // Optional: defaults to []
     // Entity tool - gives agent access to entity operations
     { "entity_name": "Task", "allowed_operations": ["read", "create", "update", "delete"] },
     // Backend function tool - gives agent access to a function
     { "function_name": "send_email", "description": "Send an email notification" }
   ],
-  "whatsapp_greeting": "Hello! How can I help you today?"
+  "whatsapp_greeting": "Hello! How can I help you today?"  // Optional
 }
 ```
 
 **Naming rules:**
-- **Agent names** must be lowercase alphanumeric with underscores only
+- **Agent names** must match pattern: `/^[a-z0-9_]+$/` (lowercase alphanumeric with underscores only, 1-100 characters)
   - Valid: `support_agent`, `order_bot`, `task_helper`
   - Invalid: `Support-Agent`, `OrderBot`, `task helper`
 - **Agent file names** must use underscores (matching the agent name)
@@ -93,6 +93,13 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 - **Entity names in `tool_configs`** must use PascalCase (matching the entity's `name` field)
   - Valid: `"entity_name": "Task"`, `"entity_name": "TeamMember"`
   - Invalid: `"entity_name": "task"`, `"entity_name": "team_member"`
+
+**Required fields:**
+- `name`: Required, must follow naming rules above
+- `description`: Required, minimum 1 character
+- `instructions`: Required, minimum 1 character
+- `tool_configs`: Optional, defaults to empty array
+- `whatsapp_greeting`: Optional
 
 ### Common Mistake: Wrong tool_configs Format
 

@@ -126,19 +126,33 @@ my-app/
 **config.jsonc example:**
 ```jsonc
 {
-  "name": "My App",
-  "description": "App description",
-  "entitiesDir": "./entities",
-  "functionsDir": "./functions",
-  "agentsDir": "./agents",
-  "site": {
-    "installCommand": "npm install",
-    "buildCommand": "npm run build",
-    "serveCommand": "npm run dev",
-    "outputDirectory": "./dist"
+  "name": "My App",                    // Required: project name
+  "description": "App description",    // Optional: project description
+  "entitiesDir": "./entities",         // Optional: default "entities"
+  "functionsDir": "./functions",       // Optional: default "functions"
+  "agentsDir": "./agents",             // Optional: default "agents"
+  "site": {                            // Optional: site deployment config
+    "installCommand": "npm install",   // Optional: install dependencies
+    "buildCommand": "npm run build",   // Optional: build command
+    "serveCommand": "npm run dev",     // Optional: local dev server
+    "outputDirectory": "./dist"        // Optional: build output directory
   }
 }
 ```
+
+**Config properties:**
+
+| Property | Description | Default |
+|----------|-------------|---------|
+| `name` | Project name (required) | - |
+| `description` | Project description | - |
+| `entitiesDir` | Directory for entity schemas | `"entities"` |
+| `functionsDir` | Directory for backend functions | `"functions"` |
+| `agentsDir` | Directory for agent configs | `"agents"` |
+| `site.installCommand` | Command to install dependencies | - |
+| `site.buildCommand` | Command to build the project | - |
+| `site.serveCommand` | Command to run dev server | - |
+| `site.outputDirectory` | Build output directory for deployment | - |
 
 ## Installation
 
@@ -210,9 +224,10 @@ ALWAYS follow this exact structure when creating entity files:
 }
 ```
 
-**Field types:** `string`, `number`, `boolean`, `array`
-**String formats:** `date`, `date-time`, `email`, `uri`, `richtext`
+**Field types:** `string`, `number`, `integer`, `boolean`, `array`, `object`, `binary`
+**String formats:** `date`, `date-time`, `time`, `email`, `uri`, `hostname`, `ipv4`, `ipv6`, `uuid`, `file`, `regex`, `richtext`
 **For enums:** Add `"enum": ["value1", "value2"]` and optionally `"default": "value1"`
+**Entity names:** Must be alphanumeric only (pattern: `/^[a-zA-Z0-9]+$/`)
 
 For complete documentation, see [entities-create.md](references/entities-create.md).
 
@@ -255,7 +270,13 @@ Agents are conversational AI assistants that can interact with users, access you
 }
 ```
 
-**Naming rules:** Agent names must be lowercase alphanumeric with underscores only (e.g., `support_agent`, `order_bot`)
+**Naming rules:** 
+- Agent names must match pattern: `/^[a-z0-9_]+$/` (lowercase alphanumeric with underscores, 1-100 chars)
+- Valid: `support_agent`, `order_bot`
+- Invalid: `Support-Agent`, `OrderBot`
+
+**Required fields:** `name`, `description`, `instructions`
+**Optional fields:** `tool_configs` (defaults to `[]`), `whatsapp_greeting`
 
 **Tool config types:**
 - **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)

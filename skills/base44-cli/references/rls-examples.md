@@ -2,10 +2,15 @@
 
 Practical Row-Level Security patterns for common application types.
 
-**Important:** Base44 RLS in JSON schema format only supports simple conditions. MongoDB-style operators (`$or`, `$and`, `$in`, etc.) are **NOT supported**. For complex access patterns, use the Base44 Dashboard UI or implement logic in backend functions.
+**Important:** Base44 RLS supports:
+- **Logical operators:** `$or`, `$and`, `$nor` for combining conditions
+- **Field operators (for `data.*` fields):** `$in`, `$nin`, `$ne`, `$all`
+- **user_condition:** Equality only (no operators)
 
 ## Contents
 - [Simple Patterns (JSON Schema)](#simple-patterns-json-schema)
+- [Using Operators](#using-operators)
+- [Field-Level Security Examples](#field-level-security-examples)
 - [Complex Patterns (Dashboard UI or Backend)](#complex-patterns-dashboard-ui-or-backend)
 - [Best Practices](#best-practices)
 
@@ -173,74 +178,257 @@ Anyone can read, only logged-in users can create/edit their own records.
 
 ---
 
+## Using Operators
+
+### Logical Operators
+
+Combine multiple conditions using `$or`, `$and`, or `$nor`:
+
+**Owner OR Admin access:**
+```jsonc
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "title": { "type": "string" },
+    "content": { "type": "string" }
+  },
+  "rls": {
+    "create": true,
+    "read": {
+      "$or": [
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "update": {
+      "$or": [
+        { "created_by": "{{user.email}}" },
+        { "user_condition": { "role": "admin" } }
+      ]
+    },
+    "delete": { "user_condition": { "role": "admin" } }
+  }
+}
+```
+
+**Multiple roles with $or:**
+```jsonc
+{
+  "rls": {
+    "read": {
+      "$or": [
+        { "user_condition": { "role": "admin" } },
+        { "user_condition": { "role": "manager" } },
+        { "user_condition": { "role": "hr" } }
+      ]
+    }
+  }
+}
+```
+
+### Field Operators for data.* Fields
+
+Use `$in`, `$nin`, `$ne`, `$all` for comparing entity data fields:
+
+**Access based on tags ($in):**
+```jsonc
+{
+  "rls": {
+    "read": {
+      "data.category": { "$in": ["public", "shared"] }
+    }
+  }
+}
+```
+
+**Exclude specific statuses ($nin):**
+```jsonc
+{
+  "rls": {
+    "read": {
+      "data.status": { "$nin": ["archived", "deleted"] }
+    }
+  }
+}
+```
+
+**Not equal ($ne):**
+```jsonc
+{
+  "rls": {
+    "read": {
+      "data.visibility": { "$ne": "private" }
+    }
+  }
+}
+```
+
+**All tags must match ($all):**
+```jsonc
+{
+  "rls": {
+    "read": {
+      "data.required_tags": { "$all": ["approved", "reviewed"] }
+    }
+  }
+}
+```
+
+### Combining Logical and Field Operators
+
+```jsonc
+{
+  "rls": {
+    "read": {
+      "$and": [
+        { "data.status": { "$ne": "draft" } },
+        {
+          "$or": [
+            { "created_by": "{{user.email}}" },
+            { "data.visibility": "public" }
+          ]
+        }
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Field-Level Security Examples
+
+Control access to specific fields within an entity.
+
+### Sensitive Salary Field
+
+```jsonc
+{
+  "name": "Employee",
+  "type": "object",
+  "properties": {
+    "name": { "type": "string" },
+    "email": { "type": "string", "format": "email" },
+    "salary": {
+      "type": "number",
+      "description": "Annual salary",
+      "rls": {
+        "read": { "user_condition": { "role": "hr" } },
+        "write": { "user_condition": { "role": "hr" } }
+      }
+    },
+    "performance_notes": {
+      "type": "string",
+      "description": "Manager notes",
+      "rls": {
+        "read": {
+          "$or": [
+            { "user_condition": { "role": "manager" } },
+            { "user_condition": { "role": "hr" } }
+          ]
+        },
+        "write": { "user_condition": { "role": "manager" } }
+      }
+    }
+  }
+}
+```
+
+### Admin-Only Internal Fields
+
+```jsonc
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "order_number": { "type": "string" },
+    "total": { "type": "number" },
+    "internal_notes": {
+      "type": "string",
+      "description": "Internal processing notes",
+      "rls": {
+        "read": { "user_condition": { "role": "admin" } },
+        "write": { "user_condition": { "role": "admin" } }
+      }
+    },
+    "profit_margin": {
+      "type": "number",
+      "description": "Profit margin percentage",
+      "rls": {
+        "read": { "user_condition": { "role": "admin" } },
+        "write": false
+      }
+    }
+  }
+}
+```
+
+---
+
 ## Complex Patterns (Dashboard UI or Backend)
 
-These patterns require multiple conditions and **cannot be implemented in JSON schema**. Use the Base44 Dashboard UI or backend functions instead.
-
-### Owner OR Admin access
-
-**Requirement:** Users can access their own records, OR admins can access all records.
-
-**JSON Schema limitation:** Cannot combine conditions with OR logic.
-
-**Solution options:**
-1. **Dashboard UI:** Add two rules to the read operation - one for "Creator only" and one for "User property check" with role = admin
-2. **Backend function:** Implement custom access logic that checks both conditions
+Some patterns may still require the Dashboard UI or backend functions.
 
 ### Bidirectional Relationships (e.g., Friendships, Matches)
 
 **Requirement:** Either party in a relationship should have access.
 
-**JSON Schema limitation:** Cannot check if user matches field A OR field B.
+**Now possible with $or:**
+```jsonc
+{
+  "rls": {
+    "read": {
+      "$or": [
+        { "data.user_a_email": "{{user.email}}" },
+        { "data.user_b_email": "{{user.email}}" }
+      ]
+    }
+  }
+}
+```
 
-**Solution options:**
-1. **Dashboard UI:** Add multiple rules matching different fields
+**Alternative solutions:**
+1. **Entity redesign:** Store two records per relationship (one for each party)
 2. **Backend function:** Query with custom logic
-3. **Entity redesign:** Store two records per relationship (one for each party)
 
-### Multi-role Access
+### Complex Business Logic
 
-**Requirement:** Multiple roles (hr, admin, manager) should have access.
+**Requirement:** Access depends on multiple entity fields with complex conditions.
 
-**JSON Schema limitation:** Cannot specify multiple roles.
-
-**Solution options:**
-1. **Dashboard UI:** Add separate rules for each role
-2. **Backend function:** Check if user role is in allowed list
-
-### Conditional Field-based Access
-
-**Requirement:** Access depends on entity field value (e.g., `is_public: true`).
-
-**JSON Schema limitation:** Cannot filter by entity field values, only user-related conditions.
+**JSON Schema limitation:** While operators help, very complex business logic may still be hard to express.
 
 **Solution options:**
-1. **Separate entities:** Create PublicPosts and PrivatePosts entities
-2. **Backend function:** Filter based on field values
+1. **Backend function:** Implement custom access logic
+2. **Combine simpler rules:** Break complex rules into simpler entity-level and field-level rules
 
 ---
 
 ## Best Practices
 
-### Entity Separation Strategy
+### Security Strategy
 
-Since RLS has limitations, split data strategically:
+Use a combination of entity-level RLS and field-level security:
 
-| Data Type | Entity | RLS Pattern |
-|-----------|--------|-------------|
-| User-editable | UserProfile | Owner-only |
-| Billing/subscription | Subscription | Admin-managed |
-| Public content | PublicPost | Read: true |
-| Private content | PrivateNote | Owner-only |
+| Data Type | Approach | Example |
+|-----------|----------|---------|
+| User-editable | Entity RLS: Owner-only | UserProfile with `created_by` check |
+| Sensitive fields | Field-level RLS | Salary field with HR role check |
+| Multi-role access | `$or` with user_condition | Admin OR Manager access |
+| Conditional access | Field operators | `$in`, `$ne` on data fields |
+| Public content | Entity RLS: `read: true` | PublicPost |
+| Private content | Entity RLS: Owner-only | PrivateNote |
 
 ### When to Use Each Approach
 
 | Requirement | Approach |
 |-------------|----------|
 | Single condition (owner, admin, department) | JSON Schema RLS |
-| Multiple OR conditions | Dashboard UI |
-| Complex business logic | Backend functions |
-| Field-value filtering | Backend functions |
+| Multiple OR/AND conditions | JSON Schema RLS with `$or`/`$and` |
+| Field value checks with `$in`/`$ne`/etc. | JSON Schema RLS for `data.*` fields |
+| Field-level access control | JSON Schema FLS (field-level `rls`) |
+| Complex comparison operators (`$gt`, `$lt`) | Backend functions |
+| Very complex business logic | Backend functions |
 
 ### Common Role Patterns
 
@@ -251,13 +439,25 @@ Since RLS has limitations, split data strategically:
 | `manager` | Department-scoped access |
 | `user` | Own records only |
 
+### Supported Operators Summary
+
+| Operator | Supported | Notes |
+|----------|-----------|-------|
+| `$or` | Yes | Combine multiple conditions |
+| `$and` | Yes | All conditions must match |
+| `$nor` | Yes | None of the conditions match |
+| `$in` | Yes | For `data.*` fields only |
+| `$nin` | Yes | For `data.*` fields only |
+| `$ne` | Yes | For `data.*` fields only |
+| `$all` | Yes | For `data.*` fields only |
+| `$gt`, `$lt`, `$gte`, `$lte` | No | Use backend functions |
+| `$regex` | No | Use backend functions |
+
 ### Limitations Summary
 
 | Not Supported | Alternative |
 |---------------|-------------|
-| `$or`, `$and` operators | Dashboard UI rules |
-| `$in`, `$nin` operators | Backend functions |
-| `$ne`, `$gt`, `$lt` operators | Backend functions |
-| Entity field filtering | Separate entities or backend |
+| Operators on `user_condition` | Use equality only for user checks |
+| Comparison operators (`$gt`, `$lt`) | Backend functions |
+| Regex matching (`$regex`) | Backend functions |
 | Cross-entity relationships | Backend functions |
-| Field-level security | Separate entities |

@@ -41,8 +41,8 @@ Each function requires a `function.jsonc` configuration file:
 
 | Property | Description | Required |
 |----------|-------------|----------|
-| `name` | Function name (must not contain dots) | Yes |
-| `entry` | Entry point file path relative to the function directory | Yes |
+| `name` | Function name (must match `/^[^.]+$/` - no dots allowed) | Yes |
+| `entry` | Entry point file path relative to the function directory (min 1 char) | Yes |
 
 ## Entry Point File
 
@@ -197,7 +197,9 @@ Deno.serve(async (req) => {
 ## Naming Conventions
 
 - **Directory name**: Use kebab-case (e.g., `process-order`, `send-notification`)
-- **Function name**: Match the directory name, no dots allowed
+- **Function name**: Match the directory name, must match pattern `/^[^.]+$/` (no dots allowed)
+  - Valid: `process-order`, `send_notification`, `myFunction`
+  - Invalid: `process.order`, `send.notification.v2`
 - **Entry file**: Typically `index.ts` or `index.js`
 
 ## Deploying Functions
