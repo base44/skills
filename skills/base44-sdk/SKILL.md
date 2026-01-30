@@ -238,7 +238,8 @@ const pendingTasks = await base44.entities.Task.filter(
 ```javascript
 const user = await base44.auth.me();
 if (!user) {
-  base44.auth.redirectToLogin(window.location.href);
+  // Navigate to your custom login page
+  navigate('/login', { state: { returnTo: window.location.pathname } });
   return;
 }
 ```

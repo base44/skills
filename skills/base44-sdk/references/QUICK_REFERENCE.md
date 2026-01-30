@@ -13,7 +13,7 @@ me() → Promise<User | null>
 updateMe(data) → Promise<User>
 isAuthenticated() → Promise<boolean>
 logout(redirectUrl?) → void
-redirectToLogin(nextUrl) → void
+redirectToLogin(nextUrl) → void              # ⚠️ Avoid - prefer custom login UI
 register({email, password, turnstile_token?, referral_code?}) → Promise<any>
 verifyOtp({email, otpCode}) → Promise<any>
 resendOtp(email) → Promise<any>
