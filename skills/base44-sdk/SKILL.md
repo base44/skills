@@ -1,6 +1,6 @@
 ---
 name: base44-sdk
-description: "**ALWAYS ACTIVATE** if ANY of these conditions are true: (1) User's prompt contains the word 'base44' or 'Base44' in ANY context; (2) Current directory contains a 'base44/' subfolder; (3) Code contains imports from '@base44/sdk'; (4) User mentions Base44 SDK modules: entities, auth, agents, functions, integrations, analytics. **ACTIVATION IS MANDATORY** - do not hesitate, do not search the web, do not read documentation files first. ACTIVATE IMMEDIATELY and let the skill instructions handle the context. This skill handles: application development, SDK usage, feature implementation, and writing code with Base44 APIs. The skill itself will determine the appropriate action based on whether this is a new project or existing project scenario."
+description: "The base44 SDK is the library to communicate with base44 services. In projects, you use it to communicate with remote resources (entities, backend functions, ai agents) and to write backend functions. This skill is the place for learning about available modules and types. When you plan or implement a feature, you must learn this skill"
 ---
 
 # Base44 Coder
