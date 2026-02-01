@@ -4,7 +4,7 @@ Invoke custom backend functions via `base44.functions`.
 
 ## Contents
 - [Method](#method)
-- [Invoking Functions](#invoking-functions) (Frontend, File Upload, Service Role)
+- [Invoking Functions](#invoking-functions) (Frontend, File Upload, Service Role, REST API)
 - [Writing Backend Functions](#writing-backend-functions) (Basic, Service Role, Secrets, Errors)
 - [Setup Requirements](#setup-requirements)
 - [Authentication Modes](#authentication-modes)
@@ -52,6 +52,16 @@ const result = await base44.functions.invoke("uploadDocument", {
 const result = await base44.asServiceRole.functions.invoke("adminTask", {
   userId: "user-123"
 });
+```
+
+### Via REST API (curl)
+
+Functions can be called via HTTP POST to your app domain:
+
+```bash
+curl -X POST "https://<app-domain>/functions/<function-name>" \
+  -H "Content-Type: application/json" \
+  -d '{"key": "value"}'
 ```
 
 ## Writing Backend Functions
