@@ -116,7 +116,7 @@ With format:
 }
 ```
 
-Available formats: `date`, `date-time`, `email`, `uri`, `richtext`
+Available formats: `date`, `date-time`, `time`, `email`, `uri`, `hostname`, `ipv4`, `ipv6`, `uuid`, `file`, `regex`, `richtext`
 
 ### String with Enum
 
@@ -139,6 +139,32 @@ Constrained to specific values:
   "position": {
     "type": "number",
     "description": "Position for ordering"
+  }
+}
+```
+
+### Integer
+
+For whole numbers only:
+```jsonc
+{
+  "quantity": {
+    "type": "integer",
+    "description": "Item quantity",
+    "minimum": 0,
+    "maximum": 1000
+  }
+}
+```
+
+### Binary
+
+For file/blob data:
+```jsonc
+{
+  "attachment": {
+    "type": "binary",
+    "description": "File attachment"
   }
 }
 ```
@@ -188,15 +214,23 @@ Constrained to specific values:
 
 ## Field Properties
 
-| Property      | Description                                                  |
-| ------------- | ------------------------------------------------------------ |
-| `type`        | Data type: `string`, `number`, `boolean`, `array`, `object`  |
-| `description` | Human-readable description of the field                      |
-| `enum`        | Array of allowed values (for strings)                        |
-| `default`     | Default value when not provided                              |
-| `format`      | Format hint: `date`, `date-time`, `email`, `uri`, `richtext` |
-| `items`       | Schema for array items                                       |
-| `properties`  | Nested properties for object types                           |
+| Property      | Description                                                                              |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| `type`        | Data type: `string`, `number`, `integer`, `boolean`, `array`, `object`, `binary`         |
+| `description` | Human-readable description of the field                                                  |
+| `enum`        | Array of allowed values (for strings)                                                    |
+| `enumNames`   | Human-readable labels for enum values (same order as `enum`)                             |
+| `default`     | Default value when not provided                                                          |
+| `format`      | Format hint: `date`, `date-time`, `time`, `email`, `uri`, `hostname`, `ipv4`, `ipv6`, `uuid`, `file`, `regex`, `richtext` |
+| `items`       | Schema for array items                                                                   |
+| `properties`  | Nested properties for object types                                                       |
+| `$ref`        | Reference to another schema definition                                                   |
+| `minLength`   | Minimum string length                                                                    |
+| `maxLength`   | Maximum string length                                                                    |
+| `pattern`     | Regex pattern for string validation                                                      |
+| `minimum`     | Minimum value for numbers                                                                |
+| `maximum`     | Maximum value for numbers                                                                |
+| `rls`         | Field-level security rules (see Field Level Security section)                            |
 
 ## Complete Example
 
@@ -252,7 +286,10 @@ Here's a complete entity definition for a Task:
 
 ## Naming Conventions
 
-- **Entity name**: Use PascalCase (e.g., `Task`, `TeamMember`, `ActivityLog`)
+- **Entity name**: Use PascalCase with alphanumeric characters only (e.g., `Task`, `TeamMember`, `ActivityLog`)
+  - Must match pattern: `/^[a-zA-Z0-9]+$/`
+  - Valid: `Task`, `TeamMember`, `Order123`
+  - Invalid: `Team_Member`, `Team-Member`, `Team Member`
 - **File name**: Use kebab-case matching the entity (e.g., `task.jsonc`, `team-member.jsonc`, `activity-log.jsonc`)
 - **Field names**: Use snake_case (e.g., `board_id`, `user_email`, `due_date`)
 
@@ -281,7 +318,7 @@ Row Level Security (RLS) controls which records users can access based on their 
 
 ### RLS Operations
 
-RLS supports four operations:
+RLS supports five operations:
 
 | Operation | Description |
 |-----------|-------------|
@@ -289,6 +326,7 @@ RLS supports four operations:
 | `read` | Control who can view records |
 | `update` | Control who can modify records |
 | `delete` | Control who can remove records |
+| `write` | Shorthand for `create`, `update`, and `delete` combined |
 
 ### Permission Values
 
@@ -339,8 +377,9 @@ There are two condition types you can use:
 ```
 
 **Important limitations:**
-- Only **simple equality** is supported (no operators like `$ne`, `$gt`, `$in`, etc.)
-- MongoDB-style operators (`$and`, `$or`, `$in`, `$nin`, `$ne`) are **NOT supported** in JSON schema RLS
+- `user_condition` only supports **simple equality** (e.g., `{ "role": "admin" }`)
+- For `data.*` field comparisons, you can use operators: `$in`, `$nin`, `$ne`, `$all`
+- Logical operators `$or`, `$and`, `$nor` are available for combining conditions
 - You cannot filter by entity field values directly (e.g., `{"status": "published"}`)
 - Only user-related conditions are allowed
 
@@ -433,11 +472,14 @@ There are two condition types you can use:
 
 ### Limitations
 
-- **No MongoDB operators:** `$and`, `$or`, `$in`, `$nin`, `$ne`, `$gt`, `$lt`, `$regex`, `$expr`, `$where` are NOT supported
+- **user_condition is equality only:** `user_condition` only supports exact match (e.g., `{ "role": "admin" }`) - no operators
+- **No comparison operators on user_condition:** `$gt`, `$lt`, `$regex`, `$expr`, `$where` are NOT supported for user conditions
 - **No entity field filtering:** Cannot filter by entity field values (e.g., `{"status": "published"}`)
-- **Simple equality only:** `user_condition` only supports exact match (e.g., `{ "role": "admin" }`)
-- **Single condition per operation:** Each operation can only have one condition (no combining multiple rules)
 - **No deeply nested templates:** Templates like `{{user.data.profile.department}}` may not work
+
+**Supported operators:**
+- **Logical operators:** `$or`, `$and`, `$nor` for combining multiple conditions
+- **Field operators (for `data.*` fields only):** `$in`, `$nin`, `$ne`, `$all`
 
 ### Complex Access Patterns
 
@@ -449,11 +491,55 @@ For complex access patterns that require multiple conditions (e.g., "owner OR ad
 
 ## Field Level Security (FLS)
 
-**Note:** Field Level Security (FLS) is **NOT currently available** in Base44. You can only set security rules for entire entities (rows/records), not for individual fields within those records.
+Field Level Security allows you to control access to individual fields within an entity. FLS rules are defined within each field's schema using the `rls` property.
 
-If you need different access levels for different fields, the recommended approach is to split your data into separate entities:
-- Public data in one entity (with `read: true`)
-- Protected data in another entity (with appropriate RLS rules)
+### FLS Operations
+
+FLS supports the same operations as entity-level RLS:
+
+| Operation | Description |
+|-----------|-------------|
+| `create` | Control who can set this field when creating records |
+| `read` | Control who can view this field |
+| `update` | Control who can modify this field |
+| `delete` | Control who can clear this field |
+| `write` | Shorthand for `create`, `update`, and `delete` combined |
+
+### FLS Example
+
+```jsonc
+{
+  "name": "Employee",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Employee name"
+    },
+    "salary": {
+      "type": "number",
+      "description": "Employee salary",
+      "rls": {
+        "read": { "user_condition": { "role": "hr" } },
+        "update": { "user_condition": { "role": "hr" } }
+      }
+    },
+    "department": {
+      "type": "string",
+      "description": "Department name"
+    }
+  },
+  "required": ["name"]
+}
+```
+
+In this example, only users with the `hr` role can read or update the `salary` field. All users with access to the entity can read/update other fields.
+
+### FLS Notes
+
+- If no field-level RLS is defined, the field inherits the entity-level RLS rules
+- FLS rules follow the same condition format as entity-level RLS
+- Use FLS for sensitive fields like salary, SSN, or internal notes
 
 ## Pushing Entities
 
