@@ -50,10 +50,10 @@ The push operation synchronizes your local entity schema with Base44:
 
 ## Error Handling
 
-If no entities are found in your project configuration:
+If no entities are found in your project:
 ```bash
 $ npx base44 entities push
-Error: No entities found in project configuration
+No entities found in project
 ```
 
 ## Use Cases

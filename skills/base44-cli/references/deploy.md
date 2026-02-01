@@ -20,7 +20,8 @@ The command automatically detects and deploys:
 
 1. **Entities** - All `.jsonc` files in `base44/entities/`
 2. **Functions** - All functions in `base44/functions/`
-3. **Site** - Built files from `site.outputDirectory` (if configured)
+3. **Agents** - All agent configurations in `base44/agents/`
+4. **Site** - Built files from `site.outputDirectory` (if configured)
 
 ## Examples
 
@@ -53,6 +54,7 @@ npx base44 deploy -y
 5. Deploys all resources in sequence:
    - Pushes entity schemas
    - Deploys functions
+   - Pushes agent configurations
    - Uploads site files
 6. Displays the dashboard URL and app URL (if site was deployed)
 
@@ -80,4 +82,5 @@ After successful deployment:
 |---------|-------------|
 | `base44 entities push` | Push only entities |
 | `base44 functions deploy` | Deploy only functions |
+| `base44 agents push` | Push only agents |
 | `base44 site deploy` | Deploy only the site |

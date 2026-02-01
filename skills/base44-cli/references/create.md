@@ -24,7 +24,7 @@ npx base44 create [name] --path <path> [options]
 | `-p, --path <path>` | Path where to create the project | Yes* |
 | `-t, --template <id>` | Template ID (see templates below) | No |
 | `--deploy` | Build and deploy the site (includes pushing entities) | No |
-| `--skills` | Add AI agent skills (default: true) | No |
+| `--no-skills` | Skip AI agent skills installation (skills are added by default) | No |
 
 *Required for non-interactive mode. Both `name` and `--path` must be provided together.
 
@@ -96,7 +96,7 @@ npx base44 create my-app -p .
 npx base44 create my-app -p . --deploy
 
 # Create without adding AI agent skills
-npx base44 create my-app -p . --skills=false
+npx base44 create my-app -p . --no-skills
 ```
 
 ## What It Does
