@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: "Use for Base44 CLI operations and project initialization. Triggers: user wants to create/initialize a new Base44 project; user mentions CLI commands (npx base44, yarn base44, create, login, logout, whoami, deploy, entities push, site deploy, functions deploy); directory is empty or missing base44/config.jsonc; user says 'create a Base44 app/project', 'setup Base44', 'deploy to Base44', 'push entities'. This skill is the PREREQUISITE for base44-sdk - always use this first for new projects before building features."
+description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, ai agents), initialization and actions (resource creation, deployment). This skill is the place for learning about how to configure resources. When you plan or implement a feature, you must learn this skill"
 ---
 
 # Base44 CLI
