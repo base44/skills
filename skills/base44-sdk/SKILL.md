@@ -1,6 +1,6 @@
 ---
 name: base44-sdk
-description: "Base44 SDK for building features in existing projects. Use when writing code with Base44 modules (entities, auth, agents, functions, integrations). Triggers on tasks involving @base44/sdk imports, CRUD operations, or implementing features in a base44/ project. For resource configuration (creating entities/agents), see base44-cli skill first."
+description: "Base44 SDK for building features in existing projects. Use when writing code with Base44 modules (entities, auth, agents, functions, integrations). Triggers on tasks involving @base44/sdk imports, CRUD operations, or implementing features in a base44/ project. MANDATORY: For resource configuration (entities/functions/agents), activate base44-cli first - do not infer config formats from patterns."
 ---
 
 # Base44 Coder

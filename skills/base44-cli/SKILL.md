@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: "Base44 CLI for project setup and resource configuration. Use when initializing projects, configuring entities/functions/agents, or deploying to Base44. Triggers on tasks involving 'npx base44' commands, pushing resources, or setting up a new Base44 app. This skill defines how resources are configured - consult before implementing features that need configuration."
+description: "Base44 CLI for project setup and resource configuration. Use when initializing projects, configuring entities/functions/agents, or deploying to Base44. Triggers on tasks involving 'npx base44' commands, pushing resources, or setting up a new Base44 app. MANDATORY: Do not infer Base44 configuration formats from patterns or other files - activate this skill to get the exact schemas required."
 ---
 
 # Base44 CLI
