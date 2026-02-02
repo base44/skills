@@ -6,9 +6,12 @@ Creates a new Base44 project from a template. This command is framework-agnostic
 
 ALWAYS provide both the project name AND `--path` flag. Without both, the command opens an interactive TUI which agents cannot use properly.
 
+The project name can be provided either as a positional argument OR via the `--name` option.
+
 WRONG: `npx base44 create`
-WRONG: `npx base44 create my-app`
+WRONG: `npx base44 create my-app` (missing --path)
 RIGHT: `npx base44 create my-app -p ./my-app`
+RIGHT: `npx base44 create --name my-app -p ./my-app`
 
 ## Syntax
 
@@ -20,13 +23,14 @@ npx base44 create [name] --path <path> [options]
 
 | Argument/Option | Description | Required |
 |--------|-------------|----------|
-| `name` | Project name (positional argument) | Yes* |
+| `[name]` | Project name (positional argument, optional) | Yes* |
+| `-n, --name <name>` | Project name (alternative to positional argument) | Yes* |
 | `-p, --path <path>` | Path where to create the project | Yes* |
 | `-t, --template <id>` | Template ID (see templates below) | No |
 | `--deploy` | Build and deploy the site (includes pushing entities) | No |
 | `--no-skills` | Skip AI agent skills installation (skills are added by default) | No |
 
-*Required for non-interactive mode. Both `name` and `--path` must be provided together.
+*Required for non-interactive mode. Both a name (via positional OR `--name`) and `--path` must be provided together. If both positional and `--name` are provided, `--name` takes precedence.
 
 ## Template Selection (CRITICAL - Choose Appropriately)
 
@@ -85,6 +89,9 @@ npx base44 create my-app -p .
 ```bash
 # RECOMMENDED: Create full-stack project (for new apps)
 npx base44 create my-app -p ./my-app -t backend-and-client
+
+# Alternative syntax using --name flag
+npx base44 create --name my-app -p ./my-app -t backend-and-client
 
 # Create full-stack and deploy in one step
 npx base44 create my-app -p ./my-app -t backend-and-client --deploy
