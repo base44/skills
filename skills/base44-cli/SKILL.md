@@ -188,7 +188,7 @@ npx base44 <command>
 |---------|-------------|-----------|
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
-| `base44 dashboard` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
+| `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 
 ### Deployment
 
@@ -363,7 +363,7 @@ npx base44 site deploy -y
 ### Opening the Dashboard
 ```bash
 # Open app dashboard in browser
-npx base44 dashboard
+npx base44 dashboard open
 ```
 
 ## Authentication
