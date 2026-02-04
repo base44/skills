@@ -2,5 +2,5 @@
   "name": "base44",
   "version": "0.0.1",
   "description": "Base44 SDK skills for Claude Code - CLI operations and JavaScript/TypeScript SDK development",
-  "skills": ["./skills/base44-cli/", "./skills/base44-sdk/", "./skills/toubleshoot-production/"]
+  "skills": ["./skills/base44-cli/", "./skills/base44-sdk/", "./skills/base44-troubleshooter/"]
 }

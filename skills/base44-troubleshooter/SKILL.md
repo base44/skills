@@ -1,5 +1,5 @@
 ---
-name: troubleshoot-production
+name: base44-troubleshooter
 description: Troubleshoot production issues using audit logs, backend function logs, and agent conversations. Use when investigating app errors, debugging function calls, tracking user activity, debugging agent tool failures, or diagnosing production problems in Base44 apps.
 ---
 
