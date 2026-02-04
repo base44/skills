@@ -1,0 +1,52 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "agent-with-function",
+  "description": "Test creating an agent that can call a backend function",
+  "prompt": "Create an order assistant agent called 'order_assistant' that can help users track and cancel their orders. The agent should have: 1) Read access to the Order entity, 2) Access to a backend function called 'cancel_order' that cancels an order. Also create the cancel_order backend function that accepts order_id and cancellation_reason.",
+  "expectedSkills": ["base44-cli"],
+  "checks": [
+    {
+      "type": "file-exists",
+      "description": "Agent config created",
+      "filePath": "base44/agents/order_assistant.jsonc"
+    },
+    {
+      "type": "valid-json",
+      "description": "Agent config is valid JSON",
+      "filePath": "base44/agents/order_assistant.jsonc"
+    },
+    {
+      "type": "file-content",
+      "description": "Has entity tool config",
+      "filePath": "base44/agents/order_assistant.jsonc",
+      "pattern": "\"entity_name\"\\s*:\\s*\"Order\""
+    },
+    {
+      "type": "file-content",
+      "description": "Has function tool config",
+      "filePath": "base44/agents/order_assistant.jsonc",
+      "pattern": "\"function_name\"\\s*:\\s*\"cancel_order\""
+    },
+    {
+      "type": "file-exists",
+      "description": "Function config created",
+      "filePath": "base44/functions/cancel-order/function.jsonc"
+    },
+    {
+      "type": "file-exists",
+      "description": "Function entry point created",
+      "filePath": "base44/functions/cancel-order/index.ts"
+    },
+    {
+      "type": "file-content",
+      "description": "Function uses Deno.serve",
+      "filePath": "base44/functions/cancel-order/index.ts",
+      "pattern": "Deno\\.serve"
+    },
+    {
+      "type": "contains",
+      "description": "Mentions agents",
+      "value": "agent"
+    }
+  ]
+}

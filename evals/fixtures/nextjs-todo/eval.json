@@ -1,0 +1,52 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "nextjs-todo-entities",
+  "description": "Test creating Todo and Category entities in an existing Next.js Base44 project",
+  "prompt": "Create Base44 entity schema files in base44/entities/ for a todo app. Create a Todo entity (todo.jsonc) with title (string, required), description (string), completed (boolean, default false), and due_date (string with date format). Also create a Category entity (category.jsonc) with name (string, required) and color (string). The Todo should have a category_id field to reference the Category. Use the standard Base44 entity schema format with name, type, properties, and required fields.",
+  "expectedSkills": ["base44-cli"],
+  "checks": [
+    {
+      "type": "file-exists",
+      "description": "Todo entity file created",
+      "filePath": "base44/entities/todo.jsonc"
+    },
+    {
+      "type": "file-exists",
+      "description": "Category entity file created",
+      "filePath": "base44/entities/category.jsonc"
+    },
+    {
+      "type": "valid-json",
+      "description": "Todo entity is valid JSON",
+      "filePath": "base44/entities/todo.jsonc"
+    },
+    {
+      "type": "valid-json",
+      "description": "Category entity is valid JSON",
+      "filePath": "base44/entities/category.jsonc"
+    },
+    {
+      "type": "file-content",
+      "description": "Todo has title property",
+      "filePath": "base44/entities/todo.jsonc",
+      "pattern": "\"title\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "file-content",
+      "description": "Todo has completed property",
+      "filePath": "base44/entities/todo.jsonc",
+      "pattern": "\"completed\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "file-content",
+      "description": "Category has name property",
+      "filePath": "base44/entities/category.jsonc",
+      "pattern": "\"name\"\\s*:\\s*\\{"
+    },
+    {
+      "type": "contains",
+      "description": "mentions base44 or entities",
+      "value": "base44"
+    }
+  ]
+}

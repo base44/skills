@@ -1,0 +1,48 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "create-support-agent",
+  "description": "Test creating an AI agent configuration with entity access",
+  "prompt": "Create a support agent called 'support_agent' that helps users with their orders. The agent should have read access to Order and Customer entities. Give it clear instructions to always look up order details when users ask about their orders.",
+  "expectedSkills": ["base44-cli"],
+  "checks": [
+    {
+      "type": "file-exists",
+      "description": "Agent config file created",
+      "filePath": "base44/agents/support_agent.jsonc"
+    },
+    {
+      "type": "valid-json",
+      "description": "Agent config is valid JSON",
+      "filePath": "base44/agents/support_agent.jsonc"
+    },
+    {
+      "type": "file-content",
+      "description": "Has correct agent name",
+      "filePath": "base44/agents/support_agent.jsonc",
+      "pattern": "\"name\"\\s*:\\s*\"support_agent\""
+    },
+    {
+      "type": "file-content",
+      "description": "Has tool_configs with entity access",
+      "filePath": "base44/agents/support_agent.jsonc",
+      "pattern": "\"tool_configs\"\\s*:\\s*\\["
+    },
+    {
+      "type": "file-content",
+      "description": "Has Order entity access",
+      "filePath": "base44/agents/support_agent.jsonc",
+      "pattern": "\"entity_name\"\\s*:\\s*\"Order\""
+    },
+    {
+      "type": "file-content",
+      "description": "Has instructions field",
+      "filePath": "base44/agents/support_agent.jsonc",
+      "pattern": "\"instructions\"\\s*:"
+    },
+    {
+      "type": "contains",
+      "description": "Mentions agents push command",
+      "value": "agents push"
+    }
+  ]
+}

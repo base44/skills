@@ -1,0 +1,38 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "react-task-manager-sdk",
+  "description": "Test implementing a TaskList component using Base44 SDK to fetch and display tasks",
+  "prompt": "Implement the TaskList component in src/components/TaskList.tsx. It should fetch all tasks using the Base44 SDK (base44.entities.Task.list()), display them in a list showing title, status, and due_date, and allow marking tasks as completed by clicking on them (using base44.entities.Task.update()).",
+  "expectedSkills": ["base44-sdk"],
+  "checks": [
+    {
+      "type": "file-content",
+      "description": "Uses entities.Task.list()",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "entities\\.Task\\.list\\("
+    },
+    {
+      "type": "file-content",
+      "description": "Uses entities.Task.update()",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "entities\\.Task\\.update\\("
+    },
+    {
+      "type": "file-content",
+      "description": "Imports base44 client",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "import.*base44|from ['\"].*base44"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses React hooks for state",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "useState|useEffect"
+    },
+    {
+      "type": "contains",
+      "description": "Output mentions SDK or entities",
+      "value": "entities"
+    }
+  ]
+}

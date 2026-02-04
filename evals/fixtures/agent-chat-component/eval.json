@@ -1,0 +1,43 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "agent-chat-component",
+  "description": "Test creating a React chat component using the Base44 agents SDK",
+  "prompt": "Create a ChatWindow React component in src/components/ChatWindow.jsx that lets users chat with a support agent. It should: 1) Create a new conversation on mount if none exists, 2) Display messages from the conversation, 3) Allow sending new messages, 4) Subscribe to real-time updates for new messages.",
+  "expectedSkills": ["base44-sdk"],
+  "checks": [
+    {
+      "type": "file-exists",
+      "description": "ChatWindow component created",
+      "filePath": "src/components/ChatWindow.jsx"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses createConversation",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "createConversation"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses addMessage",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "addMessage"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses subscribeToConversation",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "subscribeToConversation"
+    },
+    {
+      "type": "file-content",
+      "description": "References agents module",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "base44\\.agents|agents\\."
+    },
+    {
+      "type": "contains",
+      "description": "Mentions agent conversation",
+      "value": "conversation"
+    }
+  ]
+}

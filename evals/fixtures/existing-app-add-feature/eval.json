@@ -1,0 +1,53 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "add-notification-function",
+  "description": "Test creating a backend function to send order status notification emails",
+  "prompt": "Create a backend function called 'send-order-notification' that sends an email notification when an order status changes. The function should: 1) Accept order_id and new_status in the request body, 2) Fetch the order and user details using service role, 3) Send an email to the user about their order status update using integrations.Core.SendEmail.",
+  "expectedSkills": ["base44-cli"],
+  "checks": [
+    {
+      "type": "file-exists",
+      "description": "Function directory created",
+      "filePath": "base44/functions/send-order-notification/function.jsonc"
+    },
+    {
+      "type": "file-exists",
+      "description": "Function entry point created",
+      "filePath": "base44/functions/send-order-notification/index.ts"
+    },
+    {
+      "type": "valid-json",
+      "description": "function.jsonc is valid JSON",
+      "filePath": "base44/functions/send-order-notification/function.jsonc"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses Deno.serve",
+      "filePath": "base44/functions/send-order-notification/index.ts",
+      "pattern": "Deno\\.serve"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses createClientFromRequest",
+      "filePath": "base44/functions/send-order-notification/index.ts",
+      "pattern": "createClientFromRequest"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses asServiceRole",
+      "filePath": "base44/functions/send-order-notification/index.ts",
+      "pattern": "asServiceRole"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses SendEmail integration",
+      "filePath": "base44/functions/send-order-notification/index.ts",
+      "pattern": "SendEmail|integrations\\.Core"
+    },
+    {
+      "type": "contains",
+      "description": "mentions function name",
+      "value": "send-order-notification"
+    }
+  ]
+}

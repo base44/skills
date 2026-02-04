@@ -1,0 +1,233 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Eval Configuration",
+  "description": "Configuration for a skills eval test case",
+  "type": "object",
+  "required": ["name", "description", "prompt"],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for IDE support"
+    },
+    "name": {
+      "type": "string",
+      "description": "Unique identifier for the test case"
+    },
+    "description": {
+      "type": "string",
+      "description": "Human-readable description of what the test validates"
+    },
+    "prompt": {
+      "type": "string",
+      "description": "The prompt sent to Claude for this test"
+    },
+    "expectedSkills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of skill names that should be detected/invoked during the test"
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/check"
+      },
+      "description": "Assertions to run against the agent's output and generated files"
+    }
+  },
+  "definitions": {
+    "check": {
+      "type": "object",
+      "required": ["type", "description"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "contains",
+            "file-exists",
+            "file-content",
+            "valid-json",
+            "command-passes",
+            "json-schema",
+            "entity-config",
+            "agent-config",
+            "function-def"
+          ],
+          "description": "The type of check to perform"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of what this check validates"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "contains" } }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "type": "string",
+                "description": "The substring to search for in the agent's output (case-insensitive)"
+              }
+            },
+            "required": ["value"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "file-exists" } }
+          },
+          "then": {
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the file (relative to project directory)"
+              }
+            },
+            "required": ["filePath"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "file-content" } }
+          },
+          "then": {
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the file (relative to project directory)"
+              },
+              "pattern": {
+                "type": "string",
+                "description": "Regular expression pattern to match against file content"
+              },
+              "value": {
+                "type": "string",
+                "description": "Exact substring to find in file content (alternative to pattern)"
+              }
+            },
+            "required": ["filePath"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "valid-json" } }
+          },
+          "then": {
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the JSON/JSONC file to validate"
+              }
+            },
+            "required": ["filePath"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "command-passes" } }
+          },
+          "then": {
+            "properties": {
+              "command": {
+                "type": "string",
+                "description": "Shell command to run (must exit with code 0 to pass)"
+              }
+            },
+            "required": ["command"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "json-schema" } }
+          },
+          "then": {
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the JSON file to validate (optional, defaults to agent output)"
+              },
+              "schema": {
+                "type": "object",
+                "description": "JSON Schema to validate against"
+              }
+            },
+            "required": ["schema"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "entity-config" } }
+          },
+          "then": {
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the entity config file (optional, extracts from output if not specified)"
+              },
+              "target": {
+                "type": "string",
+                "enum": ["output", "file"],
+                "description": "Where to find the entity config"
+              },
+              "expectedValid": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether the config is expected to be valid"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "agent-config" } }
+          },
+          "then": {
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the agent config file (optional, extracts from output if not specified)"
+              },
+              "target": {
+                "type": "string",
+                "enum": ["output", "file"],
+                "description": "Where to find the agent config"
+              },
+              "expectedValid": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether the config is expected to be valid"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "function-def" } }
+          },
+          "then": {
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the function config file (optional, extracts from output if not specified)"
+              },
+              "target": {
+                "type": "string",
+                "enum": ["output", "file"],
+                "description": "Where to find the function config"
+              },
+              "expectedValid": {
+                "type": "boolean",
+                "default": true,
+                "description": "Whether the config is expected to be valid"
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
