@@ -202,6 +202,7 @@ npx base44 <command>
 | ---------------------- | ------------------------------------------- | --------------------------------------------------- |
 | Create Entities        | Define entities in `base44/entities` folder | [entities-create.md](references/entities-create.md) |
 | `base44 entities push` | Push local entities to Base44               | [entities-push.md](references/entities-push.md)     |
+| RLS Patterns           | Row-level security examples and operators   | [rls-examples.md](references/rls-examples.md) ⚠️ **READ FOR RLS** |
 
 #### Entity Schema (Quick Reference)
 

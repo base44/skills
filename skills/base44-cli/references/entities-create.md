@@ -376,12 +376,13 @@ There are two condition types you can use:
 }
 ```
 
-**Important limitations:**
+**Important notes:**
 - `user_condition` only supports **simple equality** (e.g., `{ "role": "admin" }`)
+- **Entity field filtering requires `data.` prefix:** Use `{ "data.fieldname": value }` to filter by entity field values
 - For `data.*` field comparisons, you can use operators: `$in`, `$nin`, `$ne`, `$all`
 - Logical operators `$or`, `$and`, `$nor` are available for combining conditions
-- You cannot filter by entity field values directly (e.g., `{"status": "published"}`)
-- Only user-related conditions are allowed
+
+⚠️ **For advanced RLS patterns and examples, see [rls-examples.md](rls-examples.md)**
 
 ### RLS Examples
 
@@ -474,12 +475,14 @@ There are two condition types you can use:
 
 - **user_condition is equality only:** `user_condition` only supports exact match (e.g., `{ "role": "admin" }`) - no operators
 - **No comparison operators on user_condition:** `$gt`, `$lt`, `$regex`, `$expr`, `$where` are NOT supported for user conditions
-- **No entity field filtering:** Cannot filter by entity field values (e.g., `{"status": "published"}`)
 - **No deeply nested templates:** Templates like `{{user.data.profile.department}}` may not work
 
 **Supported operators:**
 - **Logical operators:** `$or`, `$and`, `$nor` for combining multiple conditions
 - **Field operators (for `data.*` fields only):** `$in`, `$nin`, `$ne`, `$all`
+- **Entity field filtering:** Use `data.` prefix to filter by entity field values (e.g., `{ "data.status": "published" }` or `{ "data.completed": true }`)
+
+⚠️ **See [rls-examples.md](rls-examples.md) for comprehensive RLS patterns and examples**
 
 ### Complex Access Patterns
 
