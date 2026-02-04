@@ -39,7 +39,7 @@ async function copyDir(src: string, dest: string): Promise<void> {
 
 export interface SetupOptions {
   fixturesDir?: string;
-  experimentDir?: string;  // Optional experiment dir for CLAUDE.md override
+  experimentDir?: string;  // Optional experiment dir for CLAUDE.md and skills override
   verbose?: boolean;
 }
 
@@ -64,19 +64,44 @@ export async function setupFixtures(options: SetupOptions = {}): Promise<void> {
     console.log(`Found fixtures: ${fixtures.join(', ')}`);
   }
 
-  // Copy skills from each fixture's own skills folder to project/skills
+  // Determine skills source: experiment skills override fixture skills
+  let experimentSkillsSrc: string | null = null;
+  let experimentSkillNames: string[] = [];
+  if (experimentDir) {
+    const expSkillsPath = path.join(experimentDir, 'skills');
+    try {
+      await fs.access(expSkillsPath);
+      const skillDirs = await fs.readdir(expSkillsPath, { withFileTypes: true });
+      experimentSkillNames = skillDirs
+        .filter(d => d.isDirectory() && !d.name.startsWith('.'))
+        .map(d => d.name);
+      if (experimentSkillNames.length > 0) {
+        experimentSkillsSrc = expSkillsPath;
+        if (verbose) {
+          console.log(`Using experiment skills: ${experimentSkillNames.join(', ')}`);
+        }
+      }
+    } catch {
+      // No skills in experiment, will use fixture skills
+    }
+  }
+
+  // Copy skills to each fixture's project/skills
   for (const fixture of fixtures) {
     const fixtureDir = path.join(fixturesDir, fixture);
     const fixtureSkillsSrc = path.join(fixtureDir, 'skills');
     const projectSkillsDest = path.join(fixtureDir, 'project', 'skills');
 
-    // Check if fixture has its own skills folder
+    // Use experiment skills if available, otherwise fixture skills
+    const skillsSrc = experimentSkillsSrc ?? fixtureSkillsSrc;
+
+    // Check if skills source exists
     let skillCount = 0;
     try {
-      await fs.access(fixtureSkillsSrc);
+      await fs.access(skillsSrc);
 
-      // Get list of skills in fixture
-      const skillDirs = await fs.readdir(fixtureSkillsSrc, { withFileTypes: true });
+      // Get list of skills
+      const skillDirs = await fs.readdir(skillsSrc, { withFileTypes: true });
       const skills = skillDirs
         .filter(d => d.isDirectory() && !d.name.startsWith('.'))
         .map(d => d.name);
@@ -89,10 +114,10 @@ export async function setupFixtures(options: SetupOptions = {}): Promise<void> {
         // Ignore
       }
 
-      // Copy fixture's skills to project/skills
-      await copyDir(fixtureSkillsSrc, projectSkillsDest);
+      // Copy skills to project/skills
+      await copyDir(skillsSrc, projectSkillsDest);
     } catch {
-      // No skills folder in fixture, skip
+      // No skills folder found, skip
       if (verbose) {
         console.log(`  ⚠ ${fixture}: no skills folder found`);
       }
@@ -128,7 +153,8 @@ export async function setupFixtures(options: SetupOptions = {}): Promise<void> {
 
     if (verbose) {
       const suffix = hasClaude ? ' + CLAUDE.md' : '';
-      console.log(`  ✓ ${fixture}: copied ${skillCount} skills${suffix}`);
+      const source = experimentSkillsSrc ? ' (from experiment)' : '';
+      console.log(`  ✓ ${fixture}: copied ${skillCount} skills${source}${suffix}`);
     }
   }
 

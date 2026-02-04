@@ -4,8 +4,9 @@ import type { Experiment } from './types.js';
 
 /**
  * Discover experiments from the experiments directory.
- * Each subdirectory is an experiment. Experiments can optionally contain CLAUDE.md.
- * Skills are provided by the fixtures themselves, not by experiments.
+ * Each subdirectory is an experiment. Experiments can contain:
+ * - CLAUDE.md: Override the project's CLAUDE.md
+ * - skills/: Directory of skills to use instead of fixture skills
  */
 export async function discoverExperiments(experimentsDir: string): Promise<Experiment[]> {
   const experiments: Experiment[] = [];
@@ -19,12 +20,12 @@ export async function discoverExperiments(experimentsDir: string): Promise<Exper
       }
 
       const experimentDir = path.join(experimentsDir, entry.name);
-      const hasClaude = await hasClaudeMd(experimentDir);
+      const skills = await getExperimentContents(experimentDir);
 
       experiments.push({
         name: entry.name,
         skillsDir: experimentDir,
-        skills: hasClaude ? ['CLAUDE.md'] : [],
+        skills,
       });
     }
   } catch (error) {
@@ -38,15 +39,32 @@ export async function discoverExperiments(experimentsDir: string): Promise<Exper
 }
 
 /**
- * Check if experiment directory has a CLAUDE.md file.
+ * Get contents of an experiment directory (CLAUDE.md and skill names).
  */
-async function hasClaudeMd(experimentDir: string): Promise<boolean> {
+async function getExperimentContents(experimentDir: string): Promise<string[]> {
+  const contents: string[] = [];
+
+  // Check for CLAUDE.md
   try {
     await fs.access(path.join(experimentDir, 'CLAUDE.md'));
-    return true;
+    contents.push('CLAUDE.md');
   } catch {
-    return false;
+    // No CLAUDE.md
   }
+
+  // Check for skills directory
+  try {
+    const skillsDir = path.join(experimentDir, 'skills');
+    const skillEntries = await fs.readdir(skillsDir, { withFileTypes: true });
+    const skillNames = skillEntries
+      .filter(d => d.isDirectory() && !d.name.startsWith('.'))
+      .map(d => d.name);
+    contents.push(...skillNames);
+  } catch {
+    // No skills directory
+  }
+
+  return contents;
 }
 
 /**
