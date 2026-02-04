@@ -1,0 +1,10 @@
+{
+  "name": "Task Manager",
+  "description": "A task management application",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
+  "site": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+  }
+}

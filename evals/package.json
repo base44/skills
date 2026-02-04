@@ -1,0 +1,24 @@
+{
+  "name": "skills-evals",
+  "version": "1.0.0",
+  "description": "Evaluation system for skills testing",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "setup": "tsx src/setup.ts",
+    "eval": "npm run setup && tsx src/index.ts",
+    "eval:only": "tsx src/index.ts",
+    "eval:compare": "tsx src/compare.ts",
+    "test": "npm run eval"
+  },
+  "dependencies": {
+    "execa": "^9.5.2",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

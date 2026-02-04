@@ -1,0 +1,23 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "name": {
+      "type": "string"
+    },
+    "notification_preferences": {
+      "type": "object",
+      "properties": {
+        "email_enabled": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  },
+  "required": ["email", "name"]
+}

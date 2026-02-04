@@ -1,0 +1,9 @@
+{
+  "name": "ecommerce-app",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@base44/sdk": "latest",
+    "react": "^18.2.0"
+  }
+}
