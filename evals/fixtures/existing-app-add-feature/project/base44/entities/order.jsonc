@@ -1,0 +1,29 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string"
+    },
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "quantity": { "type": "number" },
+          "price": { "type": "number" }
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "processing", "shipped", "delivered"],
+      "default": "pending"
+    },
+    "total": {
+      "type": "number"
+    }
+  },
+  "required": ["user_id", "items", "total"]
+}

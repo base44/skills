@@ -1,0 +1,221 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "cli-functions",
+  "description": "Test CLI backend function creation: env vars, LLM, service role, response patterns",
+  "prompts": [
+    {
+      "name": "cli-function-env",
+      "description": "Create function using environment variables",
+      "prompt": "Create a backend function called 'send-webhook' that reads a WEBHOOK_URL from Deno environment variables and sends a POST request to it with data from the request body. Create both base44/functions/send-webhook/function.jsonc and base44/functions/send-webhook/index.ts.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/send-webhook/function.jsonc",
+          "description": "base44/functions/send-webhook/function.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/send-webhook/index.ts",
+          "description": "base44/functions/send-webhook/index.ts exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/functions/send-webhook/function.jsonc",
+          "description": "base44/functions/send-webhook/function.jsonc is valid JSON"
+        },
+        {
+          "type": "function-def",
+          "filePath": "base44/functions/send-webhook/function.jsonc",
+          "target": "file",
+          "description": "Function config validates (base44/functions/send-webhook/function.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/send-webhook/index.ts",
+          "pattern": "Deno\\.serve",
+          "description": "Uses Deno.serve()"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/send-webhook/index.ts",
+          "pattern": "Deno\\.env\\.get",
+          "description": "Uses Deno environment variables"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/send-webhook/index.ts",
+          "pattern": "Response\\.json\\(",
+          "description": "Returns Response.json()"
+        }
+      ]
+    },
+    {
+      "name": "cli-function-llm",
+      "description": "Create function using LLM integration",
+      "prompt": "Create a backend function called 'summarize-text' that accepts text in the request body, uses the Base44 SDK's integrations.Core.InvokeLLM to generate a summary, and returns it. Create both base44/functions/summarize-text/function.jsonc and base44/functions/summarize-text/index.ts.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/summarize-text/function.jsonc",
+          "description": "base44/functions/summarize-text/function.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/summarize-text/index.ts",
+          "description": "base44/functions/summarize-text/index.ts exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/functions/summarize-text/function.jsonc",
+          "description": "base44/functions/summarize-text/function.jsonc is valid JSON"
+        },
+        {
+          "type": "function-def",
+          "filePath": "base44/functions/summarize-text/function.jsonc",
+          "target": "file",
+          "description": "Function config validates (base44/functions/summarize-text/function.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/summarize-text/index.ts",
+          "pattern": "Deno\\.serve",
+          "description": "Uses Deno.serve()"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/summarize-text/index.ts",
+          "pattern": "createClientFromRequest",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/summarize-text/index.ts",
+          "pattern": "integrations\\.Core\\.InvokeLLM|InvokeLLM",
+          "description": "Matches expected pattern in index.ts"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/summarize-text/index.ts",
+          "pattern": "npm:@base44/sdk|from.*@base44/sdk",
+          "description": "Imports base44 client"
+        }
+      ]
+    },
+    {
+      "name": "cli-function-service-role",
+      "description": "Create function using service role access",
+      "prompt": "Create a backend function called 'admin-stats' that uses service role access to count all orders and return statistics. It should use base44.asServiceRole.entities.Order.list() to get all orders regardless of user permissions. Create both base44/functions/admin-stats/function.jsonc and base44/functions/admin-stats/index.ts.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/admin-stats/function.jsonc",
+          "description": "base44/functions/admin-stats/function.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/admin-stats/index.ts",
+          "description": "base44/functions/admin-stats/index.ts exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/functions/admin-stats/function.jsonc",
+          "description": "base44/functions/admin-stats/function.jsonc is valid JSON"
+        },
+        {
+          "type": "function-def",
+          "filePath": "base44/functions/admin-stats/function.jsonc",
+          "target": "file",
+          "description": "Function config validates (base44/functions/admin-stats/function.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/admin-stats/index.ts",
+          "pattern": "Deno\\.serve",
+          "description": "Uses Deno.serve()"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/admin-stats/index.ts",
+          "pattern": "asServiceRole",
+          "description": "Uses asServiceRole for admin access"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/admin-stats/index.ts",
+          "pattern": "createClientFromRequest",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/admin-stats/index.ts",
+          "pattern": "Response\\.json\\(",
+          "description": "Returns Response.json()"
+        }
+      ]
+    },
+    {
+      "name": "cli-function-response",
+      "description": "Create function with proper error handling and response patterns",
+      "prompt": "Create a backend function called 'validate-coupon' that accepts a coupon_code in the request body, validates it against known coupons, and returns either the discount amount or an error. Use proper try/catch error handling and return appropriate HTTP responses. Create both base44/functions/validate-coupon/function.jsonc and base44/functions/validate-coupon/index.ts.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/validate-coupon/function.jsonc",
+          "description": "base44/functions/validate-coupon/function.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/validate-coupon/index.ts",
+          "description": "base44/functions/validate-coupon/index.ts exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/functions/validate-coupon/function.jsonc",
+          "description": "base44/functions/validate-coupon/function.jsonc is valid JSON"
+        },
+        {
+          "type": "function-def",
+          "filePath": "base44/functions/validate-coupon/function.jsonc",
+          "target": "file",
+          "description": "Function config validates (base44/functions/validate-coupon/function.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/validate-coupon/index.ts",
+          "pattern": "Deno\\.serve",
+          "description": "Uses Deno.serve()"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/validate-coupon/index.ts",
+          "pattern": "try\\s*\\{",
+          "description": "Has try/catch error handling"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/validate-coupon/index.ts",
+          "pattern": "catch",
+          "description": "Has catch block"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/validate-coupon/index.ts",
+          "pattern": "Response\\.json\\(",
+          "description": "Returns Response.json()"
+        }
+      ]
+    }
+  ]
+}

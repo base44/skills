@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Results (generated reports)
+results/*.md
+
+# Copied skills in fixtures (synced from parent /skills directory by setup script)
+fixtures/*/project/skills/
+
+# OS files
+.DS_Store

@@ -1,0 +1,11 @@
+{
+  "name": "Fullstack Test App",
+  "description": "A test application for full-stack Base44 scenarios",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
+  "agentsDir": "./agents",
+  "site": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+  }
+}

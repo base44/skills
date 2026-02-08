@@ -1,0 +1,127 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "sdk-integrations",
+  "description": "Test SDK integration patterns: LLM, email, upload, image generation",
+  "prompts": [
+    {
+      "name": "sdk-integrations-llm",
+      "description": "Use LLM integration",
+      "prompt": "Create an AISummary component in src/components/AISummary.jsx that takes a text prop and generates a summary using the Base44 SDK's LLM integration. Use the correct integration method to invoke the LLM and display the result.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/AISummary.jsx",
+          "description": "src/components/AISummary.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/AISummary.jsx",
+          "pattern": "integrations\\.Core\\.InvokeLLM",
+          "description": "Matches expected pattern in AISummary.jsx"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/AISummary.jsx",
+          "pattern": "import.*base44|from ['\"].*base44",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/AISummary.jsx",
+          "pattern": "ai\\.generate|openai\\.chat|llm\\(",
+          "description": "Does not use hallucinated ai.generate"
+        }
+      ]
+    },
+    {
+      "name": "sdk-integrations-email",
+      "description": "Send email via integration",
+      "prompt": "Create a SendNotification component in src/components/SendNotification.jsx that sends an email notification using the Base44 SDK. Include form fields for recipient (to), subject, and body. Use the correct integration method to send the email.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/SendNotification.jsx",
+          "description": "src/components/SendNotification.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/SendNotification.jsx",
+          "pattern": "integrations\\.Core\\.SendEmail",
+          "description": "Matches expected pattern in SendNotification.jsx"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/SendNotification.jsx",
+          "pattern": "sendEmail\\(|email\\.send\\(",
+          "description": "Does not use hallucinated sendEmail"
+        }
+      ]
+    },
+    {
+      "name": "sdk-integrations-upload",
+      "description": "Upload file via integration",
+      "prompt": "Create a FileUploader component in src/components/FileUploader.jsx that lets users upload files using the Base44 SDK. Include a file input, handle the upload using the correct integration method, and display the uploaded file URL.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/FileUploader.jsx",
+          "description": "src/components/FileUploader.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/FileUploader.jsx",
+          "pattern": "integrations\\.Core\\.UploadFile",
+          "description": "Matches expected pattern in FileUploader.jsx"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/FileUploader.jsx",
+          "pattern": "storage\\.upload|uploadFile\\(",
+          "description": "Does not use hallucinated storage.upload"
+        }
+      ]
+    },
+    {
+      "name": "sdk-integrations-image",
+      "description": "Generate image via integration",
+      "prompt": "Create an ImageGenerator component in src/components/ImageGenerator.jsx that generates images from text prompts using the Base44 SDK. Include a text input for the prompt, use the correct integration method to generate the image, and display the result.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/ImageGenerator.jsx",
+          "description": "src/components/ImageGenerator.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ImageGenerator.jsx",
+          "pattern": "integrations\\.Core\\.GenerateImage",
+          "description": "Matches expected pattern in ImageGenerator.jsx"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ImageGenerator.jsx",
+          "pattern": "import.*base44|from ['\"].*base44",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ImageGenerator.jsx",
+          "pattern": "ai\\.generateImage|dalle|openai",
+          "description": "Does not use hallucinated ai.generateImage"
+        }
+      ]
+    }
+  ]
+}

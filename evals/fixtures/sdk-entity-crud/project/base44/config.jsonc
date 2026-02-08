@@ -1,0 +1,10 @@
+{
+  "name": "Entity CRUD App",
+  "description": "A test application for SDK entity CRUD operations",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
+  "site": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+  }
+}
