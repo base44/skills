@@ -1,0 +1,10 @@
+{
+  "name": "CLI Test App",
+  "description": "A test application for CLI entity operations",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
+  "site": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+  }
+}

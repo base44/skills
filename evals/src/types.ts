@@ -39,9 +39,29 @@ export interface CheckConfig {
   schema?: Record<string, unknown>;
 }
 
+export interface PromptConfig {
+  name: string;
+  description?: string;
+  prompt: string;
+  expectedSkills: string[];
+  checks: CheckConfig[];
+}
+
 export interface EvalConfig {
   name: string;
   description: string;
+  // Single-prompt (backward compat)
+  prompt?: string;
+  expectedSkills?: string[];
+  checks?: CheckConfig[];
+  // Multi-prompt
+  prompts?: PromptConfig[];
+}
+
+export interface ExpandedFixture {
+  name: string;
+  description: string;
+  fixtureDir: string;
   prompt: string;
   expectedSkills: string[];
   checks: CheckConfig[];

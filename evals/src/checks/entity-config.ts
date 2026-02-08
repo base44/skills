@@ -5,8 +5,11 @@ import type { Check, CheckConfig, CheckResult, EvalContext } from '../types.js';
 
 // Entity schema based on base44-cli entity structure
 const PropertySchema = z.object({
-  type: z.enum(['string', 'number', 'boolean', 'array', 'object']),
+  type: z.enum(['string', 'number', 'integer', 'boolean', 'array', 'object', 'binary']),
   description: z.string().optional(),
+  format: z.string().optional(),
+  enum: z.array(z.any()).optional(),
+  default: z.any().optional(),
   items: z.object({
     type: z.string(),
   }).optional(),

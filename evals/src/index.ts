@@ -11,6 +11,7 @@ interface CliOptions {
   fixturesDir: string;
   outputDir: string;
   verbose: boolean;
+  concurrency: number;
   filter?: string;
   fixtures?: string[];
 }
@@ -22,6 +23,7 @@ function parseArgs(args: string[]): CliOptions {
     fixturesDir: 'fixtures',
     outputDir: 'results',
     verbose: false,
+    concurrency: 5,
   };
 
   const positionalArgs: string[] = [];
@@ -55,6 +57,10 @@ function parseArgs(args: string[]): CliOptions {
       case '-v':
         options.verbose = true;
         break;
+      case '--concurrency':
+      case '-c':
+        options.concurrency = parseInt(args[++i] ?? '5', 10);
+        break;
       case '--filter':
         options.filter = args[++i];
         break;
@@ -86,6 +92,7 @@ Options:
   -a, --agent <agent>     Agent to use (default: "claude-code")
   -f, --fixtures <dir>    Fixtures directory (default: "fixtures")
   -o, --output <dir>      Output directory for reports (default: "results")
+  -c, --concurrency <n>   Max concurrent fixtures (default: 5)
   -v, --verbose           Verbose output
   --filter <pattern>      Filter fixtures by name pattern
   -h, --help              Show this help
@@ -119,6 +126,7 @@ async function main(): Promise<void> {
     verbose: options.verbose,
     filter: options.filter,
     fixtures: options.fixtures,
+    concurrency: options.concurrency,
   });
 
   // Write report

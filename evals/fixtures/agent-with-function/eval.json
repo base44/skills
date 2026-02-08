@@ -47,6 +47,36 @@
       "type": "contains",
       "description": "Mentions agents",
       "value": "agent"
+    },
+    {
+      "type": "agent-config",
+      "description": "Agent config validates against Base44 agent schema",
+      "filePath": "base44/agents/order_assistant.jsonc",
+      "target": "file"
+    },
+    {
+      "type": "function-def",
+      "description": "Function config validates against Base44 function schema",
+      "filePath": "base44/functions/cancel-order/function.jsonc",
+      "target": "file"
+    },
+    {
+      "type": "file-content",
+      "description": "Function imports createClientFromRequest from npm:@base44/sdk",
+      "filePath": "base44/functions/cancel-order/index.ts",
+      "pattern": "createClientFromRequest.*from.*@base44/sdk|npm:@base44/sdk"
+    },
+    {
+      "type": "file-content",
+      "description": "Function parses request body",
+      "filePath": "base44/functions/cancel-order/index.ts",
+      "pattern": "await\\s+req\\.json\\(\\)"
+    },
+    {
+      "type": "file-content",
+      "description": "Function returns Response.json()",
+      "filePath": "base44/functions/cancel-order/index.ts",
+      "pattern": "Response\\.json\\("
     }
   ]
 }

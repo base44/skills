@@ -1,4 +1,4 @@
-import { execSync } from 'child_process';
+import { execa } from 'execa';
 import type { CodingAgent, CodingAgentResponse } from '../types.js';
 
 // Skill markers for detecting which skills were invoked
@@ -85,63 +85,49 @@ export class ClaudeCodeAgent implements CodingAgent {
   verbose = false;
 
   async run(prompt: string, workingDir: string): Promise<CodingAgentResponse> {
-    try {
-      if (this.verbose) {
-        console.log(`[ClaudeCode] Working dir: ${workingDir}`);
-      }
+    if (this.verbose) {
+      console.log(`[ClaudeCode] Working dir: ${workingDir}`);
+      console.log(`[ClaudeCode] Running: claude -p "<prompt>"`);
+    }
 
-      // Escape the prompt for shell
-      const escapedPrompt = prompt.replace(/"/g, '\\"');
-      const command = `claude -p "${escapedPrompt}"`;
+    const result = await execa('claude', ['-p', prompt], {
+      cwd: workingDir,
+      timeout: 900000, // 15 minute timeout
+      maxBuffer: 10 * 1024 * 1024, // 10MB buffer
+      reject: false,
+    });
 
-      if (this.verbose) {
-        console.log(`[ClaudeCode] Running: ${command}`);
-      }
+    const output = result.stdout || result.stderr || '';
 
-      const output = execSync(command, {
-        cwd: workingDir,
-        encoding: 'utf8',
-        timeout: 300000, // 5 minute timeout
-        maxBuffer: 10 * 1024 * 1024, // 10MB buffer
-      });
+    if (this.verbose) {
+      console.log(`[ClaudeCode] Exit code: ${result.exitCode}`);
+      console.log(`[ClaudeCode] Output length: ${output.length}`);
+      console.log(`[ClaudeCode] Output preview: ${output.substring(0, 200)}`);
+    }
 
-      if (this.verbose) {
-        console.log(`[ClaudeCode] Output length: ${output.length}`);
-        console.log(`[ClaudeCode] Output preview: ${output.substring(0, 200)}`);
-      }
+    const skillsInvoked = detectSkills(output);
 
-      const skillsInvoked = detectSkills(output);
-
-      return {
-        output,
-        skillsInvoked,
-        metadata: {
-          exitCode: 0,
-        },
-      };
-    } catch (error: unknown) {
-      const execError = error as { stdout?: string; stderr?: string; message?: string };
-      const errorMessage = execError.message || String(error);
-      const stdout = execError.stdout || '';
-      const stderr = execError.stderr || '';
-
+    if (result.exitCode !== 0) {
+      const errorMessage = result.stderr || `Process exited with code ${result.exitCode}`;
       if (this.verbose) {
         console.log(`[ClaudeCode] Error: ${errorMessage}`);
-        console.log(`[ClaudeCode] Stdout: ${stdout}`);
-        console.log(`[ClaudeCode] Stderr: ${stderr}`);
       }
-
-      // If we got output despite error, use it
-      const output = stdout || stderr || `Error running Claude Code: ${errorMessage}`;
-      const skillsInvoked = detectSkills(output);
-
       return {
-        output,
+        output: output || `Error running Claude Code: ${errorMessage}`,
         skillsInvoked,
         metadata: {
+          exitCode: result.exitCode,
           error: errorMessage,
         },
       };
     }
+
+    return {
+      output,
+      skillsInvoked,
+      metadata: {
+        exitCode: 0,
+      },
+    };
   }
 }

@@ -6,11 +6,12 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "setup": "tsx src/setup.ts",
-    "eval": "npm run setup && tsx src/index.ts",
+    "eval": "npm run typecheck && npm run setup && tsx src/index.ts",
     "eval:only": "tsx src/index.ts",
-    "eval:compare": "tsx src/compare.ts",
-    "test": "npm run eval"
+    "eval:compare": "npm run typecheck && tsx src/compare.ts",
+    "test": "npm run typecheck"
   },
   "dependencies": {
     "execa": "^9.5.2",

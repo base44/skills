@@ -1,0 +1,10 @@
+{
+  "name": "Auth Test App",
+  "description": "A test application for SDK authentication",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
+  "site": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+  }
+}

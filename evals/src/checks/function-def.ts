@@ -7,7 +7,7 @@ import type { Check, CheckConfig, CheckResult, EvalContext } from '../types.js';
 const FunctionConfigSchema = z.object({
   name: z.string().min(1),
   description: z.string().optional(),
-  entrypoint: z.string().optional(),
+  entry: z.string().optional(),
   env: z.array(z.string()).optional(),
   envFrom: z.array(z.string()).optional(),
 });

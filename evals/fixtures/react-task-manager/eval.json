@@ -33,6 +33,36 @@
       "type": "contains",
       "description": "Output mentions SDK or entities",
       "value": "entities"
+    },
+    {
+      "type": "file-content",
+      "description": "Task.update called with (id, data) two-parameter signature",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "Task\\.update\\s*\\(\\s*\\w+[^,]*,\\s*\\{"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses async/await pattern with entity calls",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "await\\s+.*entities\\.Task\\."
+    },
+    {
+      "type": "file-content-excluded",
+      "description": "Does not use .find() (hallucinated method — correct is .filter())",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "Task\\.find\\("
+    },
+    {
+      "type": "file-content-excluded",
+      "description": "Does not use .findOne() (hallucinated — correct is .get())",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "Task\\.findOne\\("
+    },
+    {
+      "type": "file-content-excluded",
+      "description": "Does not use .insert() (hallucinated — correct is .create())",
+      "filePath": "src/components/TaskList.tsx",
+      "pattern": "Task\\.insert\\("
     }
   ]
 }

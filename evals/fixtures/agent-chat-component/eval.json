@@ -38,6 +38,36 @@
       "type": "contains",
       "description": "Mentions agent conversation",
       "value": "conversation"
+    },
+    {
+      "type": "file-content",
+      "description": "Imports from @base44/sdk or uses pre-configured base44 client",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "@base44/sdk|from ['\"].*base44"
+    },
+    {
+      "type": "file-content",
+      "description": "createConversation called with object param containing agent_name",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "createConversation\\s*\\(\\s*\\{[\\s\\S]*?agent_name"
+    },
+    {
+      "type": "file-content",
+      "description": "addMessage called with conversation and message object containing role",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "addMessage\\s*\\([^,]+,\\s*\\{[\\s\\S]*?role"
+    },
+    {
+      "type": "file-content",
+      "description": "subscribeToConversation return value captured for cleanup",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "(const|let|var)\\s+\\w+\\s*=.*subscribeToConversation"
+    },
+    {
+      "type": "file-content-excluded",
+      "description": "Does not use signInWithGoogle (hallucinated Firebase API)",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "signInWith(Google|Provider)"
     }
   ]
 }

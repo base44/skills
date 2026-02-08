@@ -151,8 +151,36 @@ export async function setupFixtures(options: SetupOptions = {}): Promise<void> {
       }
     }
 
+    // Handle AGENTS.md from experiment (if provided)
+    const destAgentsMd = path.join(fixtureDir, 'project', 'AGENTS.md');
+    let hasAgents = false;
+
+    if (experimentDir) {
+      const srcAgentsMd = path.join(experimentDir, 'AGENTS.md');
+      try {
+        await fs.access(srcAgentsMd);
+        await fs.copyFile(srcAgentsMd, destAgentsMd);
+        hasAgents = true;
+      } catch {
+        // No AGENTS.md in experiment, remove any existing one
+        try {
+          await fs.unlink(destAgentsMd);
+        } catch {
+          // Ignore if doesn't exist
+        }
+      }
+    } else {
+      // No experiment, remove any existing AGENTS.md
+      try {
+        await fs.unlink(destAgentsMd);
+      } catch {
+        // Ignore if doesn't exist
+      }
+    }
+
     if (verbose) {
-      const suffix = hasClaude ? ' + CLAUDE.md' : '';
+      const mdFiles = [hasClaude && 'CLAUDE.md', hasAgents && 'AGENTS.md'].filter(Boolean);
+      const suffix = mdFiles.length > 0 ? ` + ${mdFiles.join(', ')}` : '';
       const source = experimentSkillsSrc ? ' (from experiment)' : '';
       console.log(`  ✓ ${fixture}: copied ${skillCount} skills${source}${suffix}`);
     }

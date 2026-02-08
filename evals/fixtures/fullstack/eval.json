@@ -1,0 +1,241 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "fullstack",
+  "description": "Test full-stack scenarios: CRUD app, agent chat, function invocation, email notification",
+  "prompts": [
+    {
+      "name": "fullstack-crud-app",
+      "description": "Build a full CRUD interface for an entity",
+      "prompt": "Create a Task entity schema at base44/entities/task.jsonc with fields: title (string, required), description (string), status (string enum: pending/in_progress/completed, default pending), and due_date (string with date format). Then create a TaskManager component at src/components/TaskManager.jsx that provides full CRUD: list all tasks, create new tasks, update task status, and delete tasks using the Base44 SDK.",
+      "expectedSkills": [
+        "base44-sdk",
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/entities/task.jsonc",
+          "description": "base44/entities/task.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "src/components/TaskManager.jsx",
+          "description": "src/components/TaskManager.jsx exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/entities/task.jsonc",
+          "description": "base44/entities/task.jsonc is valid JSON"
+        },
+        {
+          "type": "entity-config",
+          "filePath": "base44/entities/task.jsonc",
+          "target": "file",
+          "description": "Entity config validates (base44/entities/task.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/TaskManager.jsx",
+          "pattern": "entities\\.Task\\.list\\(|entities\\.Task\\.filter\\(",
+          "description": "Uses entities.Task.list"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/TaskManager.jsx",
+          "pattern": "entities\\.Task\\.create\\(",
+          "description": "Uses entities.Task.create"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/TaskManager.jsx",
+          "pattern": "entities\\.Task\\.update\\(",
+          "description": "Uses entities.Task.update"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/TaskManager.jsx",
+          "pattern": "entities\\.Task\\.delete\\(",
+          "description": "Uses entities.Task.delete"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/TaskManager.jsx",
+          "pattern": "import.*base44|from ['\"].*base44",
+          "description": "Imports base44 client"
+        }
+      ]
+    },
+    {
+      "name": "fullstack-agent-chat",
+      "description": "Build agent chat with entity and conversation",
+      "prompt": "Create an agent configuration at base44/agents/task_helper.jsonc that has read access to a Task entity and helps users manage their tasks. Then create a TaskChat component at src/components/TaskChat.jsx that lets users chat with this agent using agents.createConversation(), agents.addMessage(), and agents.subscribeToConversation().",
+      "expectedSkills": [
+        "base44-sdk",
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/agents/task_helper.jsonc",
+          "description": "base44/agents/task_helper.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "src/components/TaskChat.jsx",
+          "description": "src/components/TaskChat.jsx exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/agents/task_helper.jsonc",
+          "description": "base44/agents/task_helper.jsonc is valid JSON"
+        },
+        {
+          "type": "agent-config",
+          "filePath": "base44/agents/task_helper.jsonc",
+          "target": "file",
+          "description": "Agent config validates (base44/agents/task_helper.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/TaskChat.jsx",
+          "pattern": "createConversation",
+          "description": "Matches expected pattern in TaskChat.jsx"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/TaskChat.jsx",
+          "pattern": "addMessage",
+          "description": "Matches expected pattern in TaskChat.jsx"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/TaskChat.jsx",
+          "pattern": "import.*base44|from ['\"].*base44",
+          "description": "Imports base44 client"
+        }
+      ]
+    },
+    {
+      "name": "fullstack-function-invoke",
+      "description": "Create and invoke a backend function",
+      "prompt": "Create a backend function called 'process-payment' at base44/functions/process-payment/ with function.jsonc and index.ts. The function should accept amount and currency in the request body, process the payment using service role, and return a confirmation. Then create a PaymentForm component at src/components/PaymentForm.jsx that invokes this function using functions.invoke().",
+      "expectedSkills": [
+        "base44-sdk",
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/process-payment/function.jsonc",
+          "description": "base44/functions/process-payment/function.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/process-payment/index.ts",
+          "description": "base44/functions/process-payment/index.ts exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "src/components/PaymentForm.jsx",
+          "description": "src/components/PaymentForm.jsx exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/functions/process-payment/function.jsonc",
+          "description": "base44/functions/process-payment/function.jsonc is valid JSON"
+        },
+        {
+          "type": "function-def",
+          "filePath": "base44/functions/process-payment/function.jsonc",
+          "target": "file",
+          "description": "Function config validates (base44/functions/process-payment/function.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/process-payment/index.ts",
+          "pattern": "Deno\\.serve",
+          "description": "Uses Deno.serve()"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/process-payment/index.ts",
+          "pattern": "createClientFromRequest",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/PaymentForm.jsx",
+          "pattern": "functions\\.invoke\\(",
+          "description": "Uses functions.invoke"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/PaymentForm.jsx",
+          "pattern": "process-payment",
+          "description": "Matches expected pattern in PaymentForm.jsx"
+        }
+      ]
+    },
+    {
+      "name": "fullstack-email-notify",
+      "description": "Create email notification via backend function",
+      "prompt": "Create a backend function called 'send-notification' at base44/functions/send-notification/ that accepts recipient, subject, and message in the request body, and sends an email using integrations.Core.SendEmail via service role. Then create a NotifyUser component at src/components/NotifyUser.jsx that invokes this function using functions.invoke().",
+      "expectedSkills": [
+        "base44-sdk",
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/send-notification/function.jsonc",
+          "description": "base44/functions/send-notification/function.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/send-notification/index.ts",
+          "description": "base44/functions/send-notification/index.ts exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "src/components/NotifyUser.jsx",
+          "description": "src/components/NotifyUser.jsx exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/functions/send-notification/function.jsonc",
+          "description": "base44/functions/send-notification/function.jsonc is valid JSON"
+        },
+        {
+          "type": "function-def",
+          "filePath": "base44/functions/send-notification/function.jsonc",
+          "target": "file",
+          "description": "Function config validates (base44/functions/send-notification/function.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/send-notification/index.ts",
+          "pattern": "Deno\\.serve",
+          "description": "Uses Deno.serve()"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/send-notification/index.ts",
+          "pattern": "integrations\\.Core\\.SendEmail|SendEmail",
+          "description": "Matches expected pattern in index.ts"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/send-notification/index.ts",
+          "pattern": "asServiceRole",
+          "description": "Uses asServiceRole for admin access"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/NotifyUser.jsx",
+          "pattern": "functions\\.invoke\\(",
+          "description": "Uses functions.invoke"
+        }
+      ]
+    }
+  ]
+}

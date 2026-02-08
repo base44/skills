@@ -1,0 +1,223 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "sdk-entity-crud",
+  "description": "Test SDK entity CRUD operations: create, filter, get, delete, subscribe, update",
+  "prompts": [
+    {
+      "name": "sdk-entity-create",
+      "description": "Create new entity records",
+      "prompt": "Create a CreateProduct component in src/components/CreateProduct.jsx that lets users create new products using the Base44 SDK. Include form fields for name and price, and use entities.Product.create() to save.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/CreateProduct.jsx",
+          "description": "src/components/CreateProduct.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/CreateProduct.jsx",
+          "pattern": "entities\\.Product\\.create\\(",
+          "description": "Uses entities.Product.create"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/CreateProduct.jsx",
+          "pattern": "import.*base44|from ['\"].*base44",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/CreateProduct.jsx",
+          "pattern": "Product\\.insert\\(",
+          "description": "Does not use hallucinated Product.insert"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/CreateProduct.jsx",
+          "pattern": "Product\\.add\\(",
+          "description": "Does not use hallucinated Product.add"
+        }
+      ]
+    },
+    {
+      "name": "sdk-entity-filter",
+      "description": "Filter entity records",
+      "prompt": "Create a FilteredProducts component in src/components/FilteredProducts.jsx that displays products filtered by category using the Base44 SDK. Accept a category prop and use the correct SDK method to filter products by that category.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/FilteredProducts.jsx",
+          "description": "src/components/FilteredProducts.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/FilteredProducts.jsx",
+          "pattern": "entities\\.Product\\.filter\\(",
+          "description": "Uses entities.Product.filter"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/FilteredProducts.jsx",
+          "pattern": "Product\\.find\\(",
+          "description": "Does not use hallucinated Product.find"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/FilteredProducts.jsx",
+          "pattern": "Product\\.where\\(",
+          "description": "Does not use hallucinated Product.where"
+        }
+      ]
+    },
+    {
+      "name": "sdk-entity-get",
+      "description": "Get single entity record",
+      "prompt": "Create a ProductDetail component in src/components/ProductDetail.jsx that displays a single product by ID using the Base44 SDK. Accept a productId prop and use the correct SDK method to fetch a single product.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/ProductDetail.jsx",
+          "description": "src/components/ProductDetail.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProductDetail.jsx",
+          "pattern": "entities\\.Product\\.get\\(",
+          "description": "Uses entities.Product.get"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProductDetail.jsx",
+          "pattern": "Product\\.findOne\\(",
+          "description": "Does not use hallucinated Product.findOne"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProductDetail.jsx",
+          "pattern": "Product\\.findById\\(",
+          "description": "Does not use hallucinated Product.findById"
+        }
+      ]
+    },
+    {
+      "name": "sdk-entity-delete",
+      "description": "Delete entity records",
+      "prompt": "Create a DeleteProduct component in src/components/DeleteProduct.jsx that allows deleting a product by ID using the Base44 SDK. Include a confirmation dialog before deleting. Use the correct SDK method to delete.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/DeleteProduct.jsx",
+          "description": "src/components/DeleteProduct.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/DeleteProduct.jsx",
+          "pattern": "entities\\.Product\\.delete\\(",
+          "description": "Uses entities.Product.delete"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/DeleteProduct.jsx",
+          "pattern": "Product\\.remove\\(",
+          "description": "Does not use hallucinated Product.remove"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/DeleteProduct.jsx",
+          "pattern": "Product\\.destroy\\(",
+          "description": "Does not use hallucinated Product.destroy"
+        }
+      ]
+    },
+    {
+      "name": "sdk-entity-subscribe",
+      "description": "Subscribe to real-time entity updates",
+      "prompt": "Create a LiveProducts component in src/components/LiveProducts.jsx that displays products with real-time updates using the Base44 SDK. Use the correct subscription method to listen for changes and update the UI automatically. Clean up the subscription when the component unmounts.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/LiveProducts.jsx",
+          "description": "src/components/LiveProducts.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/LiveProducts.jsx",
+          "pattern": "entities\\.Product\\.subscribe\\(",
+          "description": "Uses entities.Product.subscribe"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/LiveProducts.jsx",
+          "pattern": "useEffect",
+          "description": "Uses React useEffect hook"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/LiveProducts.jsx",
+          "pattern": "Product\\.onChange\\(",
+          "description": "Does not use hallucinated Product.onChange"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/LiveProducts.jsx",
+          "pattern": "Product\\.onSnapshot\\(",
+          "description": "Does not use hallucinated Product.onSnapshot"
+        }
+      ]
+    },
+    {
+      "name": "sdk-entity-update",
+      "description": "Update entity records",
+      "prompt": "Create an EditProduct component in src/components/EditProduct.jsx that lets users edit an existing product using the Base44 SDK. Accept a productId prop, fetch the current product data, show a form pre-filled with existing values, and use the correct SDK method to update with the (id, data) two-parameter signature.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/EditProduct.jsx",
+          "description": "src/components/EditProduct.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/EditProduct.jsx",
+          "pattern": "entities\\.Product\\.update\\(",
+          "description": "Uses entities.Product.update"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/EditProduct.jsx",
+          "pattern": "Product\\.update\\s*\\(\\s*\\w+[^,]*,\\s*\\{",
+          "description": "Matches expected pattern in EditProduct.jsx"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/EditProduct.jsx",
+          "pattern": "Product\\.save\\(",
+          "description": "Does not use hallucinated Product.save"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/EditProduct.jsx",
+          "pattern": "Product\\.set\\(",
+          "description": "Does not use hallucinated Product.set"
+        }
+      ]
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import os from 'os';
 import type {
   CodingAgent,
   EvalConfig,
+  ExpandedFixture,
   EvalRunResult,
   FixtureResult,
   SuiteResult,
@@ -35,12 +36,46 @@ async function loadEvalConfig(fixtureDir: string): Promise<EvalConfig> {
   return JSON.parse(content) as EvalConfig;
 }
 
+export async function expandFixtures(fixtureDirs: string[]): Promise<ExpandedFixture[]> {
+  const expanded: ExpandedFixture[] = [];
+
+  for (const fixtureDir of fixtureDirs) {
+    const config = await loadEvalConfig(fixtureDir);
+
+    if (config.prompts && config.prompts.length > 0) {
+      // Multi-prompt fixture
+      for (const promptConfig of config.prompts) {
+        expanded.push({
+          name: promptConfig.name,
+          description: promptConfig.description || config.description,
+          fixtureDir,
+          prompt: promptConfig.prompt,
+          expectedSkills: promptConfig.expectedSkills,
+          checks: promptConfig.checks,
+        });
+      }
+    } else if (config.prompt) {
+      // Single-prompt fixture (backward compat)
+      expanded.push({
+        name: config.name,
+        description: config.description,
+        fixtureDir,
+        prompt: config.prompt,
+        expectedSkills: config.expectedSkills || [],
+        checks: config.checks || [],
+      });
+    }
+  }
+
+  return expanded;
+}
+
 async function runFixture(
   agent: CodingAgent,
-  fixtureDir: string,
+  fixture: ExpandedFixture,
   verbose: boolean
 ): Promise<FixtureResult> {
-  const config = await loadEvalConfig(fixtureDir);
+  const { fixtureDir } = fixture;
 
   // Create temp directory and copy fixture
   const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'eval-'));
@@ -59,14 +94,14 @@ async function runFixture(
   }
 
   if (verbose) {
-    console.log(`  Running fixture: ${config.name}`);
+    console.log(`  Running fixture: ${fixture.name}`);
     console.log(`  Temp dir: ${tempDir}`);
     console.log(`  Project dir: ${projectDir}`);
   }
 
   try {
     // Run the agent
-    const agentResponse = await agent.run(config.prompt, projectDir);
+    const agentResponse = await agent.run(fixture.prompt, projectDir);
 
     if (verbose) {
       console.log(`  Skills invoked: ${agentResponse.skillsInvoked.join(', ') || '(none)'}`);
@@ -76,13 +111,13 @@ async function runFixture(
     }
 
     // Check skill activation
-    const skillCheckPassed = config.expectedSkills.every(
+    const skillCheckPassed = fixture.expectedSkills.every(
       skill => agentResponse.skillsInvoked.includes(skill)
     );
 
     // Run all checks
     const checkResults = await Promise.all(
-      config.checks.map(async checkConfig => {
+      fixture.checks.map(async checkConfig => {
         const check = createCheck(checkConfig);
         return check.run({
           agentResponse,
@@ -98,11 +133,11 @@ async function runFixture(
     const passed = skillCheckPassed && allChecksPassed;
 
     return {
-      name: config.name,
-      description: config.description,
+      name: fixture.name,
+      description: fixture.description,
       fixtureDir: path.relative(process.cwd(), fixtureDir),
-      prompt: config.prompt,
-      expectedSkills: config.expectedSkills,
+      prompt: fixture.prompt,
+      expectedSkills: fixture.expectedSkills,
       skillsInvoked: agentResponse.skillsInvoked,
       skillCheckPassed,
       checks: checkResults,
@@ -112,11 +147,11 @@ async function runFixture(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     return {
-      name: config.name,
-      description: config.description,
+      name: fixture.name,
+      description: fixture.description,
       fixtureDir: path.relative(process.cwd(), fixtureDir),
-      prompt: config.prompt,
-      expectedSkills: config.expectedSkills,
+      prompt: fixture.prompt,
+      expectedSkills: fixture.expectedSkills,
       skillsInvoked: [],
       skillCheckPassed: false,
       checks: [],
@@ -159,12 +194,25 @@ export async function discoverFixtures(baseDir: string): Promise<string[]> {
   return fixtures.sort();
 }
 
-function groupFixturesBySuite(fixtures: string[]): Map<string, string[]> {
-  const suites = new Map<string, string[]>();
+async function runPool<T, R>(items: T[], concurrency: number, fn: (item: T) => Promise<R>): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let idx = 0;
+  const worker = async () => {
+    while (idx < items.length) {
+      const i = idx++;
+      results[i] = await fn(items[i]);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, () => worker()));
+  return results;
+}
+
+function groupFixturesBySuite(fixtures: ExpandedFixture[]): Map<string, ExpandedFixture[]> {
+  const suites = new Map<string, ExpandedFixture[]>();
 
   for (const fixture of fixtures) {
     // Extract suite name from path (e.g., fixtures/entities/basic-entity -> entities)
-    const parts = fixture.split(path.sep);
+    const parts = fixture.fixtureDir.split(path.sep);
     const fixturesIndex = parts.indexOf('fixtures');
     const suiteName = fixturesIndex >= 0 && parts.length > fixturesIndex + 1
       ? parts[fixturesIndex + 1]
@@ -185,6 +233,7 @@ export interface RunOptions {
   verbose?: boolean;
   filter?: string;
   fixtures?: string[];
+  concurrency?: number;
 }
 
 export async function runEvals(
@@ -197,17 +246,18 @@ export async function runEvals(
     verbose = false,
     filter,
     fixtures: fixtureNames,
+    concurrency = 5,
   } = options;
 
   // Initialize check registry
   await initializeChecks();
 
-  // Discover fixtures
-  let fixtures = await discoverFixtures(fixturesDir);
+  // Discover fixture directories
+  let fixtureDirs = await discoverFixtures(fixturesDir);
 
-  // Filter by specific fixture names if provided
+  // Filter directories by specific fixture names if provided
   if (fixtureNames && fixtureNames.length > 0) {
-    fixtures = fixtures.filter(f => {
+    fixtureDirs = fixtureDirs.filter(f => {
       const fixtureName = path.basename(f);
       return fixtureNames.some(name =>
         fixtureName === name || fixtureName.includes(name)
@@ -215,50 +265,81 @@ export async function runEvals(
     });
   }
 
-  // Apply filter pattern if specified
+  // Apply filter pattern to directories
   if (filter) {
     const filterLower = filter.toLowerCase();
-    fixtures = fixtures.filter(f => f.toLowerCase().includes(filterLower));
+    fixtureDirs = fixtureDirs.filter(f => f.toLowerCase().includes(filterLower));
+  }
+
+  // Expand multi-prompt fixtures into individual entries
+  let expanded = await expandFixtures(fixtureDirs);
+
+  // Apply filter to expanded fixture names too
+  if (filter) {
+    const filterLower = filter.toLowerCase();
+    expanded = expanded.filter(f => f.name.toLowerCase().includes(filterLower));
   }
 
   if (verbose) {
-    console.log(`Found ${fixtures.length} fixtures`);
+    console.log(`Found ${fixtureDirs.length} fixture directories, ${expanded.length} prompts`);
   }
 
   // Group by suite
-  const suiteMap = groupFixturesBySuite(fixtures);
-  const suites: SuiteResult[] = [];
+  const suiteMap = groupFixturesBySuite(expanded);
 
-  let totalPassed = 0;
-  let totalFailed = 0;
-
+  // Flatten all fixtures with their suite name for parallel execution
+  const allItems: { suiteName: string; fixture: ExpandedFixture }[] = [];
   for (const [suiteName, suiteFixtures] of suiteMap) {
-    if (verbose) {
-      console.log(`\nRunning suite: ${suiteName}`);
+    for (const fixture of suiteFixtures) {
+      allItems.push({ suiteName, fixture });
     }
+  }
 
-    const fixtureResults: FixtureResult[] = [];
+  if (verbose) {
+    console.log(`Running ${allItems.length} fixtures with concurrency ${concurrency}`);
+  }
 
-    for (const fixtureDir of suiteFixtures) {
-      const result = await runFixture(agent, fixtureDir, verbose);
-      fixtureResults.push(result);
+  // Run all fixtures in parallel with concurrency limit
+  const allResults = await runPool(allItems, concurrency, async ({ fixture }) => {
+    const result = await runFixture(agent, fixture, verbose);
 
-      if (result.passed) {
-        totalPassed++;
-        if (verbose) {
-          console.log(`  ✅ ${result.name}`);
-        }
-      } else {
-        totalFailed++;
-        if (verbose) {
-          console.log(`  ❌ ${result.name}`);
-          if (result.error) {
-            console.log(`     Error: ${result.error}`);
-          }
-        }
+    // Print pass/fail as each fixture completes
+    if (result.passed) {
+      console.log(`  ✅ ${result.name}`);
+    } else {
+      console.log(`  ❌ ${result.name}`);
+      if (verbose && result.error) {
+        console.log(`     Error: ${result.error}`);
       }
     }
 
+    return result;
+  });
+
+  // Re-group results by suite
+  let totalPassed = 0;
+  let totalFailed = 0;
+  const suiteResults = new Map<string, FixtureResult[]>();
+
+  for (let i = 0; i < allItems.length; i++) {
+    const { suiteName } = allItems[i];
+    const result = allResults[i];
+
+    if (!suiteResults.has(suiteName)) {
+      suiteResults.set(suiteName, []);
+    }
+    suiteResults.get(suiteName)!.push(result);
+
+    if (result.passed) {
+      totalPassed++;
+    } else {
+      totalFailed++;
+    }
+  }
+
+  const suites: SuiteResult[] = [];
+  for (const [suiteName] of suiteMap) {
+    const fixtureResults = suiteResults.get(suiteName) || [];
     suites.push({
       name: suiteName,
       fixtures: fixtureResults,

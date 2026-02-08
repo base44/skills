@@ -4,20 +4,30 @@ import path from 'path';
 import type { Check, CheckConfig, CheckResult, EvalContext } from '../types.js';
 
 // Agent configuration schema based on base44-cli agent structure
-const ToolConfigSchema = z.object({
-  name: z.string(),
-  enabled: z.boolean().optional(),
-  config: z.record(z.any()).optional(),
+
+// Entity tool config
+const EntityToolSchema = z.object({
+  entity_name: z.string().min(1),
+  allowed_operations: z.array(z.enum(['read', 'create', 'update', 'delete'])).min(1),
 });
 
-const AgentConfigSchema = z.object({
-  name: z.string().min(1),
+// Function tool config
+const FunctionToolSchema = z.object({
+  function_name: z.string().min(1),
   description: z.string().optional(),
-  instructions: z.string().optional(),
+});
+
+const ToolConfigSchema = z.union([EntityToolSchema, FunctionToolSchema]);
+
+const AgentConfigSchema = z.object({
+  name: z.string().regex(/^[a-z0-9_]+$/),
+  description: z.string().min(1),
+  instructions: z.string().min(1),
   model: z.string().optional(),
   tool_configs: z.array(ToolConfigSchema).optional(),
   temperature: z.number().min(0).max(2).optional(),
   max_tokens: z.number().positive().optional(),
+  whatsapp_greeting: z.string().optional(),
 });
 
 function extractJsonFromOutput(output: string): object | null {

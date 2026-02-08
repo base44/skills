@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Eval Configuration",
-  "description": "Configuration for a skills eval test case",
+  "description": "Configuration for a skills eval test case. Supports single-prompt (prompt + checks) or multi-prompt (prompts array) mode.",
   "type": "object",
-  "required": ["name", "description", "prompt"],
+  "required": ["name", "description"],
   "properties": {
     "$schema": {
       "type": "string",
@@ -19,24 +19,63 @@
     },
     "prompt": {
       "type": "string",
-      "description": "The prompt sent to Claude for this test"
+      "description": "The prompt sent to Claude for this test (single-prompt mode)"
     },
     "expectedSkills": {
       "type": "array",
       "items": {
         "type": "string"
       },
-      "description": "List of skill names that should be detected/invoked during the test"
+      "description": "List of skill names that should be detected/invoked during the test (single-prompt mode)"
     },
     "checks": {
       "type": "array",
       "items": {
         "$ref": "#/definitions/check"
       },
-      "description": "Assertions to run against the agent's output and generated files"
+      "description": "Assertions to run against the agent's output and generated files (single-prompt mode)"
+    },
+    "prompts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/promptEntry"
+      },
+      "description": "Array of prompt entries for multi-prompt mode. Each prompt is independently executed and evaluated."
     }
   },
   "definitions": {
+    "promptEntry": {
+      "type": "object",
+      "required": ["name", "prompt", "expectedSkills", "checks"],
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Unique identifier for this prompt within the fixture"
+        },
+        "description": {
+          "type": "string",
+          "description": "Human-readable description of what this prompt tests"
+        },
+        "prompt": {
+          "type": "string",
+          "description": "The prompt sent to Claude"
+        },
+        "expectedSkills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "List of skill names that should be detected/invoked"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/check"
+          },
+          "description": "Assertions to run against the agent's output and generated files"
+        }
+      }
+    },
     "check": {
       "type": "object",
       "required": ["type", "description"],
@@ -47,6 +86,7 @@
             "contains",
             "file-exists",
             "file-content",
+            "file-content-excluded",
             "valid-json",
             "command-passes",
             "json-schema",
@@ -110,6 +150,24 @@
               }
             },
             "required": ["filePath"]
+          }
+        },
+        {
+          "if": {
+            "properties": { "type": { "const": "file-content-excluded" } }
+          },
+          "then": {
+            "properties": {
+              "filePath": {
+                "type": "string",
+                "description": "Path to the file (relative to project directory)"
+              },
+              "pattern": {
+                "type": "string",
+                "description": "Regular expression pattern that should NOT be found in file content"
+              }
+            },
+            "required": ["filePath", "pattern"]
           }
         },
         {

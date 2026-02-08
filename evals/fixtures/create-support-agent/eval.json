@@ -43,6 +43,24 @@
       "type": "contains",
       "description": "Mentions agents push command",
       "value": "agents push"
+    },
+    {
+      "type": "agent-config",
+      "description": "Agent config validates against Base44 agent schema",
+      "filePath": "base44/agents/support_agent.jsonc",
+      "target": "file"
+    },
+    {
+      "type": "file-content",
+      "description": "Has Customer entity access (both Order AND Customer required)",
+      "filePath": "base44/agents/support_agent.jsonc",
+      "pattern": "\"entity_name\"\\s*:\\s*\"Customer\""
+    },
+    {
+      "type": "file-content",
+      "description": "allowed_operations is an array with 'read'",
+      "filePath": "base44/agents/support_agent.jsonc",
+      "pattern": "\"allowed_operations\"\\s*:\\s*\\[[^\\]]*\"read\""
     }
   ]
 }

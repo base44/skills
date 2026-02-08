@@ -47,6 +47,48 @@
       "type": "contains",
       "description": "mentions base44 or entities",
       "value": "base44"
+    },
+    {
+      "type": "entity-config",
+      "description": "Todo entity validates against Base44 entity schema",
+      "filePath": "base44/entities/todo.jsonc",
+      "target": "file"
+    },
+    {
+      "type": "entity-config",
+      "description": "Category entity validates against Base44 entity schema",
+      "filePath": "base44/entities/category.jsonc",
+      "target": "file"
+    },
+    {
+      "type": "file-content",
+      "description": "Todo entity name is PascalCase 'Todo'",
+      "filePath": "base44/entities/todo.jsonc",
+      "pattern": "\"name\"\\s*:\\s*\"Todo\""
+    },
+    {
+      "type": "file-content",
+      "description": "Todo has type 'object' at root",
+      "filePath": "base44/entities/todo.jsonc",
+      "pattern": "\"type\"\\s*:\\s*\"object\""
+    },
+    {
+      "type": "file-content",
+      "description": "Todo has required array",
+      "filePath": "base44/entities/todo.jsonc",
+      "pattern": "\"required\"\\s*:\\s*\\["
+    },
+    {
+      "type": "file-content",
+      "description": "Todo completed field has type boolean",
+      "filePath": "base44/entities/todo.jsonc",
+      "pattern": "\"completed\"[\\s\\S]*?\"type\"\\s*:\\s*\"boolean\""
+    },
+    {
+      "type": "file-content",
+      "description": "Category entity name is PascalCase 'Category'",
+      "filePath": "base44/entities/category.jsonc",
+      "pattern": "\"name\"\\s*:\\s*\"Category\""
     }
   ]
 }

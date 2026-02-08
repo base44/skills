@@ -32,6 +32,7 @@ export async function initializeChecks(): Promise<void> {
   const { FileContentCheck } = await import('./file-content.js');
   const { CommandPassesCheck } = await import('./command-passes.js');
   const { ValidJsonCheck } = await import('./valid-json.js');
+  const { FileContentExcludedCheck } = await import('./file-content-excluded.js');
 
   registerCheck('entity-config', (config) => new EntityConfigCheck(config));
   registerCheck('function-def', (config) => new FunctionDefCheck(config));
@@ -40,6 +41,7 @@ export async function initializeChecks(): Promise<void> {
   registerCheck('json-schema', (config) => new JsonSchemaCheck(config));
   registerCheck('file-exists', (config) => new FileExistsCheck(config));
   registerCheck('file-content', (config) => new FileContentCheck(config));
+  registerCheck('file-content-excluded', (config) => new FileContentExcludedCheck(config));
   registerCheck('command-passes', (config) => new CommandPassesCheck(config));
   registerCheck('valid-json', (config) => new ValidJsonCheck(config));
 }

@@ -14,6 +14,7 @@ interface CliOptions {
   outputDir: string;
   verbose: boolean;
   runs: number;
+  concurrency: number;
   filterFixtures?: string;
   filterExperiments?: string;
 }
@@ -27,6 +28,7 @@ function parseArgs(args: string[]): CliOptions {
     outputDir: 'results',
     verbose: false,
     runs: 1,
+    concurrency: 5,
   };
 
   for (let i = 0; i < args.length; i++) {
@@ -61,6 +63,10 @@ function parseArgs(args: string[]): CliOptions {
       case '-r':
         options.runs = parseInt(args[++i] ?? '1', 10);
         break;
+      case '--concurrency':
+      case '-c':
+        options.concurrency = parseInt(args[++i] ?? '5', 10);
+        break;
       case '--filter-fixtures':
         options.filterFixtures = args[++i];
         break;
@@ -90,6 +96,7 @@ Options:
   -e, --experiments <dir>           Experiments directory (default: "experiments")
   -f, --fixtures <dir>              Fixtures directory (default: "fixtures")
   -o, --output <dir>                Output directory for reports (default: "results")
+  -c, --concurrency <n>             Max concurrent fixtures (default: 5)
   -v, --verbose                     Verbose output
   --filter-fixtures <pattern>       Filter fixtures by name pattern
   --filter-experiments <pattern>    Filter experiments by name pattern
@@ -190,6 +197,7 @@ async function main(): Promise<void> {
       verbose: options.verbose,
       filterFixtures: options.filterFixtures,
       filterExperiments: options.filterExperiments,
+      concurrency: options.concurrency,
     });
 
     const reportPath = await writeComparisonReport(result, options.outputDir);

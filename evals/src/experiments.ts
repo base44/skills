@@ -6,6 +6,7 @@ import type { Experiment } from './types.js';
  * Discover experiments from the experiments directory.
  * Each subdirectory is an experiment. Experiments can contain:
  * - CLAUDE.md: Override the project's CLAUDE.md
+ * - AGENTS.md: Place an AGENTS.md in the project root
  * - skills/: Directory of skills to use instead of fixture skills
  */
 export async function discoverExperiments(experimentsDir: string): Promise<Experiment[]> {
@@ -39,7 +40,7 @@ export async function discoverExperiments(experimentsDir: string): Promise<Exper
 }
 
 /**
- * Get contents of an experiment directory (CLAUDE.md and skill names).
+ * Get contents of an experiment directory (CLAUDE.md, AGENTS.md, and skill names).
  */
 async function getExperimentContents(experimentDir: string): Promise<string[]> {
   const contents: string[] = [];
@@ -50,6 +51,14 @@ async function getExperimentContents(experimentDir: string): Promise<string[]> {
     contents.push('CLAUDE.md');
   } catch {
     // No CLAUDE.md
+  }
+
+  // Check for AGENTS.md
+  try {
+    await fs.access(path.join(experimentDir, 'AGENTS.md'));
+    contents.push('AGENTS.md');
+  } catch {
+    // No AGENTS.md
   }
 
   // Check for skills directory

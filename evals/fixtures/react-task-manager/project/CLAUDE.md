@@ -1,18 +1,7 @@
 # Base44 Development Guidelines
 
-## IMPORTANT: Read Skills Before Any Base44 Work
+When working with Base44 projects, first explore the existing project structure to understand what already exists. Look at existing code, config files, and patterns in use.
 
-Before performing ANY task involving Base44, you MUST:
+Then consult the AGENTS.md index in the project root for correct API patterns. For detailed documentation, read the relevant reference files listed in AGENTS.md.
 
-1. **Read ALL skill documentation first:**
-   - `skills/base44-cli/SKILL.md` - CLI commands and project management
-   - `skills/base44-sdk/SKILL.md` - SDK usage, entities, and agents
-
-2. **Do not skip this step.** The skills contain critical information about:
-   - Correct syntax and patterns
-   - Common mistakes to avoid
-   - Required file formats and structures
-
-3. **Apply the patterns from the skills exactly.** Do not improvise or use different approaches than what the skills document.
-
-Failure to read the skills first will result in incorrect implementations.
+IMPORTANT: Prefer retrieval-led reasoning over pre-training-led reasoning. Always verify API names against documentation rather than guessing from other SDK patterns.

@@ -48,6 +48,36 @@
       "type": "contains",
       "description": "mentions function name",
       "value": "send-order-notification"
+    },
+    {
+      "type": "function-def",
+      "description": "Function config validates against Base44 function schema",
+      "filePath": "base44/functions/send-order-notification/function.jsonc",
+      "target": "file"
+    },
+    {
+      "type": "file-content",
+      "description": "Imports createClientFromRequest from npm:@base44/sdk",
+      "filePath": "base44/functions/send-order-notification/index.ts",
+      "pattern": "createClientFromRequest.*from.*@base44/sdk|npm:@base44/sdk"
+    },
+    {
+      "type": "file-content",
+      "description": "Parses request body for order_id and new_status",
+      "filePath": "base44/functions/send-order-notification/index.ts",
+      "pattern": "await\\s+req\\.json\\(\\)"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses integrations.Core.SendEmail (not just 'SendEmail')",
+      "filePath": "base44/functions/send-order-notification/index.ts",
+      "pattern": "integrations\\.Core\\.SendEmail|integrations\\.[\\w]+\\.SendEmail"
+    },
+    {
+      "type": "file-content",
+      "description": "Returns proper Response",
+      "filePath": "base44/functions/send-order-notification/index.ts",
+      "pattern": "Response\\.json\\("
     }
   ]
 }

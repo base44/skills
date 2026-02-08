@@ -8,7 +8,7 @@ import type {
 } from './types.js';
 import { discoverExperiments, filterExperiments } from './experiments.js';
 import { setupFixtures } from './setup.js';
-import { runEvals, discoverFixtures } from './runner.js';
+import { runEvals, discoverFixtures, expandFixtures } from './runner.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.join(__dirname, '..');
@@ -20,6 +20,7 @@ export interface CompareOptions {
   verbose?: boolean;
   filterFixtures?: string;
   filterExperiments?: string;
+  concurrency?: number;
 }
 
 /**
@@ -36,6 +37,7 @@ export async function runComparison(
     verbose = false,
     filterFixtures,
     filterExperiments: experimentFilter,
+    concurrency,
   } = options;
 
   // Discover experiments
@@ -57,18 +59,17 @@ export async function runComparison(
     console.log(`Found ${experiments.length} experiments: ${experiments.map(e => e.name).join(', ')}`);
   }
 
-  // Discover fixtures to get list of fixture names
-  let fixturesList = await discoverFixtures(fixturesDir);
+  // Discover fixtures and expand multi-prompt entries
+  let fixturesDirs = await discoverFixtures(fixturesDir);
   if (filterFixtures) {
     const filterLower = filterFixtures.toLowerCase();
-    fixturesList = fixturesList.filter(f => f.toLowerCase().includes(filterLower));
+    fixturesDirs = fixturesDirs.filter(f => f.toLowerCase().includes(filterLower));
   }
 
-  // Extract fixture names from paths
-  const fixtureNames = fixturesList.map(f => {
-    const parts = f.split(path.sep);
-    return parts[parts.length - 1];
-  });
+  const expandedFixtures = await expandFixtures(fixturesDirs);
+
+  // Extract fixture names from expanded entries (prompt-level names)
+  const fixtureNames = expandedFixtures.map(f => f.name);
 
   if (verbose) {
     console.log(`Found ${fixtureNames.length} fixtures`);
@@ -100,6 +101,7 @@ export async function runComparison(
       fixturesDir,
       verbose,
       filter: filterFixtures,
+      concurrency,
     });
 
     // Convert to ExperimentRunResult

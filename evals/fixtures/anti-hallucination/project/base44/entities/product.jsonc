@@ -1,0 +1,23 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Product name"
+    },
+    "price": {
+      "type": "number",
+      "description": "Product price"
+    },
+    "category": {
+      "type": "string",
+      "description": "Product category"
+    },
+    "in_stock": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": ["name", "price"]
+}

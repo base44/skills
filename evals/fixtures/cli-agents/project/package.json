@@ -1,0 +1,11 @@
+{
+  "name": "cli-agents-app",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "@base44/sdk": "latest"
+  },
+  "devDependencies": {
+    "base44": "latest"
+  }
+}
