@@ -1,11 +1,11 @@
-# base44 dashboard
+# base44 dashboard open
 
 Opens the Base44 app dashboard in your default web browser.
 
 ## Syntax
 
 ```bash
-npx base44 dashboard
+npx base44 dashboard open
 ```
 
 ## Options
@@ -21,7 +21,7 @@ This command has no options.
 
 ```bash
 # Open dashboard for current project
-npx base44 dashboard
+npx base44 dashboard open
 ```
 
 ## Requirements

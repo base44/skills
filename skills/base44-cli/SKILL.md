@@ -188,7 +188,7 @@ npx base44 <command>
 |---------|-------------|-----------|
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
-| `base44 dashboard` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
+| `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 
 ### Deployment
 
@@ -263,7 +263,7 @@ Agents are conversational AI assistants that can interact with users, access you
   "instructions": "Detailed instructions for the agent's behavior",
   "tool_configs": [
     // Entity tool - gives agent access to entity operations
-    { "entity_name": "tasks", "allowed_operations": ["read", "create", "update", "delete"] },
+    { "entity_name": "Task", "allowed_operations": ["read", "create", "update", "delete"] },
     // Backend function tool - gives agent access to a function
     { "function_name": "send_email", "description": "Send an email notification" }
   ],
@@ -288,8 +288,17 @@ Agents are conversational AI assistants that can interact with users, access you
 | Command              | Description                               | Reference                                   |
 | -------------------- | ----------------------------------------- | ------------------------------------------- |
 | `base44 site deploy` | Deploy built site files to Base44 hosting | [site-deploy.md](references/site-deploy.md) |
+| `base44 site open`   | Open the published site in your browser   | [site-open.md](references/site-open.md)     |
 
 **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
+
+### Type Generation
+
+| Command                 | Description                                            | Reference                                           |
+| ----------------------- | ------------------------------------------------------ | --------------------------------------------------- |
+| `base44 types generate` | Generate TypeScript types from project resources       | [types-generate.md](references/types-generate.md)   |
+
+**Note:** This command is hidden in the CLI help menu and is for advanced usage. It generates TypeScript declaration files from entities, functions, and agents.
 
 ## Quick Start
 
@@ -364,7 +373,7 @@ npx base44 site deploy -y
 ### Opening the Dashboard
 ```bash
 # Open app dashboard in browser
-npx base44 dashboard
+npx base44 dashboard open
 ```
 
 ## Authentication
