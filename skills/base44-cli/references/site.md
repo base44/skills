@@ -1,18 +1,19 @@
-# base44 dashboard
+# base44 site
 
-Manage app dashboard.
+Manage app site (frontend app).
 
 ## Syntax
 
 ```bash
-npx base44 dashboard <command>
+npx base44 site <command>
 ```
 
 ## Subcommands
 
 | Command | Description |
 |---------|-------------|
-| `open` | Open the app dashboard in your browser |
+| `deploy` | Deploy built site files to Base44 hosting |
+| `open` | Open the published site in your browser |
 
 ## Authentication
 
@@ -22,3 +23,4 @@ npx base44 dashboard <command>
 
 - This is a parent command - you must use a subcommand
 - See individual subcommand documentation for details
+- The site refers to your frontend application (React, Vue, etc.)
