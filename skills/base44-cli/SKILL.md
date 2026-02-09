@@ -188,7 +188,7 @@ npx base44 <command>
 |---------|-------------|-----------|
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
-| `base44 dashboard` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
+| `base44 dashboard open` | Open the app dashboard in your browser | [dashboard-open.md](references/dashboard-open.md) |
 
 ### Deployment
 
@@ -288,6 +288,7 @@ Agents are conversational AI assistants that can interact with users, access you
 | Command              | Description                               | Reference                                   |
 | -------------------- | ----------------------------------------- | ------------------------------------------- |
 | `base44 site deploy` | Deploy built site files to Base44 hosting | [site-deploy.md](references/site-deploy.md) |
+| `base44 site open`   | Open the published site in your browser   | [site-open.md](references/site-open.md)     |
 
 **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
 

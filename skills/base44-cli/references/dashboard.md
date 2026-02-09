@@ -1,35 +1,36 @@
 # base44 dashboard
 
-Opens the Base44 app dashboard in your default web browser.
+Manage app dashboard operations.
 
 ## Syntax
 
 ```bash
-npx base44 dashboard
+npx base44 dashboard <subcommand> [options]
 ```
 
-## Options
+## Subcommands
 
-This command has no options.
+| Subcommand | Description |
+|------------|-------------|
+| `open` | Open the app dashboard in your browser |
 
 ## What It Does
 
-1. Reads the project's app ID from `base44/.app.jsonc`
-2. Opens the dashboard URL in your default browser
+The `dashboard` command provides access to your Base44 app's web dashboard, where you can manage entities, functions, users, and settings.
 
 ## Example
 
 ```bash
 # Open dashboard for current project
-npx base44 dashboard
+npx base44 dashboard open
 ```
 
 ## Requirements
 
-- Must be run from a linked Base44 project directory (contains `base44/.app.jsonc`)
+- Must be run from a linked Base44 project directory
 - Must be authenticated (run `npx base44 login` first)
 
 ## Notes
 
-- The dashboard provides a web interface to manage your app's entities, functions, users, and settings
-- If you're not in a project directory, the command will fail with an error
+- For detailed information about the `open` subcommand, see [dashboard-open.md](dashboard-open.md)
+- The dashboard provides a web interface to manage all aspects of your Base44 application
