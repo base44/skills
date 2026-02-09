@@ -28,6 +28,8 @@ jobs:
           repository: base44/cli
           ref: ${{ github.event.client_payload.version || inputs.cli_version || 'main' }}
           path: base44-cli
+          fetch-depth: 0
+          fetch-tags: true
 
       - name: Run Claude Code to sync skill
         uses: anthropics/claude-code-action@v1
