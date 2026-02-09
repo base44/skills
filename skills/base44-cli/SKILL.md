@@ -100,7 +100,7 @@ my-app/
 │   ├── entities/                # Entity schema definitions
 │   │   ├── task.jsonc
 │   │   └── board.jsonc
-│   ├── functions/               # Backend functions (optional)
+│   ├── functions/               # Backend functions (optional); automations live in function.jsonc
 │   │   └── my-function/
 │   │       ├── function.jsonc
 │   │       └── index.ts
@@ -120,6 +120,7 @@ my-app/
 **Key files:**
 - `base44/config.jsonc` - Project name, description, site build settings
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
+- `base44/functions/*/function.jsonc` - Function config and optional `automations` (CRON, simple triggers, entity hooks)
 - `base44/agents/*.jsonc` - Agent configurations (optional)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
 
@@ -237,7 +238,8 @@ For complete documentation, see [entities-create.md](references/entities-create.
 | Action / Command          | Description                                   | Reference                                               |
 | ------------------------- | --------------------------------------------- | ------------------------------------------------------- |
 | Create Functions          | Define functions in `base44/functions` folder | [functions-create.md](references/functions-create.md)   |
-| `base44 functions deploy` | Deploy local functions to Base44              | [functions-deploy.md](references/functions-deploy.md)   |
+| Configure Automations     | CRON, simple triggers, entity hooks in `function.jsonc` | [automations.md](references/automations.md)   |
+| `base44 functions deploy` | Deploy local functions (and automations) to Base44 | [functions-deploy.md](references/functions-deploy.md)   |
 
 ### Agent Management
 
@@ -282,6 +284,22 @@ Agents are conversational AI assistants that can interact with users, access you
 **Tool config types:**
 - **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
 - **Backend function tools**: `function_name` + `description`
+
+#### Automation Quick Reference
+
+Automations are triggers defined in the `automations` array inside `function.jsonc`. They deploy with the function via `base44 functions deploy`. Four types:
+
+**Common fields (all types):** `name` (required), `description`, `function_args`, `is_active` (default: true)
+
+**Scheduled One-Time:** `type: "scheduled"`, `schedule_mode: "one-time"`, `one_time_date` (ISO string)
+
+**Scheduled CRON:** `type: "scheduled"`, `schedule_mode: "recurring"`, `schedule_type: "cron"`, `cron_expression`, optional `ends_type` / `ends_on_date` / `ends_after_count`
+
+**Scheduled Simple:** `type: "scheduled"`, `schedule_mode: "recurring"`, `schedule_type: "simple"`, `repeat_unit` (`"minutes"` \| `"hours"` \| `"days"` \| `"weeks"` \| `"months"`), optional `repeat_interval`, `start_time`, `repeat_on_days` (0–6), `repeat_on_day_of_month` (1–31), `ends_type` / `ends_on_date` / `ends_after_count`
+
+**Entity Hook:** `type: "entity"`, `entity_name` (matches entity schema name), `event_types`: array of `"create"` \| `"update"` \| `"delete"` (at least one)
+
+For full schemas and examples, see [automations.md](references/automations.md).
 
 ### Site Deployment
 

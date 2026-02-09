@@ -33,7 +33,17 @@ Each function requires a `function.jsonc` configuration file:
 ```jsonc
 {
   "name": "my-function",
-  "entry": "index.ts"
+  "entry": "index.ts",
+  // Optionally add automations
+  "automations": [
+    {
+      "name": "Daily run",
+      "type": "scheduled",
+      "schedule_mode": "recurring",
+      "schedule_type": "cron",
+      "cron_expression": "0 9 * * *"
+    }
+  ]
 }
 ```
 
@@ -43,6 +53,11 @@ Each function requires a `function.jsonc` configuration file:
 |----------|-------------|----------|
 | `name` | Function name (must match `/^[^.]+$/` - no dots allowed) | Yes |
 | `entry` | Entry point file path relative to the function directory (min 1 char) | Yes |
+| `automations` | Array of triggers (CRON, simple schedule, one-time, entity hooks); deployed with the function | No |
+
+## Automations
+
+Functions can define automations (triggers) so they run on a schedule or when entity data changes. Add an optional `automations` array to `function.jsonc`. Supported types: **scheduled** (one-time, CRON, or simple interval) and **entity hooks** (on entity create/update/delete). Automations are deployed with the function via `npx base44 functions deploy`. For full schemas and examples, see [automations.md](automations.md).
 
 ## Entry Point File
 
