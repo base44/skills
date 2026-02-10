@@ -189,7 +189,7 @@ npx base44 <command>
 |---------|-------------|-----------|
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
-| `base44 dashboard` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
+| `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 
 ### Deployment
 
@@ -301,11 +301,12 @@ Automations are triggers defined in the `automations` array inside `function.jso
 
 For full schemas and examples, see [automations.md](references/automations.md).
 
-### Site Deployment
+### Site Management
 
 | Command              | Description                               | Reference                                   |
 | -------------------- | ----------------------------------------- | ------------------------------------------- |
 | `base44 site deploy` | Deploy built site files to Base44 hosting | [site-deploy.md](references/site-deploy.md) |
+| `base44 site open`   | Open the deployed site in your browser    | [site-open.md](references/site-open.md)     |
 
 **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
 
