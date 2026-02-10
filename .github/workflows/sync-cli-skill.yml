@@ -9,6 +9,10 @@ on:
         description: 'CLI version tag to sync (e.g., v0.0.16)'
         required: false
         default: 'main'
+      additional_instructions:
+        description: 'Additional instructions for Claude (optional)'
+        required: false
+        default: ''
 
 jobs:
   sync-skill:
@@ -45,3 +49,5 @@ jobs:
 
             After syncing, create a pull request with the changes.
             PR title: "Update base44-cli skill to ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }} {human-readable-time}"
+
+            ${{ inputs.additional_instructions && format('Additional instructions: {0}', inputs.additional_instructions) || '' }}
