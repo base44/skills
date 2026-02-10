@@ -1,157 +1,87 @@
 ---
 name: base44-troubleshooter
-description: Troubleshoot production issues using audit logs, backend function logs, and agent conversations. Use when investigating app errors, debugging function calls, tracking user activity, debugging agent tool failures, or diagnosing production problems in Base44 apps.
+description: Troubleshoot production issues using backend function logs. Use when investigating app errors, debugging function calls, or diagnosing production problems in Base44 apps.
 ---
 
 # Troubleshoot Production Issues
 
-## Security Rules
-
-**NEVER read, cat, or access any auth/token files directly. NEVER use curl with Authorization headers.**
-
-Always use the provided scripts - they handle authentication internally. If authentication fails, instruct the user to run `base44 login` (or `npx base44 login` if base44 is not installed globally).
-
 ## Prerequisites
 
-Verify authentication before running scripts:
+Verify authentication before fetching logs:
 
 ```bash
-base44 whoami || npx base44 whoami
+npx base44 whoami
 ```
 
-If not authenticated or token expired, instruct user to run `base44 login` (or `npx base44 login` if base44 is not installed globally).
+If not authenticated or token expired, instruct user to run `base44 login`.
 
-## Scripts
+## Fetching Function Logs
 
-Scripts are located in the `scripts/` subdirectory of this skill. Use the absolute path based on where this SKILL.md file is located:
-
-```
-<skill_directory>/scripts/fetch-audit-logs.sh
-<skill_directory>/scripts/fetch-function-logs.sh
-<skill_directory>/scripts/fetch-agent-conversations.sh
-```
-
-Scripts read the token internally - no token handling needed.
-
-### fetch-audit-logs.sh
+Must be run from the project directory (where `base44/.app.jsonc` exists).
 
 ```bash
-<skill_directory>/scripts/fetch-audit-logs.sh <app_id> [options]
+npx base44 logs [options]
 ```
 
 **Options**:
 | Option | Description |
 |--------|-------------|
-| `--status <success\|failure>` | Filter by outcome |
-| `--event-types '<json_array>'` | Filter by event types |
-| `--user-email <email>` | Filter by user |
-| `--start-date <ISO datetime>` | From date |
-| `--end-date <ISO datetime>` | Until date |
-| `--limit <1-1000>` | Results per page (default: 50) |
-| `--order <ASC\|DESC>` | Sort order (default: DESC) |
+| `--function <names>` | Filter by function name(s), comma-separated. If omitted, fetches logs for all project functions |
+| `--since <datetime>` | Show logs from this time (ISO format) |
+| `--until <datetime>` | Show logs until this time (ISO format) |
+| `--level <level>` | Filter by log level: `log`, `info`, `warn`, `error`, `debug` |
+| `-n, --limit <n>` | Results per page (1-1000, default: 50) |
+| `--order <order>` | Sort order: `ASC` \| `DESC` (default: DESC) |
+| `--json` | Output raw JSON |
 
 **Examples**:
-```bash
-<skill_directory>/scripts/fetch-audit-logs.sh abc123 --status failure
-<skill_directory>/scripts/fetch-audit-logs.sh abc123 --event-types '["api.function.call"]'
-<skill_directory>/scripts/fetch-audit-logs.sh abc123 --status failure --limit 10 --user-email user@example.com
-```
-
-### fetch-function-logs.sh
 
 ```bash
-<skill_directory>/scripts/fetch-function-logs.sh <app_id> <function_name> [options]
-```
+# All recent logs
+npx base44 logs
 
-**Options**:
-| Option | Description |
-|--------|-------------|
-| `--since <ISO datetime>` | Show logs from this time |
-| `--until <ISO datetime>` | Show logs until this time |
+# Errors only
+npx base44 logs --level error
 
-**Examples**:
-```bash
-<skill_directory>/scripts/fetch-function-logs.sh abc123 myFunction
-<skill_directory>/scripts/fetch-function-logs.sh abc123 myFunction --since 2024-01-01T00:00:00Z
-<skill_directory>/scripts/fetch-function-logs.sh abc123 myFunction --since 2024-01-01T00:00:00Z --until 2024-01-02T00:00:00Z
-```
+# Specific function
+npx base44 logs --function myFunction
 
-### fetch-agent-conversations.sh
+# Multiple functions
+npx base44 logs --function createOrder,processPayment
 
-```bash
-<skill_directory>/scripts/fetch-agent-conversations.sh <app_id> [options]
-```
+# Time range
+npx base44 logs --since 2024-01-01T00:00:00Z --until 2024-01-02T00:00:00Z
 
-**Options**:
-| Option | Description |
-|--------|-------------|
-| `--agent-name <name>` | Filter by agent name |
-| `--limit <number>` | Max results (default: 50) |
-| `--errors-only` | Only show conversations with tool errors |
-| `--conversation-id <id>` | Fetch specific conversation |
-
-**Examples**:
-```bash
-<skill_directory>/scripts/fetch-agent-conversations.sh abc123
-<skill_directory>/scripts/fetch-agent-conversations.sh abc123 --agent-name task_agent
-<skill_directory>/scripts/fetch-agent-conversations.sh abc123 --errors-only
-<skill_directory>/scripts/fetch-agent-conversations.sh abc123 --conversation-id conv_123
+# Last 10 errors for a specific function
+npx base44 logs --function myFunction --level error --limit 10
 ```
 
 ## Troubleshooting Flow
 
-### 1. Get App ID
+### 1. Confirm Project Context
 
-Read the app ID from `base44/.app.jsonc`:
-
-```bash
-jq -r '.id' base44/.app.jsonc
-```
-
-Fallback: ask the user.
-
-### 2. Fetch Audit Logs
+Make sure you're in a Base44 project directory:
 
 ```bash
-APP_ID=$(jq -r '.id' base44/.app.jsonc)
-<skill_directory>/scripts/fetch-audit-logs.sh $APP_ID --filters '{"status": "failure"}' | jq '.events[] | {timestamp, event_type, error_code, metadata}'
+cat base44/.app.jsonc
 ```
 
-### 3. Investigate Function Failures
-
-If audit logs show `api.function.call` failures, get runtime logs:
+### 2. Check Recent Errors
 
 ```bash
-# Get function name from audit log metadata.function_name
-<skill_directory>/scripts/fetch-function-logs.sh $APP_ID <function_name>
+npx base44 logs --level error
 ```
 
-### 4. Investigate Agent Failures
+### 3. Drill Into a Specific Function
 
-If audit logs show `app.agent.conversation` events or users report agent issues:
+If you know which function is failing:
 
 ```bash
-# Find conversations with tool errors
-<skill_directory>/scripts/fetch-agent-conversations.sh $APP_ID --errors-only
-
-# Get specific conversation details
-<skill_directory>/scripts/fetch-agent-conversations.sh $APP_ID --conversation-id <id>
-
-# Extract error details
-<skill_directory>/scripts/fetch-agent-conversations.sh $APP_ID --errors-only | \
-  jq '.[].messages[].tool_calls[]? | select(.status == "error") | {name, results}'
+npx base44 logs --function <function_name> --level error
 ```
 
-## Key Differences
+### 4. Analyze the Logs
 
-| Source | Contains | Use For |
-|--------|----------|---------|
-| Audit Logs | Event metadata (who, what, when, success/fail) | Finding what failed |
-| Function Logs | Console output, stack traces | Debugging why backend functions failed |
-| Agent Conversations | Full chat + tool calls with results | Debugging agent tool failures, RLS issues |
-
-## References
-
-- [Audit Logs API](references/audit-logs-api.md) - Event metadata, request/response schema
-- [Function Logs API](references/function-logs-api.md) - Runtime logs, console output
-- [Agent Conversations API](references/agent-conversations-api.md) - Chat history, tool call results
+- Look for stack traces and error messages in the output
+- Check timestamps to correlate with user-reported issues
+- Use `--json` for structured output when you need to parse details
