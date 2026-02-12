@@ -140,7 +140,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 
 For client setup and authentication modes, see [client.md](references/client.md).
 
-**TypeScript Support:** Each reference file includes a "Type Definitions" section with TypeScript interfaces and types for the module's methods, parameters, and return values.
+**TypeScript Support:** Each reference file includes a "Type Definitions" section with TypeScript interfaces and types for the module's methods, parameters, and return values. You can augment `EntityTypeRegistry`, `FunctionNameRegistry`, and `AgentNameRegistry` for typed entity names, function names, and agent names (see [entities.md](references/entities.md), [functions.md](references/functions.md), [base44-agents.md](references/base44-agents.md)).
 
 ## Installation
 

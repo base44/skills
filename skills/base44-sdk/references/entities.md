@@ -11,17 +11,19 @@ CRUD operations on data models. Access via `base44.entities.EntityName.method()`
 
 ## Methods
 
+**Note:** The maximum limit for `list()` and `filter()` is 5,000 items per request.
+
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `create(data)` | `Promise<any>` | Create one record |
-| `bulkCreate(dataArray)` | `Promise<any[]>` | Create multiple records |
-| `list(sort?, limit?, skip?, fields?)` | `Promise<any[]>` | Get all records (paginated) |
-| `filter(query, sort?, limit?, skip?, fields?)` | `Promise<any[]>` | Get records matching conditions |
-| `get(id)` | `Promise<any>` | Get single record by ID |
-| `update(id, data)` | `Promise<any>` | Update record (partial update) |
-| `delete(id)` | `Promise<any>` | Delete record by ID |
-| `deleteMany(query)` | `Promise<any>` | Delete all matching records |
-| `importEntities(file)` | `Promise<any>` | Import from CSV (frontend only) |
+| `create(data)` | `Promise<T>` | Create one record |
+| `bulkCreate(dataArray)` | `Promise<T[]>` | Create multiple records |
+| `list(sort?, limit?, skip?, fields?)` | `Promise<Pick<T, K>[]>` | Get all records (paginated) |
+| `filter(query, sort?, limit?, skip?, fields?)` | `Promise<Pick<T, K>[]>` | Get records matching conditions |
+| `get(id)` | `Promise<T>` | Get single record by ID |
+| `update(id, data)` | `Promise<T>` | Update record (partial update) |
+| `delete(id)` | `Promise<DeleteResult>` | Delete record by ID |
+| `deleteMany(query)` | `Promise<DeleteManyResult>` | Delete all matching records |
+| `importEntities(file)` | `Promise<ImportResult<T>>` | Import from CSV (frontend only) |
 | `subscribe(callback)` | `() => void` | Subscribe to realtime updates (returns unsubscribe function) |
 
 ## Examples
@@ -48,9 +50,9 @@ const tasks = await base44.entities.Task.bulkCreate([
 ### List with Pagination
 
 ```javascript
-// Get first 10 records, sorted by created_date descending
+// Get first 10 records, sorted by created_date descending (max 5,000 per request)
 const tasks = await base44.entities.Task.list(
-  "-created_date",  // sort (string: prefix with - for descending)
+  "-created_date",  // sort (SortField: prefix with - for descending)
   10,               // limit
   0                 // skip
 );
@@ -71,10 +73,10 @@ const myPending = await base44.entities.Task.filter({
   assignedTo: userId
 });
 
-// With sort, limit, skip
+// With sort, limit, skip (max 5,000 per request)
 const recent = await base44.entities.Task.filter(
   { status: "pending" },
-  "-created_date",  // sort (string: prefix with - for descending)
+  "-created_date",  // sort (SortField: prefix with - for descending)
   5,
   0
 );
@@ -109,10 +111,24 @@ await base44.entities.Task.update("task-id-123", {
 
 ```javascript
 // Single record
-await base44.entities.Task.delete("task-id-123");
+const result = await base44.entities.Task.delete("task-id-123");
+console.log("Deleted:", result.success);
 
 // Multiple records matching query
-await base44.entities.Task.deleteMany({ status: "archived" });
+const manyResult = await base44.entities.Task.deleteMany({ status: "archived" });
+console.log("Deleted:", manyResult.deleted);
+```
+
+### Import from File
+
+```javascript
+// Frontend only: import from CSV/file
+const result = await base44.entities.Task.importEntities(file);
+if (result.status === "success" && result.output) {
+  console.log(`Imported ${result.output.length} records`);
+} else {
+  console.error(result.details);
+}
 ```
 
 ### Subscribe to Realtime Updates
@@ -187,11 +203,11 @@ RLS and FLS are configured in entity schema files (`base44/entities/*.jsonc`). S
 type RealtimeEventType = "create" | "update" | "delete";
 
 /** Payload received when a realtime event occurs. */
-interface RealtimeEvent {
+interface RealtimeEvent<T = any> {
   /** The type of change that occurred. */
   type: RealtimeEventType;
   /** The entity data. */
-  data: any;
+  data: T;
   /** The unique identifier of the affected entity. */
   id: string;
   /** ISO 8601 timestamp of when the event occurred. */
@@ -199,55 +215,134 @@ interface RealtimeEvent {
 }
 
 /** Callback function invoked when a realtime event occurs. */
-type RealtimeCallback = (event: RealtimeEvent) => void;
+type RealtimeCallback<T = any> = (event: RealtimeEvent<T>) => void;
+```
 
-/** Function returned from subscribe, call it to unsubscribe. */
-type Subscription = () => void;
+### Result Types
+
+```typescript
+/** Result returned when deleting a single entity. */
+interface DeleteResult {
+  /** Whether the deletion was successful. */
+  success: boolean;
+}
+
+/** Result returned when deleting multiple entities. */
+interface DeleteManyResult {
+  /** Whether the deletion was successful. */
+  success: boolean;
+  /** Number of entities that were deleted. */
+  deleted: number;
+}
+
+/** Result returned when importing entities from a file. */
+interface ImportResult<T = any> {
+  /** Status of the import operation. */
+  status: "success" | "error";
+  /** Details message, e.g., "Successfully imported 3 entities with RLS enforcement". */
+  details: string | null;
+  /** Array of created entity objects when successful, or null on error. */
+  output: T[] | null;
+}
+```
+
+### SortField and Server Fields
+
+```typescript
+/**
+ * Sort field type for entity queries.
+ * Supports ascending (no prefix or '+') and descending ('-') sorting.
+ * Example: 'created_date', '+created_date', '-created_date'
+ */
+type SortField<T> = (keyof T & string) | `+${keyof T & string}` | `-${keyof T & string}`;
+
+/** Fields added by the server to every entity record. */
+interface ServerEntityFields {
+  id: string;
+  created_date: string;
+  updated_date: string;
+  created_by?: string | null;
+  created_by_id?: string | null;
+  is_sample?: boolean;
+}
+```
+
+### Type Registry (for typed entities)
+
+```typescript
+/**
+ * Registry mapping entity names to their TypeScript types.
+ * Augment this interface with your entity schema (user-defined fields only).
+ */
+interface EntityTypeRegistry {}
+
+/**
+ * Full record type for each entity: schema fields + server-injected fields.
+ */
+type EntityRecord = {
+  [K in keyof EntityTypeRegistry]: EntityTypeRegistry[K] & ServerEntityFields;
+};
 ```
 
 ### EntityHandler
 
 ```typescript
 /** Entity handler providing CRUD operations for a specific entity type. */
-interface EntityHandler {
-  /** Lists records with optional pagination and sorting. */
-  list(sort?: string, limit?: number, skip?: number, fields?: string[]): Promise<any>;
+interface EntityHandler<T = any> {
+  /** Lists records with optional pagination and sorting. Max 5,000 per request. */
+  list<K extends keyof T = keyof T>(
+    sort?: SortField<T>,
+    limit?: number,
+    skip?: number,
+    fields?: K[]
+  ): Promise<Pick<T, K>[]>;
 
-  /** Filters records based on a query. */
-  filter(query: Record<string, any>, sort?: string, limit?: number, skip?: number, fields?: string[]): Promise<any>;
+  /** Filters records based on a query. Max 5,000 per request. */
+  filter<K extends keyof T = keyof T>(
+    query: Partial<T>,
+    sort?: SortField<T>,
+    limit?: number,
+    skip?: number,
+    fields?: K[]
+  ): Promise<Pick<T, K>[]>;
 
   /** Gets a single record by ID. */
-  get(id: string): Promise<any>;
+  get(id: string): Promise<T>;
 
   /** Creates a new record. */
-  create(data: Record<string, any>): Promise<any>;
+  create(data: Partial<T>): Promise<T>;
 
   /** Updates an existing record. */
-  update(id: string, data: Record<string, any>): Promise<any>;
+  update(id: string, data: Partial<T>): Promise<T>;
 
   /** Deletes a single record by ID. */
-  delete(id: string): Promise<any>;
+  delete(id: string): Promise<DeleteResult>;
 
   /** Deletes multiple records matching a query. */
-  deleteMany(query: Record<string, any>): Promise<any>;
+  deleteMany(query: Partial<T>): Promise<DeleteManyResult>;
 
   /** Creates multiple records in a single request. */
-  bulkCreate(data: Record<string, any>[]): Promise<any>;
+  bulkCreate(data: Partial<T>[]): Promise<T[]>;
 
   /** Imports records from a file (frontend only). */
-  importEntities(file: File): Promise<any>;
+  importEntities(file: File): Promise<ImportResult<T>>;
 
   /** Subscribes to realtime updates. Returns unsubscribe function. */
-  subscribe(callback: RealtimeCallback): Subscription;
+  subscribe(callback: RealtimeCallback<T>): () => void;
 }
 ```
 
 ### EntitiesModule
 
 ```typescript
-/** Entities module for managing app data. */
-interface EntitiesModule {
-  /** Access any entity by name dynamically. */
-  [entityName: string]: EntityHandler;
-}
+/** Entities module: typed registry keys get typed handlers; dynamic access remains untyped. */
+type EntitiesModule = TypedEntitiesModule & DynamicEntitiesModule;
+
+type TypedEntitiesModule = {
+  [K in keyof EntityTypeRegistry]: EntityHandler<EntityRecord[K]>;
+};
+
+type DynamicEntitiesModule = {
+  [entityName: string]: EntityHandler<any>;
+};
 ```

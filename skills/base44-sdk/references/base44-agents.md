@@ -23,9 +23,9 @@ AI agent conversations and messages via `base44.agents`.
 |--------|-----------|-------------|
 | `createConversation(params)` | `Promise<Conversation>` | Create a new conversation with an agent |
 | `getConversations()` | `Promise<Conversation[]>` | Get all user's conversations |
-| `getConversation(id)` | `Promise<Conversation>` | Get conversation with messages |
+| `getConversation(id)` | `Promise<Conversation>` | Get conversation with messages (includes full tool call results) |
 | `listConversations(filterParams)` | `Promise<Conversation[]>` | Filter/sort/paginate conversations |
-| `subscribeToConversation(id, onUpdate?)` | `() => void` | Real-time updates via WebSocket (returns unsubscribe function) |
+| `subscribeToConversation(id, onUpdate?)` | `() => void` | Realtime updates via WebSocket; tool call data truncated (returns unsubscribe function) |
 | `addMessage(conversation, message)` | `Promise<Message>` | Send a message |
 | `getWhatsAppConnectURL(agentName)` | `string` | Get WhatsApp connection URL for agent |
 
@@ -57,6 +57,8 @@ conversations.forEach(conv => {
 
 ### Get Single Conversation (with messages)
 
+Returns the complete stored conversation including full tool call results (unlike the realtime subscription, which truncates tool call data).
+
 ```javascript
 const conversation = await base44.agents.getConversation("conv-id-123");
 
@@ -85,7 +87,9 @@ const highPriority = await base44.agents.listConversations({
 });
 ```
 
-### Subscribe to Updates (Real-time)
+### Subscribe to Updates (Realtime)
+
+When receiving messages through this subscription, tool call data is truncated for efficiency (`arguments_string` limited to 500 characters, `results` to 50). Use `getConversation()` after the message completes to retrieve full tool call data.
 
 ```javascript
 const unsubscribe = base44.agents.subscribeToConversation(
@@ -188,6 +192,21 @@ return () => unsubscribe();
 ```
 
 ## Type Definitions
+
+### AgentNameRegistry and AgentName
+
+```typescript
+/**
+ * Registry of agent names.
+ * Augment this interface to enable autocomplete for agent names.
+ */
+interface AgentNameRegistry {}
+
+/**
+ * Agent name type - uses registry keys if augmented, otherwise string.
+ */
+type AgentName = keyof AgentNameRegistry extends never ? string : keyof AgentNameRegistry;
+```
 
 ### AgentConversation
 
@@ -311,7 +330,7 @@ interface AgentMessageMetadata {
 /** Parameters for creating a new conversation. */
 interface CreateConversationParams {
   /** The name of the agent to create a conversation with. */
-  agent_name: string;
+  agent_name: AgentName;
   /** Optional metadata to attach to the conversation. */
   metadata?: Record<string, any>;
 }
@@ -343,7 +362,7 @@ interface AgentsModule {
   /** Gets all conversations from all agents in the app. */
   getConversations(): Promise<AgentConversation[]>;
 
-  /** Gets a specific conversation by ID. */
+  /** Gets a specific conversation by ID. Returns complete stored conversation including full tool call results. */
   getConversation(conversationId: string): Promise<AgentConversation | undefined>;
 
   /** Lists conversations with filtering, sorting, and pagination. */
@@ -355,10 +374,10 @@ interface AgentsModule {
   /** Adds a message to a conversation. */
   addMessage(conversation: AgentConversation, message: Partial<AgentMessage>): Promise<AgentMessage>;
 
-  /** Subscribes to real-time updates for a conversation. Returns unsubscribe function. */
+  /** Subscribes to realtime updates for a conversation. Returns unsubscribe function. */
   subscribeToConversation(conversationId: string, onUpdate?: (conversation: AgentConversation) => void): () => void;
 
   /** Gets WhatsApp connection URL for an agent. */
-  getWhatsAppConnectURL(agentName: string): string;
+  getWhatsAppConnectURL(agentName: AgentName): string;
 }
 ```

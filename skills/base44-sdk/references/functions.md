@@ -12,11 +12,11 @@ Invoke custom backend functions via `base44.functions`.
 ## Method
 
 ```javascript
-base44.functions.invoke(functionName, data): Promise<any>
+base44.functions.invoke(functionName, data?): Promise<any>
 ```
 
 - `functionName`: Name of the backend function
-- `data`: Object of parameters (sent as JSON, or multipart if contains File objects)
+- `data`: Optional object of parameters (sent as JSON, or multipart if contains File objects)
 - Returns: Whatever the function returns
 
 ## Invoking Functions
@@ -199,6 +199,17 @@ Inside the function, use `createClientFromRequest(req)` to get a client that inh
 ## Type Definitions
 
 ```typescript
+/**
+ * Registry of function names.
+ * Augment this interface to enable autocomplete for function names.
+ */
+interface FunctionNameRegistry {}
+
+/**
+ * Function name type - uses registry keys if augmented, otherwise string.
+ */
+type FunctionName = keyof FunctionNameRegistry extends never ? string : keyof FunctionNameRegistry;
+
 /** Functions module for invoking custom backend functions. */
 interface FunctionsModule {
   /**
@@ -208,9 +219,9 @@ interface FunctionsModule {
    * sent as multipart/form-data. Otherwise, it will be sent as JSON.
    *
    * @param functionName - The name of the function to invoke.
-   * @param data - An object containing named parameters for the function.
+   * @param data - Optional object containing named parameters for the function.
    * @returns Promise resolving to the function's response.
    */
-  invoke(functionName: string, data: Record<string, any>): Promise<any>;
+  invoke(functionName: FunctionName, data?: Record<string, any>): Promise<any>;
 }
 ```
