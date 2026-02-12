@@ -269,10 +269,13 @@ interface ServerEntityFields {
 
 ### Type Registry (for typed entities)
 
+**How to get typed entities:** The Base44 CLI can generate entity interfaces and an augmentation of `EntityTypeRegistry` from your project. For how to run it, use the **base44-cli** skill.
+
 ```typescript
 /**
  * Registry mapping entity names to their TypeScript types.
  * Augment this interface with your entity schema (user-defined fields only).
+ * Typically populated by the Base44 CLI type generator.
  */
 interface EntityTypeRegistry {}
 

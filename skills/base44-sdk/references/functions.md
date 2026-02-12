@@ -198,10 +198,13 @@ Inside the function, use `createClientFromRequest(req)` to get a client that inh
 
 ## Type Definitions
 
+**How to get typed function names:** The Base44 CLI can generate an augmentation of `FunctionNameRegistry` from your project. For how to run it, use the **base44-cli** skill.
+
 ```typescript
 /**
  * Registry of function names.
  * Augment this interface to enable autocomplete for function names.
+ * Typically populated by the Base44 CLI type generator.
  */
 interface FunctionNameRegistry {}
 

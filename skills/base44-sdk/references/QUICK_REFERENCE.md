@@ -153,3 +153,9 @@ import { createClient } from "@base44/sdk";
 
 const base44 = createClient({ appId: "your-app-id" });  // MUST use 'appId'
 ```
+
+---
+
+## TypeScript type registries
+
+For typed entities, function names, and agent names (autocomplete and type checking), the Base44 CLI generates types and wires them into your project. Use the **base44-cli** skill for how to generate types.

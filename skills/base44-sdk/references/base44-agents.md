@@ -195,10 +195,13 @@ return () => unsubscribe();
 
 ### AgentNameRegistry and AgentName
 
+**How to get typed agent names:** The Base44 CLI can generate an augmentation of `AgentNameRegistry` from your project. For how to run it, use the **base44-cli** skill.
+
 ```typescript
 /**
  * Registry of agent names.
  * Augment this interface to enable autocomplete for agent names.
+ * Typically populated by the Base44 CLI type generator.
  */
 interface AgentNameRegistry {}
 
