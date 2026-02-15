@@ -106,8 +106,10 @@ my-app/
 │   │   └── my-function/
 │   │       ├── function.jsonc
 │   │       └── index.ts
-│   └── agents/                  # Agent configurations (optional)
-│       └── support_agent.jsonc
+│   ├── agents/                  # Agent configurations (optional)
+│   │   └── support_agent.jsonc
+│   └── connectors/              # Connector configurations (optional)
+│       └── github.jsonc
 ├── src/                         # Frontend source code
 │   ├── api/
 │   │   └── base44Client.js      # Base44 SDK client
@@ -199,7 +201,7 @@ npx base44 <command>
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 deploy` | Deploy all resources (entities, functions, site) | [deploy.md](references/deploy.md) |
+| `base44 deploy` | Deploy all resources (entities, functions, agents, connectors, site) | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 
@@ -256,6 +258,47 @@ Agents are conversational AI assistants that can interact with users, access you
 | `base44 agents push`    | Push local agents to Base44             | [agents-push.md](references/agents-push.md)     |
 
 **Note:** Agent commands perform full synchronization - pushing replaces all remote agents with local ones, and pulling replaces all local agents with remote ones.
+
+### Connector Management
+
+Connectors enable third-party integrations with your Base44 app (e.g., GitHub, Google, Slack). Define connector configurations locally and sync them with Base44.
+
+| Action / Command          | Description                                     | Reference                                             |
+| ------------------------- | ----------------------------------------------- | ----------------------------------------------------- |
+| Create Connectors         | Define connectors in `base44/connectors` folder | See Connector Schema below                            |
+| `base44 connectors pull`  | Pull remote connectors to local files           | [connectors-pull.md](references/connectors-pull.md)   |
+| `base44 connectors push`  | Push local connectors to Base44 with OAuth      | [connectors-push.md](references/connectors-push.md)   |
+
+**Note:** Connector commands perform full synchronization. Push replaces all remote connectors with local ones. Pull replaces all local connectors with remote ones.
+
+**OAuth Authorization:** Pushing connectors requires OAuth authorization for each connector. The CLI opens a browser for authorization. Press Esc to skip individual connectors. In CI environments (`CI` env variable set), OAuth prompts are automatically skipped.
+
+#### Connector Schema (Quick Reference)
+
+**File naming:** `base44/connectors/{connector_name}.jsonc` (e.g., `github.jsonc`)
+
+**Schema template:**
+```jsonc
+{
+  "name": "connector_name",
+  "provider": "github", // or "google", "slack", etc.
+  "description": "Brief description of this connector",
+  "config": {
+    // Provider-specific configuration
+    "client_id": "your_client_id",
+    "client_secret": "your_client_secret",
+    "scopes": ["repo", "user"]
+  }
+}
+```
+
+**Naming rules:**
+- Connector names must match pattern: `/^[a-z0-9_-]+$/` (lowercase alphanumeric with underscores/hyphens)
+- Valid: `github`, `google_oauth`, `slack-bot`
+- Invalid: `GitHub`, `GoogleOAuth`
+
+**Required fields:** `name`, `provider`, `config`
+**Optional fields:** `description`
 
 #### Agent Schema (Quick Reference)
 
@@ -351,6 +394,7 @@ Or deploy individual resources:
 - `npx base44 entities push` - Push entities only
 - `npx base44 functions deploy` - Deploy functions only
 - `npx base44 agents push` - Push agents only
+- `npx base44 connectors push` - Push connectors only (with OAuth authorization)
 - `npx base44 site deploy -y` - Deploy site only
 
 ## Common Workflows
@@ -378,7 +422,7 @@ npx base44 types generate
 # Build your project first
 npm run build
 
-# Deploy everything (entities, functions, and site)
+# Deploy everything (entities, functions, agents, connectors, and site)
 npx base44 deploy -y
 ```
 
@@ -400,6 +444,9 @@ npx base44 functions deploy
 
 # Push only agents
 npx base44 agents push
+
+# Push only connectors (with OAuth authorization)
+npx base44 connectors push
 
 # Deploy only site
 npx base44 site deploy -y
