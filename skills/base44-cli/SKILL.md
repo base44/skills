@@ -189,6 +189,7 @@ npx base44 <command>
 |---------|-------------|-----------|
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
+| `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 
 ### Deployment
@@ -402,3 +403,4 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | Invalid agent name          | Agent names must be lowercase alphanumeric with underscores only                    |
 | No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
 | Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded                        |
+| Update available message    | If prompted to update, run `npm install -g base44@latest` (or use npx for local installs) |
