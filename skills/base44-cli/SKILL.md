@@ -97,6 +97,8 @@ A Base44 project combines a standard frontend project with a `base44/` configura
 my-app/
 ├── base44/                      # Base44 configuration (created by CLI)
 │   ├── config.jsonc             # Project settings, site config
+│   ├── .types/                  # Auto-generated TypeScript types (created by `types generate`)
+│   │   └── types.d.ts           # Module augmentation for @base44/sdk
 │   ├── entities/                # Entity schema definitions
 │   │   ├── task.jsonc
 │   │   └── board.jsonc
@@ -122,6 +124,7 @@ my-app/
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
 - `base44/functions/*/function.jsonc` - Function config and optional `automations` (CRON, simple triggers, entity hooks)
 - `base44/agents/*.jsonc` - Agent configurations (optional)
+- `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44 types generate`)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
 
 **config.jsonc example:**
@@ -302,6 +305,16 @@ Automations are triggers defined in the `automations` array inside `function.jso
 
 For full schemas and examples, see [automations.md](references/automations.md).
 
+### Type Generation
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 types generate` | Generate TypeScript types (`types.d.ts`) from entities, functions, and agents | [types-generate.md](references/types-generate.md) |
+
+**Output:** `base44/.types/types.d.ts` — augments `@base44/sdk` module with typed registries (`EntityTypeRegistry`, `FunctionNameRegistry`, `AgentNameRegistry`).
+
+**No authentication required.** Runs entirely locally. Automatically updates `tsconfig.json` to include the generated types.
+
 ### Site Management
 
 | Command              | Description                               | Reference                                   |
@@ -359,12 +372,23 @@ npx base44 link --create --name my-app
 
 ### Deploying All Changes
 ```bash
+# Generate types (optional, for TypeScript projects)
+npx base44 types generate
+
 # Build your project first
 npm run build
 
 # Deploy everything (entities, functions, and site)
 npx base44 deploy -y
 ```
+
+### Generating TypeScript Types
+```bash
+# Generate types from entities, functions, and agents
+npx base44 types generate
+```
+
+This creates `base44/.types/types.d.ts` with typed registries for the `@base44/sdk` module. Run this after changing entities, functions, or agents to keep your types in sync. No authentication required.
 
 ### Deploying Individual Resources
 ```bash
