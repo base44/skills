@@ -106,8 +106,11 @@ my-app/
 │   │   └── my-function/
 │   │       ├── function.jsonc
 │   │       └── index.ts
-│   └── agents/                  # Agent configurations (optional)
-│       └── support_agent.jsonc
+│   ├── agents/                  # Agent configurations (optional)
+│   │   └── support_agent.jsonc
+│   └── connectors/              # OAuth connector configs (optional)
+│       ├── slack.jsonc
+│       └── github.jsonc
 ├── src/                         # Frontend source code
 │   ├── api/
 │   │   └── base44Client.js      # Base44 SDK client
@@ -124,6 +127,7 @@ my-app/
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
 - `base44/functions/*/function.jsonc` - Function config and optional `automations` (CRON, simple triggers, entity hooks)
 - `base44/agents/*.jsonc` - Agent configurations (optional)
+- `base44/connectors/*.jsonc` - OAuth connector configurations (optional)
 - `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44 types generate`)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
 
@@ -135,6 +139,7 @@ my-app/
   "entitiesDir": "./entities",         // Optional: default "entities"
   "functionsDir": "./functions",       // Optional: default "functions"
   "agentsDir": "./agents",             // Optional: default "agents"
+  "connectorsDir": "./connectors",     // Optional: default "connectors"
   "site": {                            // Optional: site deployment config
     "installCommand": "npm install",   // Optional: install dependencies
     "buildCommand": "npm run build",   // Optional: build command
@@ -153,6 +158,7 @@ my-app/
 | `entitiesDir` | Directory for entity schemas | `"entities"` |
 | `functionsDir` | Directory for backend functions | `"functions"` |
 | `agentsDir` | Directory for agent configs | `"agents"` |
+| `connectorsDir` | Directory for connector configs | `"connectors"` |
 | `site.installCommand` | Command to install dependencies | - |
 | `site.buildCommand` | Command to build the project | - |
 | `site.serveCommand` | Command to run dev server | - |
@@ -304,6 +310,21 @@ Automations are triggers defined in the `automations` array inside `function.jso
 **Entity Hook:** `type: "entity"`, `entity_name` (matches entity schema name), `event_types`: array of `"create"` \| `"update"` \| `"delete"` (at least one)
 
 For full schemas and examples, see [automations.md](references/automations.md).
+
+### Connector Management
+
+Connectors are OAuth integrations that allow your Base44 project to interact with third-party services (e.g., Slack, GitHub, Stripe). Use these commands to manage connector configurations.
+
+| Command                  | Description                                      | Reference                                           |
+| ------------------------ | ------------------------------------------------ | --------------------------------------------------- |
+| `base44 connectors pull` | Pull remote connectors to local files            | [connectors-pull.md](references/connectors-pull.md) |
+| `base44 connectors push` | Push local connectors to Base44 (with OAuth)     | [connectors-push.md](references/connectors-push.md) |
+
+**Note:** Connector commands perform full synchronization:
+- **Push**: Replaces all remote connectors with local ones. Prompts for OAuth authorization when needed (can skip in CI).
+- **Pull**: Replaces all local connector files with remote ones.
+
+Connectors are stored in the `base44/connectors/` directory (configured via `connectorsDir` in `config.jsonc`).
 
 ### Type Generation
 
