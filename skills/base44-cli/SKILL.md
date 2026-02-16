@@ -301,9 +301,10 @@ Connectors are OAuth integrations that let your app connect to external services
 | Action / Command            | Description                                     | Reference                                             |
 | --------------------------- | ----------------------------------------------- | ----------------------------------------------------- |
 | Create Connectors           | Define connectors in `base44/connectors` folder | [connectors-create.md](references/connectors-create.md) |
+| `base44 connectors pull`    | Pull remote connectors to local files           | [connectors-pull.md](references/connectors-pull.md)   |
 | `base44 connectors push`    | Push local connectors to Base44                 | [connectors-push.md](references/connectors-push.md)   |
 
-**Note:** Pushing connectors syncs scopes and removes any connectors not defined locally. New connectors require OAuth authorization in your browser.
+**Note:** Connector commands perform full synchronization - pushing replaces all remote connectors with local ones (and triggers OAuth for new ones), and pulling replaces all local connectors with remote ones.
 
 #### Connector Schema (Quick Reference)
 
@@ -403,6 +404,7 @@ Or deploy individual resources:
 - `npx base44 entities push` - Push entities only
 - `npx base44 functions deploy` - Deploy functions only
 - `npx base44 agents push` - Push agents only
+- `npx base44 connectors pull` - Pull connectors from Base44
 - `npx base44 connectors push` - Push connectors only
 - `npx base44 site deploy -y` - Deploy site only
 
@@ -453,6 +455,9 @@ npx base44 functions deploy
 
 # Push only agents
 npx base44 agents push
+
+# Pull connectors from Base44
+npx base44 connectors pull
 
 # Push only connectors
 npx base44 connectors push

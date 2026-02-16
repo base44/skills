@@ -126,3 +126,11 @@ npx base44 connectors push
 ```
 
 This will prompt you to authorize each new connector in your browser. See [connectors-push.md](connectors-push.md) for details.
+
+To pull existing connectors from Base44 to local files:
+
+```bash
+npx base44 connectors pull
+```
+
+See [connectors-pull.md](connectors-pull.md) for details.

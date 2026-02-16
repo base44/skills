@@ -118,3 +118,4 @@ Run the command again when you're ready to authorize.
 ## Related Commands
 
 - [connectors-create.md](connectors-create.md) - How to create connector configuration files
+- [connectors-pull.md](connectors-pull.md) - Pull connectors from Base44 to local files
