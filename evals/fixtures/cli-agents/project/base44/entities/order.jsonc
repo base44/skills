@@ -1,0 +1,24 @@
+{
+  "name": "Order",
+  "type": "object",
+  "properties": {
+    "order_number": {
+      "type": "string",
+      "description": "Unique order number"
+    },
+    "status": {
+      "type": "string",
+      "enum": ["pending", "processing", "shipped", "delivered", "cancelled"],
+      "default": "pending"
+    },
+    "total": {
+      "type": "number",
+      "description": "Total order amount"
+    },
+    "items": {
+      "type": "array",
+      "description": "List of order items"
+    }
+  },
+  "required": ["order_number", "total"]
+}

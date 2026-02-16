@@ -1,0 +1,119 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "sdk-functions",
+  "description": "Test SDK function invocation patterns",
+  "prompts": [
+    {
+      "name": "sdk-functions-invoke",
+      "description": "Invoke a backend function from frontend",
+      "prompt": "Create a ProcessOrder component in src/components/ProcessOrder.jsx that invokes a backend function called 'process_order' using the Base44 SDK. Pass an orderId and action to the function. Display the result or any errors.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/ProcessOrder.jsx",
+          "description": "src/components/ProcessOrder.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProcessOrder.jsx",
+          "pattern": "functions\\.invoke\\(",
+          "description": "Uses functions.invoke"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProcessOrder.jsx",
+          "pattern": "process_order",
+          "description": "Matches expected pattern in ProcessOrder.jsx"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProcessOrder.jsx",
+          "pattern": "import.*base44|from ['\"].*base44",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProcessOrder.jsx",
+          "pattern": "functions\\.call\\(",
+          "description": "Does not use hallucinated functions.call"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProcessOrder.jsx",
+          "pattern": "httpsCallable",
+          "description": "Does not use hallucinated httpsCallable"
+        }
+      ]
+    },
+    {
+      "name": "sdk-functions-backend",
+      "description": "Create a backend function with Deno.serve",
+      "prompt": "Create a backend function called 'calculate-shipping' that accepts an order_id and destination in the request body, looks up the order using service role access, and returns a shipping cost. Create both the function config (base44/functions/calculate-shipping/function.jsonc) and the implementation (base44/functions/calculate-shipping/index.ts).",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/calculate-shipping/function.jsonc",
+          "description": "base44/functions/calculate-shipping/function.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "base44/functions/calculate-shipping/index.ts",
+          "description": "base44/functions/calculate-shipping/index.ts exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/functions/calculate-shipping/function.jsonc",
+          "description": "base44/functions/calculate-shipping/function.jsonc is valid JSON"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/calculate-shipping/index.ts",
+          "pattern": "Deno\\.serve",
+          "description": "Uses Deno.serve()"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/calculate-shipping/index.ts",
+          "pattern": "createClientFromRequest",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/calculate-shipping/index.ts",
+          "pattern": "asServiceRole",
+          "description": "Uses asServiceRole for admin access"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/calculate-shipping/index.ts",
+          "pattern": "await\\s+req\\.json\\(\\)",
+          "description": "Parses request body"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/calculate-shipping/index.ts",
+          "pattern": "Response\\.json\\(",
+          "description": "Returns Response.json()"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/functions/calculate-shipping/index.ts",
+          "pattern": "npm:@base44/sdk|createClientFromRequest.*from.*@base44/sdk",
+          "description": "Imports base44 client"
+        },
+        {
+          "type": "function-def",
+          "filePath": "base44/functions/calculate-shipping/function.jsonc",
+          "target": "file",
+          "description": "Function config validates (base44/functions/calculate-shipping/function.jsonc)"
+        }
+      ]
+    }
+  ]
+}

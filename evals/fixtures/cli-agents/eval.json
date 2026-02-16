@@ -1,0 +1,201 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "cli-agents",
+  "description": "Test CLI agent configuration: full CRUD, multi-entity, functions, mixed tools",
+  "prompts": [
+    {
+      "name": "cli-agent-full-crud",
+      "description": "Create agent with full CRUD access to entity",
+      "prompt": "Create an agent called 'inventory_manager' that manages the product inventory. It should have full CRUD access (read, create, update, delete) to the Product entity. Give it instructions to help users add, update, and remove products from inventory. Save at base44/agents/inventory_manager.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/agents/inventory_manager.jsonc",
+          "description": "base44/agents/inventory_manager.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/agents/inventory_manager.jsonc",
+          "description": "base44/agents/inventory_manager.jsonc is valid JSON"
+        },
+        {
+          "type": "agent-config",
+          "filePath": "base44/agents/inventory_manager.jsonc",
+          "target": "file",
+          "description": "Agent config validates (base44/agents/inventory_manager.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/inventory_manager.jsonc",
+          "pattern": "\"name\"\\s*:\\s*\"inventory_manager\"",
+          "description": "Has name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/inventory_manager.jsonc",
+          "pattern": "\"entity_name\"\\s*:\\s*\"Product\"",
+          "description": "Has entity_name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/inventory_manager.jsonc",
+          "pattern": "\"allowed_operations\"\\s*:\\s*\\[[^\\]]*\"read\"[^\\]]*\"create\"[^\\]]*\"update\"[^\\]]*\"delete\"",
+          "description": "Has allowed_operations field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/inventory_manager.jsonc",
+          "pattern": "\"instructions\"\\s*:",
+          "description": "Has instructions field"
+        }
+      ]
+    },
+    {
+      "name": "cli-agent-multi-entity",
+      "description": "Create agent with access to multiple entities",
+      "prompt": "Create an agent called 'order_tracker' that helps customers track their orders. It should have read access to both Order and Customer entities. Give it instructions to look up order details and customer information. Save at base44/agents/order_tracker.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/agents/order_tracker.jsonc",
+          "description": "base44/agents/order_tracker.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/agents/order_tracker.jsonc",
+          "description": "base44/agents/order_tracker.jsonc is valid JSON"
+        },
+        {
+          "type": "agent-config",
+          "filePath": "base44/agents/order_tracker.jsonc",
+          "target": "file",
+          "description": "Agent config validates (base44/agents/order_tracker.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/order_tracker.jsonc",
+          "pattern": "\"entity_name\"\\s*:\\s*\"Order\"",
+          "description": "Has entity_name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/order_tracker.jsonc",
+          "pattern": "\"entity_name\"\\s*:\\s*\"Customer\"",
+          "description": "Has entity_name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/order_tracker.jsonc",
+          "pattern": "\"allowed_operations\"\\s*:\\s*\\[[^\\]]*\"read\"",
+          "description": "Has allowed_operations field"
+        }
+      ]
+    },
+    {
+      "name": "cli-agent-functions",
+      "description": "Create agent with function tool access",
+      "prompt": "Create an agent called 'shipping_bot' that helps users with shipping. It should have access to a backend function called 'calculate_shipping' (described as 'Calculate shipping cost for an order') and read access to the Order entity. Save at base44/agents/shipping_bot.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/agents/shipping_bot.jsonc",
+          "description": "base44/agents/shipping_bot.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/agents/shipping_bot.jsonc",
+          "description": "base44/agents/shipping_bot.jsonc is valid JSON"
+        },
+        {
+          "type": "agent-config",
+          "filePath": "base44/agents/shipping_bot.jsonc",
+          "target": "file",
+          "description": "Agent config validates (base44/agents/shipping_bot.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/shipping_bot.jsonc",
+          "pattern": "\"function_name\"\\s*:\\s*\"calculate_shipping\"",
+          "description": "Has function_name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/shipping_bot.jsonc",
+          "pattern": "\"entity_name\"\\s*:\\s*\"Order\"",
+          "description": "Has entity_name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/shipping_bot.jsonc",
+          "pattern": "\"description\"\\s*:",
+          "description": "Has description field"
+        }
+      ]
+    },
+    {
+      "name": "cli-agent-mixed",
+      "description": "Create agent with mixed entity and function tools",
+      "prompt": "Create an agent called 'store_assistant' that helps manage a store. It should have: 1) Full CRUD access to Product entity, 2) Read access to Order entity, 3) Access to a function called 'send_receipt' (described as 'Send order receipt email'). Include detailed instructions for the agent. Save at base44/agents/store_assistant.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/agents/store_assistant.jsonc",
+          "description": "base44/agents/store_assistant.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/agents/store_assistant.jsonc",
+          "description": "base44/agents/store_assistant.jsonc is valid JSON"
+        },
+        {
+          "type": "agent-config",
+          "filePath": "base44/agents/store_assistant.jsonc",
+          "target": "file",
+          "description": "Agent config validates (base44/agents/store_assistant.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/store_assistant.jsonc",
+          "pattern": "\"name\"\\s*:\\s*\"store_assistant\"",
+          "description": "Has name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/store_assistant.jsonc",
+          "pattern": "\"entity_name\"\\s*:\\s*\"Product\"",
+          "description": "Has entity_name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/store_assistant.jsonc",
+          "pattern": "\"entity_name\"\\s*:\\s*\"Order\"",
+          "description": "Has entity_name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/store_assistant.jsonc",
+          "pattern": "\"function_name\"\\s*:\\s*\"send_receipt\"",
+          "description": "Has function_name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/agents/store_assistant.jsonc",
+          "pattern": "\"instructions\"\\s*:",
+          "description": "Has instructions field"
+        }
+      ]
+    }
+  ]
+}

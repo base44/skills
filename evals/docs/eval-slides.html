@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skill Evals: Regression Testing for Claude Code Skills</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/monokai.css">
+  <style>
+    :root {
+      --b44-blue: #4fc3f7;
+      --b44-green: #81c784;
+      --b44-red: #e57373;
+      --b44-yellow: #fff176;
+      --b44-purple: #ce93d8;
+      --b44-orange: #ffb74d;
+      --b44-dim: #666;
+      --b44-bg: #1a1a2e;
+      --b44-box: #16213e;
+      --b44-border: #0f3460;
+    }
+    .reveal { font-size: 32px; }
+    .reveal h1 { font-size: 1.8em; color: var(--b44-blue); }
+    .reveal h2 { font-size: 1.4em; color: var(--b44-blue); margin-bottom: 0.6em; }
+    .reveal h3 { font-size: 1.1em; color: var(--b44-purple); }
+    .reveal section { text-align: left; }
+    .reveal .center { text-align: center; }
+    .reveal code { color: var(--b44-yellow); }
+    .reveal pre { width: 100%; font-size: 0.55em; }
+    .reveal pre code { max-height: 520px; }
+    .reveal ul { font-size: 0.85em; }
+    .reveal li { margin-bottom: 0.3em; }
+    .reveal table { font-size: 0.7em; margin: 0 auto; }
+    .reveal th { color: var(--b44-blue); border-bottom: 2px solid var(--b44-border); padding: 6px 14px; }
+    .reveal td { border-bottom: 1px solid #333; padding: 6px 14px; }
+    .subtitle { color: #aaa; font-size: 0.7em; margin-top: 0.3em; }
+
+    /* Two-column layout */
+    .cols { display: flex; gap: 2em; align-items: flex-start; }
+    .cols > * { flex: 1; }
+
+    /* Comparison table */
+    .cmp-table { width: 100%; border-collapse: collapse; font-size: 0.65em; }
+    .cmp-table th { background: var(--b44-box); padding: 8px 12px; text-align: left; }
+    .cmp-table td { padding: 8px 12px; border-bottom: 1px solid #333; }
+    .cmp-table .correct { color: var(--b44-green); }
+    .cmp-table .wrong { color: var(--b44-red); }
+
+    /* Architecture diagram */
+    .arch-diagram { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; margin: 1em 0; }
+    .arch-box { background: var(--b44-box); border: 2px solid var(--b44-border); border-radius: 10px; padding: 14px 18px; text-align: center; min-width: 120px; }
+    .arch-box .box-title { font-weight: bold; font-size: 0.8em; margin-bottom: 4px; }
+    .arch-box .box-sub { font-size: 0.55em; color: #999; }
+    .arch-arrow { font-size: 1.6em; color: var(--b44-dim); padding: 0 4px; }
+    .arch-box.blue { border-color: var(--b44-blue); }
+    .arch-box.green { border-color: var(--b44-green); }
+    .arch-box.purple { border-color: var(--b44-purple); }
+    .arch-box.orange { border-color: var(--b44-orange); }
+    .arch-box.yellow { border-color: var(--b44-yellow); }
+    .arch-box.red { border-color: var(--b44-red); }
+
+    /* File tree */
+    .file-tree { font-family: 'Courier New', monospace; font-size: 0.6em; line-height: 1.7; background: var(--b44-box); border-radius: 8px; padding: 16px 20px; }
+    .file-tree .dir { color: var(--b44-blue); }
+    .file-tree .file { color: #ccc; }
+    .file-tree .anno { color: var(--b44-dim); font-style: italic; font-family: sans-serif; margin-left: 8px; }
+
+    /* Check grid */
+    .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.6em; }
+    .check-cat { background: var(--b44-box); border-radius: 8px; padding: 12px 16px; }
+    .check-cat h4 { margin: 0 0 8px 0; font-size: 1.1em; }
+    .check-cat ul { margin: 0; padding-left: 1.2em; }
+    .check-cat li { margin-bottom: 4px; }
+    .check-cat.fs h4 { color: var(--b44-blue); }
+    .check-cat.output h4 { color: var(--b44-green); }
+    .check-cat.struct h4 { color: var(--b44-purple); }
+    .check-cat.domain h4 { color: var(--b44-orange); }
+
+    /* Experiment comparison */
+    .exp-table { width: 100%; border-collapse: collapse; font-size: 0.55em; }
+    .exp-table th { background: var(--b44-box); padding: 8px; text-align: center; color: var(--b44-blue); }
+    .exp-table td { padding: 6px 8px; border-bottom: 1px solid #333; text-align: center; vertical-align: top; }
+    .exp-table td:first-child { text-align: left; color: #ccc; font-weight: bold; }
+    .yes { color: var(--b44-green); }
+    .no { color: var(--b44-red); }
+
+    /* Flowchart */
+    .flow { display: flex; flex-direction: column; gap: 0; align-items: center; font-size: 0.65em; }
+    .flow-row { display: flex; align-items: center; gap: 12px; }
+    .flow-step { background: var(--b44-box); border: 2px solid var(--b44-border); border-radius: 8px; padding: 8px 16px; text-align: center; min-width: 150px; }
+    .flow-step .step-num { display: inline-block; background: var(--b44-blue); color: #000; border-radius: 50%; width: 22px; height: 22px; line-height: 22px; text-align: center; font-weight: bold; font-size: 0.8em; margin-right: 6px; }
+    .flow-down { color: var(--b44-dim); font-size: 1.4em; text-align: center; }
+
+    /* Matrix table */
+    .matrix { width: 100%; border-collapse: collapse; font-size: 0.55em; }
+    .matrix th { background: var(--b44-box); padding: 6px 10px; color: var(--b44-blue); }
+    .matrix td { padding: 6px 10px; text-align: center; border-bottom: 1px solid #333; }
+    .matrix td:first-child { text-align: left; color: #ccc; }
+    .matrix .pass { background: rgba(129,199,132,0.15); color: var(--b44-green); font-weight: bold; }
+    .matrix .fail { background: rgba(229,115,115,0.15); color: var(--b44-red); font-weight: bold; }
+    .matrix .rate { font-weight: bold; color: var(--b44-yellow); }
+
+    /* Coverage grid */
+    .cov-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; font-size: 0.55em; }
+    .cov-cat { background: var(--b44-box); border-radius: 8px; padding: 12px 16px; }
+    .cov-cat h4 { margin: 0 0 8px 0; font-size: 1.15em; }
+    .cov-cat ul { margin: 0; padding-left: 1.2em; list-style: none; }
+    .cov-cat li::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; }
+    .cov-cat.sdk li::before { background: var(--b44-blue); }
+    .cov-cat.cli li::before { background: var(--b44-green); }
+    .cov-cat.cross li::before { background: var(--b44-purple); }
+    .cov-cat.sdk h4 { color: var(--b44-blue); }
+    .cov-cat.cli h4 { color: var(--b44-green); }
+    .cov-cat.cross h4 { color: var(--b44-purple); }
+
+    /* Step boxes */
+    .steps { display: flex; flex-direction: column; gap: 14px; font-size: 0.7em; }
+    .step-box { background: var(--b44-box); border-left: 4px solid var(--b44-blue); border-radius: 0 8px 8px 0; padding: 12px 16px; }
+    .step-box .step-label { color: var(--b44-blue); font-weight: bold; font-size: 0.9em; margin-bottom: 4px; }
+    .step-box code { font-size: 0.9em; }
+
+    /* Command blocks */
+    .cmd-block { background: var(--b44-box); border-radius: 8px; padding: 16px 20px; margin-bottom: 14px; font-size: 0.7em; }
+    .cmd-block .cmd-title { color: var(--b44-green); font-weight: bold; margin-bottom: 6px; }
+    .cmd-block pre { margin: 0; background: none; box-shadow: none; }
+    .cmd-block pre code { font-size: 1em; padding: 0; }
+
+    /* Value cards */
+    .value-cards { display: flex; gap: 16px; }
+    .value-card { flex: 1; background: var(--b44-box); border-radius: 10px; padding: 18px; border-top: 3px solid var(--b44-border); }
+    .value-card.blue { border-top-color: var(--b44-blue); }
+    .value-card.green { border-top-color: var(--b44-green); }
+    .value-card.purple { border-top-color: var(--b44-purple); }
+    .value-card h3 { margin-top: 0; font-size: 0.9em; }
+    .value-card p { font-size: 0.7em; color: #bbb; margin: 0; }
+  </style>
+</head>
+<body>
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- Slide 1: Title -->
+      <section class="center">
+        <h1>Skill Evals</h1>
+        <p class="subtitle">Regression Testing for Claude Code Skills</p>
+        <br>
+        <p style="font-size:0.6em; color:#888;">
+          Automated verification that Claude Code uses correct Base44 APIs<br>
+          instead of hallucinating Firebase / Supabase patterns
+        </p>
+      </section>
+
+      <!-- Slide 2: The Hallucination Problem -->
+      <section>
+        <h2>The Hallucination Problem</h2>
+        <p style="font-size:0.7em; color:#aaa; margin-bottom:0.8em;">
+          Without skill documentation, Claude falls back to pre-training patterns
+        </p>
+        <table class="cmp-table">
+          <thead>
+            <tr><th>API</th><th class="correct">Correct (Base44)</th><th class="wrong">Hallucinated</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Create record</td>
+              <td class="correct"><code>entities.Product.create(data)</code></td>
+              <td class="wrong"><code>Product.insert(data)</code></td>
+            </tr>
+            <tr>
+              <td>Filter records</td>
+              <td class="correct"><code>entities.Product.filter(query)</code></td>
+              <td class="wrong"><code>Product.find(query)</code> / <code>.where()</code></td>
+            </tr>
+            <tr>
+              <td>Auth login</td>
+              <td class="correct"><code>loginViaEmailPassword(email, pw)</code></td>
+              <td class="wrong"><code>signInWithEmailAndPassword()</code></td>
+            </tr>
+            <tr>
+              <td>OAuth provider</td>
+              <td class="correct"><code>loginWithProvider('google')</code></td>
+              <td class="wrong"><code>signInWithGoogle()</code></td>
+            </tr>
+            <tr>
+              <td>SDK import</td>
+              <td class="correct"><code>import { ... } from "@base44/sdk"</code></td>
+              <td class="wrong"><code>import { ... } from "firebase"</code></td>
+            </tr>
+            <tr>
+              <td>Config init</td>
+              <td class="correct"><code>createClient({ appId })</code></td>
+              <td class="wrong"><code>initializeApp({ apiKey })</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Slide 3: What Value Does This Provide? -->
+      <section>
+        <h2>What Value Does This Provide?</h2>
+        <div class="value-cards">
+          <div class="value-card blue">
+            <h3>Regression Testing</h3>
+            <p>Every change to skill documentation is tested against 16 fixtures and 30+ prompts. Catch regressions before they ship.</p>
+          </div>
+          <div class="value-card green">
+            <h3>Strategy Comparison</h3>
+            <p>Compare documentation approaches (AGENTS.md format, verbosity level, context priming) to find the most effective strategy.</p>
+          </div>
+          <div class="value-card purple">
+            <h3>Consistency Measurement</h3>
+            <p>Run the same fixture N times to measure how reliably Claude produces correct output. Quantify flakiness.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Architecture Overview -->
+      <section>
+        <h2>Architecture Overview</h2>
+        <div class="arch-diagram">
+          <div class="arch-box blue">
+            <div class="box-title">Experiments</div>
+            <div class="box-sub">CLAUDE.md + AGENTS.md<br>+ skills/</div>
+          </div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-box purple">
+            <div class="box-title">Setup</div>
+            <div class="box-sub">Inject skills &amp;<br>docs into fixtures</div>
+          </div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-box green">
+            <div class="box-title">Fixtures</div>
+            <div class="box-sub">eval.json + project/<br>16 test scenarios</div>
+          </div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-box orange">
+            <div class="box-title">Runner</div>
+            <div class="box-sub">Copy to /tmp<br>Run agent</div>
+          </div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-box yellow">
+            <div class="box-title">Checks</div>
+            <div class="box-sub">10 check types<br>Validate output</div>
+          </div>
+          <div class="arch-arrow">&rarr;</div>
+          <div class="arch-box red">
+            <div class="box-title">Reports</div>
+            <div class="box-sub">Pass/fail matrix<br>Best experiment</div>
+          </div>
+        </div>
+        <div style="font-size:0.6em; color:#888; text-align:center; margin-top:1.5em;">
+          <code>src/experiments.ts</code> &rarr; <code>src/setup.ts</code> &rarr; <code>src/runner.ts</code> &rarr; <code>src/checks/</code> &rarr; <code>src/compare-runner.ts</code>
+        </div>
+      </section>
+
+      <!-- Slide 5: Fixture Anatomy -->
+      <section>
+        <h2>Fixture Anatomy</h2>
+        <div class="cols">
+          <div class="file-tree">
+            <span class="dir">fixtures/sdk-entity-crud/</span><br>
+            &nbsp;&nbsp;<span class="file">eval.json</span><span class="anno">&larr; prompts + checks</span><br>
+            &nbsp;&nbsp;<span class="dir">project/</span><span class="anno">&larr; working directory for agent</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">CLAUDE.md</span><span class="anno">&larr; injected by setup</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">AGENTS.md</span><span class="anno">&larr; injected by setup</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">skills/</span><span class="anno">&larr; injected from experiment</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">base44-sdk/</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">SKILL.md</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">references/</span><span class="anno">&larr; symlink</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">base44-cli/</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">SKILL.md</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">references/</span><span class="anno">&larr; symlink</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;<span class="file">src/</span><span class="anno">&larr; optional starter code</span><br>
+          </div>
+          <div style="font-size:0.65em;">
+            <p><strong>Experiment injection:</strong></p>
+            <ul>
+              <li><code>setup.ts</code> copies experiment's <code>skills/</code> into each fixture's <code>project/skills/</code></li>
+              <li><code>CLAUDE.md</code> and <code>AGENTS.md</code> copied from experiment dir if present</li>
+              <li>Baseline experiment = empty dir, no docs injected</li>
+            </ul>
+            <p style="margin-top:1em;"><strong>At runtime:</strong></p>
+            <ul>
+              <li>Entire fixture copied to <code>/tmp/eval-*</code></li>
+              <li>Agent runs inside <code>project/</code></li>
+              <li>Checks validate output files + stdout</li>
+              <li>Temp dir cleaned up after each run</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: eval.json Format -->
+      <section>
+        <h2>eval.json Format</h2>
+        <pre><code class="language-json">{
+  "$schema": "../../eval.schema.json",
+  "name": "anti-hallucination",
+  "description": "Verify correct Base44 APIs, block hallucinated patterns",
+  "prompts": [
+    {
+      "name": "anti-hallucination-auth",
+      "prompt": "Create a React login page with email/password login,
+                 Google OAuth, registration, and logout...",
+      "expectedSkills": ["base44-sdk"],
+      "checks": [
+        {
+          "type": "file-exists",
+          "description": "Login component created",
+          "filePath": "src/components/Login.jsx"
+        },
+        {
+          "type": "file-content",
+          "description": "Uses loginViaEmailPassword",
+          "filePath": "src/components/Login.jsx",
+          "pattern": "loginViaEmailPassword"
+        },
+        {
+          "type": "file-content-excluded",
+          "description": "No Firebase signIn pattern",
+          "filePath": "src/components/Login.jsx",
+          "pattern": "signInWithEmailAndPassword"
+        }
+      ]
+    }
+  ]
+}</code></pre>
+        <p style="font-size:0.55em; color:#888;">
+          The three-check pattern: <span style="color:var(--b44-blue)">file-exists</span> &rarr;
+          <span style="color:var(--b44-green)">file-content</span> (correct API) &rarr;
+          <span style="color:var(--b44-red)">file-content-excluded</span> (hallucinated API)
+        </p>
+      </section>
+
+      <!-- Slide 7: The 10 Check Types -->
+      <section>
+        <h2>The 10 Check Types</h2>
+        <div class="check-grid">
+          <div class="check-cat fs">
+            <h4>File System</h4>
+            <ul>
+              <li><code>file-exists</code> &mdash; Verify a file was created at the expected path</li>
+              <li><code>file-content</code> &mdash; Assert a regex pattern exists in a file</li>
+              <li><code>file-content-excluded</code> &mdash; Assert a pattern does NOT appear in a file</li>
+            </ul>
+          </div>
+          <div class="check-cat output">
+            <h4>Output</h4>
+            <ul>
+              <li><code>contains</code> &mdash; Check agent stdout for a substring</li>
+              <li><code>valid-json</code> &mdash; Verify a file contains parseable JSON</li>
+              <li><code>command-passes</code> &mdash; Run a shell command, assert exit code 0</li>
+            </ul>
+          </div>
+          <div class="check-cat struct">
+            <h4>Structural</h4>
+            <ul>
+              <li><code>json-schema</code> &mdash; Validate file contents against a JSON Schema</li>
+            </ul>
+          </div>
+          <div class="check-cat domain">
+            <h4>Domain-Specific (Base44)</h4>
+            <ul>
+              <li><code>entity-config</code> &mdash; Validate entity schema: PascalCase name, type:object, properties, required</li>
+              <li><code>agent-config</code> &mdash; Validate agent schema: snake_case name, instructions, tool_configs</li>
+              <li><code>function-def</code> &mdash; Validate function config: name + entry (not entrypoint)</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Experiments -->
+      <section>
+        <h2>Experiments</h2>
+        <table class="exp-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Feature</th>
+              <th>baseline</th>
+              <th>agents-md</th>
+              <th>agents-md<br>-combined</th>
+              <th>verbose<br>-index</th>
+              <th>context<br>-first</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>SKILL.md files</td>
+              <td class="no">&mdash;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+            </tr>
+            <tr>
+              <td>AGENTS.md API index</td>
+              <td class="no">&mdash;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+            </tr>
+            <tr>
+              <td>CLAUDE.md priming</td>
+              <td class="no">&mdash;</td>
+              <td class="no">&mdash;</td>
+              <td class="yes">&#10003;</td>
+              <td class="no">&mdash;</td>
+              <td class="yes">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Expanded signatures</td>
+              <td class="no">&mdash;</td>
+              <td class="no">&mdash;</td>
+              <td class="no">&mdash;</td>
+              <td class="yes">&#10003;</td>
+              <td class="no">&mdash;</td>
+            </tr>
+            <tr>
+              <td>Retrieval-led reasoning hint</td>
+              <td class="no">&mdash;</td>
+              <td class="no">&mdash;</td>
+              <td class="yes">&#10003;</td>
+              <td class="no">&mdash;</td>
+              <td class="yes">&#10003;</td>
+            </tr>
+            <tr>
+              <td>Common Mistakes section</td>
+              <td class="no">&mdash;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+              <td class="yes">&#10003;</td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="display:flex; gap:10px; margin-top:0.8em; font-size:0.45em;">
+          <div style="flex:1; background:var(--b44-box); border-radius:6px; padding:8px 10px; border-top:2px solid var(--b44-red);">
+            <strong style="color:var(--b44-red);">baseline</strong><br>
+            No docs at all. Control group &mdash; shows what hallucinations look like without guidance.
+          </div>
+          <div style="flex:1; background:var(--b44-box); border-radius:6px; padding:8px 10px; border-top:2px solid var(--b44-blue);">
+            <strong style="color:var(--b44-blue);">agents-md</strong><br>
+            Compact API index in AGENTS.md listing modules + method names. Skills with SKILL.md + references. No CLAUDE.md.
+          </div>
+          <div style="flex:1; background:var(--b44-box); border-radius:6px; padding:8px 10px; border-top:2px solid var(--b44-green);">
+            <strong style="color:var(--b44-green);">agents-md-combined</strong><br>
+            Same AGENTS.md index + CLAUDE.md that primes agent to explore project structure first and prefer retrieval over pre-training.
+          </div>
+          <div style="flex:1; background:var(--b44-box); border-radius:6px; padding:8px 10px; border-top:2px solid var(--b44-yellow);">
+            <strong style="color:var(--b44-yellow);">verbose-index</strong><br>
+            AGENTS.md with expanded method signatures including param types and return types. More verbose, potentially more precise.
+          </div>
+          <div style="flex:1; background:var(--b44-box); border-radius:6px; padding:8px 10px; border-top:2px solid var(--b44-purple);">
+            <strong style="color:var(--b44-purple);">context-first</strong><br>
+            CLAUDE.md with &ldquo;read docs first&rdquo; hint + compact AGENTS.md index. Tests if retrieval priming improves accuracy.
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Execution Flow -->
+      <section>
+        <h2>Execution Flow</h2>
+        <div class="flow">
+          <div class="flow-row">
+            <div class="flow-step"><span class="step-num">1</span> Discover fixtures</div>
+            <div class="arch-arrow">&rarr;</div>
+            <div class="flow-step"><span class="step-num">2</span> Expand multi-prompt</div>
+            <div class="arch-arrow">&rarr;</div>
+            <div class="flow-step"><span class="step-num">3</span> Group by suite</div>
+          </div>
+          <div class="flow-down">&darr;</div>
+          <div class="flow-row">
+            <div class="flow-step"><span class="step-num">4</span> Copy to /tmp</div>
+            <div class="arch-arrow">&rarr;</div>
+            <div class="flow-step"><span class="step-num">5</span> Run agent in project/</div>
+            <div class="arch-arrow">&rarr;</div>
+            <div class="flow-step"><span class="step-num">6</span> Check expectedSkills</div>
+          </div>
+          <div class="flow-down">&darr;</div>
+          <div class="flow-row">
+            <div class="flow-step"><span class="step-num">7</span> Run check suite</div>
+            <div class="arch-arrow">&rarr;</div>
+            <div class="flow-step"><span class="step-num">8</span> Aggregate results</div>
+            <div class="arch-arrow">&rarr;</div>
+            <div class="flow-step"><span class="step-num">9</span> Report pass/fail</div>
+          </div>
+        </div>
+        <div style="font-size:0.55em; color:#888; text-align:center; margin-top:1em;">
+          Concurrency: up to 5 fixtures run in parallel &mdash; configurable via <code>--concurrency</code> flag
+        </div>
+      </section>
+
+      <!-- Slide 10: Actual Results - Experiment Comparison -->
+      <section>
+        <h2>Results: Experiment Comparison</h2>
+        <p style="font-size:0.55em; color:#aaa; margin-bottom:0.8em;">5 experiments &times; 16 fixtures (45 expanded prompts)</p>
+        <div style="display:flex; gap:24px; align-items:flex-start;">
+          <div style="flex:2;">
+            <table class="matrix" style="font-size:0.6em;">
+              <thead>
+                <tr><th style="text-align:left">Experiment</th><th>Passed</th><th>Failed</th><th>Pass Rate</th></tr>
+              </thead>
+              <tbody>
+                <tr style="background:rgba(129,199,132,0.1);">
+                  <td><strong style="color:var(--b44-green);">agents-md-combined</strong></td>
+                  <td class="pass">38</td><td class="fail">7</td><td class="rate">84%</td>
+                </tr>
+                <tr>
+                  <td>agents-md-context-first</td>
+                  <td class="pass">36</td><td class="fail">9</td><td class="rate">80%</td>
+                </tr>
+                <tr>
+                  <td>agents-md</td>
+                  <td class="pass">34</td><td class="fail">11</td><td class="rate">76%</td>
+                </tr>
+                <tr>
+                  <td>agents-md-verbose-index</td>
+                  <td class="pass">32</td><td class="fail">13</td><td class="rate">71%</td>
+                </tr>
+                <tr>
+                  <td>baseline</td>
+                  <td class="pass">21</td><td class="fail">24</td><td class="rate">47%</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="flex:1; font-size:0.55em;">
+            <!-- Bar chart via CSS -->
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:110px; text-align:right; color:var(--b44-green); font-weight:bold;">combined</span>
+                <div style="background:var(--b44-green); height:22px; border-radius:3px; width:84%;"></div>
+                <span style="color:var(--b44-green); font-weight:bold; width:40px;">84%</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:110px; text-align:right; color:#ccc;">context-first</span>
+                <div style="background:var(--b44-blue); height:22px; border-radius:3px; width:80%;"></div>
+                <span style="color:var(--b44-blue); font-weight:bold; width:40px;">80%</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:110px; text-align:right; color:#ccc;">agents-md</span>
+                <div style="background:var(--b44-blue); height:22px; border-radius:3px; width:76%;"></div>
+                <span style="color:var(--b44-blue); font-weight:bold; width:40px;">76%</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:110px; text-align:right; color:#ccc;">verbose-index</span>
+                <div style="background:var(--b44-orange); height:22px; border-radius:3px; width:71%;"></div>
+                <span style="color:var(--b44-orange); font-weight:bold; width:40px;">71%</span>
+              </div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <span style="width:110px; text-align:right; color:#ccc;">baseline</span>
+                <div style="background:var(--b44-red); height:22px; border-radius:3px; width:47%;"></div>
+                <span style="color:var(--b44-red); font-weight:bold; width:40px;">47%</span>
+              </div>
+            </div>
+            <p style="font-size:0.9em; color:var(--b44-green); margin-top:1.2em; text-align:center;">
+              <strong>bestExperiment: agents-md-combined</strong>
+            </p>
+          </div>
+        </div>
+        <p style="font-size:0.5em; color:#666; margin-top:0.6em;">
+          CLAUDE.md retrieval priming + AGENTS.md compact index = highest pass rate. Verbose signatures did not help &mdash; more docs != better results.
+        </p>
+      </section>
+
+      <!-- Slide 12: Test Coverage Grid -->
+      <section>
+        <h2>Test Coverage: 16 Fixtures</h2>
+        <div class="cov-grid">
+          <div class="cov-cat sdk">
+            <h4>SDK / Frontend (7)</h4>
+            <ul>
+              <li>sdk-entity-crud <span style="color:#666">(6 prompts)</span></li>
+              <li>sdk-auth</li>
+              <li>sdk-functions</li>
+              <li>sdk-integrations</li>
+              <li>anti-hallucination <span style="color:#666">(4 prompts)</span></li>
+              <li>agent-chat-component</li>
+              <li>react-task-manager</li>
+            </ul>
+          </div>
+          <div class="cov-cat cli">
+            <h4>CLI / Config (5)</h4>
+            <ul>
+              <li>cli-entities <span style="color:#666">(6 prompts)</span></li>
+              <li>cli-agents <span style="color:#666">(4 prompts)</span></li>
+              <li>cli-functions</li>
+              <li>create-support-agent</li>
+              <li>skill-check</li>
+            </ul>
+          </div>
+          <div class="cov-cat cross">
+            <h4>Cross-Cutting (4)</h4>
+            <ul>
+              <li>fullstack <span style="color:#666">(4 prompts)</span></li>
+              <li>existing-app-add-feature</li>
+              <li>nextjs-todo</li>
+              <li>agent-with-function</li>
+            </ul>
+          </div>
+        </div>
+        <p style="font-size:0.55em; color:#888; text-align:center; margin-top:1em;">
+          Multi-prompt fixtures expand to 30+ individual test prompts.
+          Each prompt has its own <code>expectedSkills</code> and <code>checks[]</code>.
+        </p>
+      </section>
+
+      <!-- Slide 12: Adding a New Fixture -->
+      <section>
+        <h2>Adding a New Fixture</h2>
+        <div class="steps">
+          <div class="step-box">
+            <div class="step-label">Step 1: Create eval.json</div>
+            <pre style="margin:0.4em 0 0;"><code class="language-bash">mkdir evals/fixtures/my-new-fixture
+# $schema gives autocomplete in VS Code
+cat > evals/fixtures/my-new-fixture/eval.json</code></pre>
+          </div>
+          <div class="step-box">
+            <div class="step-label">Step 2: Add project/ with starter files</div>
+            <pre style="margin:0.4em 0 0;"><code class="language-bash">mkdir -p evals/fixtures/my-new-fixture/project/src
+# Add any starter code the agent needs
+# project/ becomes the agent's working directory</code></pre>
+          </div>
+          <div class="step-box">
+            <div class="step-label">Step 3: Run it</div>
+            <pre style="margin:0.4em 0 0;"><code class="language-bash">cd evals
+npm run eval -- --fixtures my-new-fixture --verbose</code></pre>
+          </div>
+        </div>
+        <p style="font-size:0.55em; color:#888; margin-top:0.6em;">
+          Reference <code>eval.schema.json</code> with <code>"$schema": "../../eval.schema.json"</code> for IDE validation and autocomplete.
+        </p>
+      </section>
+
+      <!-- Slide 13: Adding a New Experiment -->
+      <section>
+        <h2>Adding a New Experiment</h2>
+        <div class="steps">
+          <div class="step-box">
+            <div class="step-label">Step 1: Create experiment directory</div>
+            <div class="file-tree" style="margin-top:0.4em; font-size:0.85em; padding:10px 14px;">
+              <span class="dir">experiments/my-experiment/</span><br>
+              &nbsp;&nbsp;<span class="file">CLAUDE.md</span><span class="anno">&larr; optional project-level instructions</span><br>
+              &nbsp;&nbsp;<span class="file">AGENTS.md</span><span class="anno">&larr; optional API index</span><br>
+              &nbsp;&nbsp;<span class="dir">skills/</span><br>
+              &nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">base44-sdk/</span><br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="file">SKILL.md</span><br>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="dir">references/</span><span class="anno">&larr; symlink</span><br>
+            </div>
+          </div>
+          <div class="step-box">
+            <div class="step-label">Step 2: Symlink references to avoid duplication</div>
+            <pre style="margin:0.4em 0 0;"><code class="language-bash">cd experiments/my-experiment/skills/base44-sdk
+ln -s ../../../../../skills/base44-sdk/references references</code></pre>
+          </div>
+          <div class="step-box">
+            <div class="step-label">Step 3: Run comparison</div>
+            <pre style="margin:0.4em 0 0;"><code class="language-bash">cd evals
+npm run eval:compare</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 14: Daily Workflows -->
+      <section>
+        <h2>Daily Workflows</h2>
+        <div class="cmd-block">
+          <div class="cmd-title">Validate a skill change</div>
+          <pre><code class="language-bash"># Edit skills/base44-sdk/SKILL.md, then:
+cd evals && npm run eval -- --verbose</code></pre>
+          <p style="font-size:0.8em; color:#aaa; margin:4px 0 0;">Run all fixtures against the current skill documentation</p>
+        </div>
+        <div class="cmd-block">
+          <div class="cmd-title">Compare documentation strategies</div>
+          <pre><code class="language-bash">cd evals && npm run eval:compare
+# Runs all experiments x all fixtures
+# Outputs pass/fail matrix + bestExperiment</code></pre>
+          <p style="font-size:0.8em; color:#aaa; margin:4px 0 0;">Find which AGENTS.md format produces the highest pass rate</p>
+        </div>
+        <div class="cmd-block">
+          <div class="cmd-title">Check consistency (repeated runs)</div>
+          <pre><code class="language-bash">cd evals && tsx src/run-repeated.ts --runs 5 \
+  --fixtures anti-hallucination --verbose</code></pre>
+          <p style="font-size:0.8em; color:#aaa; margin:4px 0 0;">Run the same fixture N times to measure flakiness and consistency</p>
+        </div>
+      </section>
+
+      <!-- Slide 15: Bottom Line -->
+      <section class="center">
+        <h2>Bottom Line</h2>
+        <div style="max-width:1200px; margin:0 auto; text-align:left;">
+          <div style="display:flex; gap:20px; margin-top:1em;">
+            <div style="flex:1; background:var(--b44-box); border-radius:10px; padding:20px 24px; border-left:4px solid var(--b44-red);">
+              <h3 style="margin-top:0; color:var(--b44-red); font-size:0.9em;">The Problem</h3>
+              <p style="font-size:0.65em; color:#bbb;">Claude's pre-training data contains far more Firebase/Supabase patterns than Base44 APIs. Without skill documentation, it hallucinates wrong method names, wrong imports, and wrong auth flows.</p>
+            </div>
+            <div style="flex:1; background:var(--b44-box); border-radius:10px; padding:20px 24px; border-left:4px solid var(--b44-green);">
+              <h3 style="margin-top:0; color:var(--b44-green); font-size:0.9em;">The Solution</h3>
+              <p style="font-size:0.65em; color:#bbb;">16 fixtures with 30+ prompts that verify correct API usage and reject hallucinated patterns. Each fixture uses the three-check pattern: file exists, correct API present, hallucinated API absent.</p>
+            </div>
+          </div>
+          <div style="background:var(--b44-box); border-radius:10px; padding:20px 24px; margin-top:20px; border-left:4px solid var(--b44-blue);">
+            <h3 style="margin-top:0; color:var(--b44-blue); font-size:0.9em;">The Impact</h3>
+            <div style="display:flex; gap:40px; font-size:0.65em; color:#bbb;">
+              <div style="flex:1;">
+                <strong style="color:#fff;">Every skill change is testable.</strong> Run <code>npm run eval</code> before merging to catch regressions in documentation that cause hallucinations.
+              </div>
+              <div style="flex:1;">
+                <strong style="color:#fff;">Documentation strategies are comparable.</strong> The compare runner quantifies which AGENTS.md format, verbosity level, or priming approach works best.
+              </div>
+              <div style="flex:1;">
+                <strong style="color:#fff;">Consistency is measurable.</strong> Repeated runs reveal whether Claude reliably uses correct APIs or just gets lucky sometimes.
+              </div>
+            </div>
+          </div>
+          <p style="font-size:0.7em; color:var(--b44-yellow); text-align:center; margin-top:1.2em;">
+            Skills that pass evals &rarr; fewer hallucinations in production &rarr; users get working code on the first try.
+          </p>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@5/plugin/highlight/highlight.js"></script>
+  <script>
+    Reveal.initialize({
+      hash: true,
+      slideNumber: true,
+      width: 1920,
+      height: 1080,
+      margin: 0.08,
+      plugins: [RevealHighlight],
+      transition: 'slide',
+      backgroundTransition: 'fade',
+    });
+  </script>
+</body>
+</html>

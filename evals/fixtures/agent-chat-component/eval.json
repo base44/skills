@@ -1,0 +1,73 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "agent-chat-component",
+  "description": "Test creating a React chat component using the Base44 agents SDK",
+  "prompt": "Create a ChatWindow React component in src/components/ChatWindow.jsx that lets users chat with a support agent. It should: 1) Create a new conversation on mount if none exists, 2) Display messages from the conversation, 3) Allow sending new messages, 4) Subscribe to real-time updates for new messages.",
+  "expectedSkills": ["base44-sdk"],
+  "checks": [
+    {
+      "type": "file-exists",
+      "description": "ChatWindow component created",
+      "filePath": "src/components/ChatWindow.jsx"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses createConversation",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "createConversation"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses addMessage",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "addMessage"
+    },
+    {
+      "type": "file-content",
+      "description": "Uses subscribeToConversation",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "subscribeToConversation"
+    },
+    {
+      "type": "file-content",
+      "description": "References agents module",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "base44\\.agents|agents\\."
+    },
+    {
+      "type": "contains",
+      "description": "Mentions agent conversation",
+      "value": "conversation"
+    },
+    {
+      "type": "file-content",
+      "description": "Imports from @base44/sdk or uses pre-configured base44 client",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "@base44/sdk|from ['\"].*base44"
+    },
+    {
+      "type": "file-content",
+      "description": "createConversation called with object param containing agent_name",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "createConversation\\s*\\(\\s*\\{[\\s\\S]*?agent_name"
+    },
+    {
+      "type": "file-content",
+      "description": "addMessage called with conversation and message object containing role",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "addMessage\\s*\\([^,]+,\\s*\\{[\\s\\S]*?role"
+    },
+    {
+      "type": "file-content",
+      "description": "subscribeToConversation return value captured for cleanup",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "(const|let|var)\\s+\\w+\\s*=.*subscribeToConversation"
+    },
+    {
+      "type": "file-content-excluded",
+      "description": "Does not use signInWithGoogle (hallucinated Firebase API)",
+      "filePath": "src/components/ChatWindow.jsx",
+      "pattern": "signInWith(Google|Provider)"
+    }
+  ]
+}

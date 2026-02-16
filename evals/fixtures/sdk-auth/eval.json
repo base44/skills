@@ -1,0 +1,137 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "sdk-auth",
+  "description": "Test SDK authentication patterns: login, register, profile, route guard",
+  "prompts": [
+    {
+      "name": "sdk-auth-login",
+      "description": "Implement login page with email/password",
+      "prompt": "Create a LoginPage component in src/pages/LoginPage.jsx that lets users log in with email and password using the Base44 SDK auth module. Include form inputs for email and password, a submit handler that calls the correct auth method, error handling for failed login, and redirect to /dashboard on success.",
+      "expectedSkills": ["base44-sdk"],
+      "checks": [
+        {
+          "type": "file-exists",
+          "description": "LoginPage component file exists",
+          "filePath": "src/pages/LoginPage.jsx"
+        },
+        {
+          "type": "file-content",
+          "description": "Uses loginViaEmailPassword method",
+          "filePath": "src/pages/LoginPage.jsx",
+          "pattern": "loginViaEmailPassword"
+        },
+        {
+          "type": "file-content",
+          "description": "Imports from Base44 SDK",
+          "filePath": "src/pages/LoginPage.jsx",
+          "pattern": "import.*base44|from ['\"].*base44"
+        },
+        {
+          "type": "file-content-excluded",
+          "description": "Does not use Firebase auth methods",
+          "filePath": "src/pages/LoginPage.jsx",
+          "pattern": "signInWithEmailAndPassword|signIn\\("
+        },
+        {
+          "type": "file-content-excluded",
+          "description": "Does not use OAuth provider methods",
+          "filePath": "src/pages/LoginPage.jsx",
+          "pattern": "signInWith(Google|Provider)"
+        }
+      ]
+    },
+    {
+      "name": "sdk-auth-register",
+      "description": "Implement registration page",
+      "prompt": "Create a RegisterPage component in src/pages/RegisterPage.jsx that lets new users register with the Base44 SDK. Include form fields for email and password, call the correct registration method, handle errors, and redirect to /login on success.",
+      "expectedSkills": ["base44-sdk"],
+      "checks": [
+        {
+          "type": "file-exists",
+          "description": "RegisterPage component file exists",
+          "filePath": "src/pages/RegisterPage.jsx"
+        },
+        {
+          "type": "file-content",
+          "description": "Uses register method",
+          "filePath": "src/pages/RegisterPage.jsx",
+          "pattern": "register\\s*\\("
+        },
+        {
+          "type": "file-content",
+          "description": "Imports from Base44 SDK",
+          "filePath": "src/pages/RegisterPage.jsx",
+          "pattern": "import.*base44|from ['\"].*base44"
+        },
+        {
+          "type": "file-content-excluded",
+          "description": "Does not use Firebase registration methods",
+          "filePath": "src/pages/RegisterPage.jsx",
+          "pattern": "createUser|signUp\\("
+        }
+      ]
+    },
+    {
+      "name": "sdk-auth-profile",
+      "description": "Implement user profile page",
+      "prompt": "Create a ProfilePage component in src/pages/ProfilePage.jsx that displays the current user's information using the Base44 SDK. Fetch the current user on mount, display their email and name, and add a button to update the user's name using the correct SDK method.",
+      "expectedSkills": ["base44-sdk"],
+      "checks": [
+        {
+          "type": "file-exists",
+          "description": "ProfilePage component file exists",
+          "filePath": "src/pages/ProfilePage.jsx"
+        },
+        {
+          "type": "file-content",
+          "description": "Uses auth.me() to fetch current user",
+          "filePath": "src/pages/ProfilePage.jsx",
+          "pattern": "auth\\.me\\(\\)"
+        },
+        {
+          "type": "file-content",
+          "description": "Uses updateMe or auth.update method",
+          "filePath": "src/pages/ProfilePage.jsx",
+          "pattern": "updateMe|auth\\.update"
+        },
+        {
+          "type": "file-content-excluded",
+          "description": "Does not use Firebase auth state methods",
+          "filePath": "src/pages/ProfilePage.jsx",
+          "pattern": "currentUser|onAuthStateChanged"
+        }
+      ]
+    },
+    {
+      "name": "sdk-auth-guard",
+      "description": "Implement route guard component",
+      "prompt": "Create an AuthGuard component in src/components/AuthGuard.jsx that checks if the user is logged in using the Base44 SDK. If logged in, render the children. If not, redirect to /login. Use auth.me() to check authentication status.",
+      "expectedSkills": ["base44-sdk"],
+      "checks": [
+        {
+          "type": "file-exists",
+          "description": "AuthGuard component file exists",
+          "filePath": "src/components/AuthGuard.jsx"
+        },
+        {
+          "type": "file-content",
+          "description": "Uses auth.me() to check authentication",
+          "filePath": "src/components/AuthGuard.jsx",
+          "pattern": "auth\\.me\\(\\)"
+        },
+        {
+          "type": "file-content",
+          "description": "Renders children when authenticated",
+          "filePath": "src/components/AuthGuard.jsx",
+          "pattern": "children"
+        },
+        {
+          "type": "file-content-excluded",
+          "description": "Does not use Firebase auth state methods",
+          "filePath": "src/components/AuthGuard.jsx",
+          "pattern": "onAuthStateChanged|currentUser"
+        }
+      ]
+    }
+  ]
+}

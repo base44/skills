@@ -1,0 +1,19 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "skill-check",
+  "description": "Simple test to verify Claude can respond about Base44",
+  "prompt": "What is Base44? How do I create an entity?",
+  "expectedSkills": [],
+  "checks": [
+    {
+      "type": "contains",
+      "description": "mentions base44",
+      "value": "base44"
+    },
+    {
+      "type": "contains",
+      "description": "mentions entities",
+      "value": "entit"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "Integrations Test App",
+  "description": "A test application for SDK integrations",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
+  "site": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+  }
+}

@@ -1,0 +1,253 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "anti-hallucination",
+  "description": "Test that correct Base44 APIs are used and hallucinated APIs are avoided",
+  "prompts": [
+    {
+      "name": "anti-hallucination-crud",
+      "description": "Verify correct entity CRUD method names",
+      "prompt": "Create a ProductManager component in src/components/ProductManager.jsx that provides full CRUD for the Product entity. It must: list all products, create new products, get a single product by ID, update a product, delete a product, and filter products by category. Use the Base44 SDK exclusively.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/components/ProductManager.jsx",
+          "description": "src/components/ProductManager.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "entities\\.Product\\.list\\(",
+          "description": "Uses correct list() method"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "entities\\.Product\\.create\\(",
+          "description": "Uses correct create() method"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "entities\\.Product\\.get\\(",
+          "description": "Uses correct get() method"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "entities\\.Product\\.update\\(",
+          "description": "Uses correct update() method"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "entities\\.Product\\.delete\\(",
+          "description": "Uses correct delete() method"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "entities\\.Product\\.filter\\(",
+          "description": "Uses correct filter() method"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "Product\\.find\\(",
+          "description": "Does not hallucinate find() method"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "Product\\.findOne\\(",
+          "description": "Does not hallucinate findOne() method"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "Product\\.insert\\(",
+          "description": "Does not hallucinate insert() method"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "Product\\.remove\\(",
+          "description": "Does not hallucinate remove() method"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/components/ProductManager.jsx",
+          "pattern": "Product\\.save\\(",
+          "description": "Does not hallucinate save() method"
+        }
+      ]
+    },
+    {
+      "name": "anti-hallucination-auth",
+      "description": "Verify correct auth method names",
+      "prompt": "Create an AuthPage component in src/pages/AuthPage.jsx that provides login with email/password, login with Google, user registration, getting current user info, and logout. Use the Base44 SDK auth module exclusively.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/pages/AuthPage.jsx",
+          "description": "src/pages/AuthPage.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "loginViaEmailPassword",
+          "description": "Uses correct loginViaEmailPassword method"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "loginWithProvider\\s*\\(\\s*['\"]google['\"]",
+          "description": "Uses correct loginWithProvider method with 'google'"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "register\\s*\\(",
+          "description": "Uses correct register() method"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "auth\\.me\\(\\)",
+          "description": "Uses correct me() method for current user"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "logout\\(\\)",
+          "description": "Uses correct logout() method"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "signInWithEmailAndPassword",
+          "description": "Does not hallucinate Firebase signInWithEmailAndPassword"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "signInWithGoogle|signInWithProvider",
+          "description": "Does not hallucinate Firebase signInWithGoogle or signInWithProvider"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "createUser|signUp\\(",
+          "description": "Does not hallucinate createUser or signUp methods"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/pages/AuthPage.jsx",
+          "pattern": "onAuthStateChanged|currentUser",
+          "description": "Does not hallucinate Firebase onAuthStateChanged or currentUser"
+        }
+      ]
+    },
+    {
+      "name": "anti-hallucination-imports",
+      "description": "Verify correct import patterns",
+      "prompt": "Create a Dashboard component in src/pages/Dashboard.jsx that imports and uses the Base44 SDK client. It should fetch and display the current user info and a list of products. Make sure to import the base44 client correctly.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/pages/Dashboard.jsx",
+          "description": "src/pages/Dashboard.jsx exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/pages/Dashboard.jsx",
+          "pattern": "import.*base44|from ['\"].*base44",
+          "description": "Imports from base44 SDK"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/pages/Dashboard.jsx",
+          "pattern": "auth\\.me\\(\\)",
+          "description": "Uses correct me() method for current user"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/pages/Dashboard.jsx",
+          "pattern": "entities\\.Product",
+          "description": "Accesses Product entity correctly"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/pages/Dashboard.jsx",
+          "pattern": "from ['\"]firebase",
+          "description": "Does not import from Firebase SDK"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/pages/Dashboard.jsx",
+          "pattern": "from ['\"]@supabase",
+          "description": "Does not import from Supabase SDK"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/pages/Dashboard.jsx",
+          "pattern": "initializeApp|getFirestore",
+          "description": "Does not hallucinate Firebase initialization methods"
+        }
+      ]
+    },
+    {
+      "name": "anti-hallucination-config",
+      "description": "Verify correct client configuration",
+      "prompt": "Create a new Base44 client configuration file at src/lib/base44Client.js for an external app. Initialize the client with createClient and configure it with the app ID. Export the configured client as default.",
+      "expectedSkills": [
+        "base44-sdk"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "src/lib/base44Client.js",
+          "description": "src/lib/base44Client.js exists"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/lib/base44Client.js",
+          "pattern": "createClient",
+          "description": "Uses correct createClient function"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/lib/base44Client.js",
+          "pattern": "from ['\"]@base44/sdk['\"]",
+          "description": "Imports from @base44/sdk"
+        },
+        {
+          "type": "file-content",
+          "filePath": "src/lib/base44Client.js",
+          "pattern": "appId",
+          "description": "Uses correct appId configuration property"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/lib/base44Client.js",
+          "pattern": "clientId",
+          "description": "Does not hallucinate clientId property (correct is appId)"
+        },
+        {
+          "type": "file-content-excluded",
+          "filePath": "src/lib/base44Client.js",
+          "pattern": "initializeApp|getApp",
+          "description": "Does not hallucinate Firebase initialization methods"
+        }
+      ]
+    }
+  ]
+}

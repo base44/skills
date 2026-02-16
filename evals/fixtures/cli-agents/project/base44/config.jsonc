@@ -1,0 +1,11 @@
+{
+  "name": "CLI Agents App",
+  "description": "A test application for CLI agent operations",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions",
+  "agentsDir": "./agents",
+  "site": {
+    "buildCommand": "npm run build",
+    "outputDirectory": "dist"
+  }
+}

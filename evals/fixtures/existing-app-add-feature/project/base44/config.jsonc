@@ -1,0 +1,6 @@
+{
+  "name": "Notification App",
+  "description": "An application with email notifications",
+  "entitiesDir": "./entities",
+  "functionsDir": "./functions"
+}

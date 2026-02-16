@@ -1,0 +1,263 @@
+{
+  "$schema": "../../eval.schema.json",
+  "name": "cli-entities",
+  "description": "Test CLI entity schema creation: enums, dates, richtext, complex, multiple, naming",
+  "prompts": [
+    {
+      "name": "cli-entity-enums",
+      "description": "Create entity with enum fields",
+      "prompt": "Create an entity called 'Ticket' with fields: title (string, required), priority (string enum: low/medium/high/critical, default medium), status (string enum: open/in_progress/resolved/closed, default open), and assigned_to (string). Save it at base44/entities/ticket.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/entities/ticket.jsonc",
+          "description": "base44/entities/ticket.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/entities/ticket.jsonc",
+          "description": "base44/entities/ticket.jsonc is valid JSON"
+        },
+        {
+          "type": "entity-config",
+          "filePath": "base44/entities/ticket.jsonc",
+          "target": "file",
+          "description": "Entity config validates (base44/entities/ticket.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/ticket.jsonc",
+          "pattern": "\"name\"\\s*:\\s*\"Ticket\"",
+          "description": "Has name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/ticket.jsonc",
+          "pattern": "\"enum\"\\s*:\\s*\\[.*\"low\".*\"medium\".*\"high\".*\"critical\"",
+          "description": "Has enum field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/ticket.jsonc",
+          "pattern": "\"enum\"\\s*:\\s*\\[.*\"open\".*\"in_progress\"",
+          "description": "Has enum field"
+        }
+      ]
+    },
+    {
+      "name": "cli-entity-dates",
+      "description": "Create entity with date format fields",
+      "prompt": "Create an entity called 'Event' with fields: name (string, required), start_date (string with date format, required), end_date (string with date format), start_time (string with time format), and description (string). Save it at base44/entities/event.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/entities/event.jsonc",
+          "description": "base44/entities/event.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/entities/event.jsonc",
+          "description": "base44/entities/event.jsonc is valid JSON"
+        },
+        {
+          "type": "entity-config",
+          "filePath": "base44/entities/event.jsonc",
+          "target": "file",
+          "description": "Entity config validates (base44/entities/event.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/event.jsonc",
+          "pattern": "\"format\"\\s*:\\s*\"date\"",
+          "description": "Has format field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/event.jsonc",
+          "pattern": "\"format\"\\s*:\\s*\"time\"",
+          "description": "Has format field"
+        }
+      ]
+    },
+    {
+      "name": "cli-entity-richtext",
+      "description": "Create entity with richtext field",
+      "prompt": "Create an entity called 'Article' with fields: title (string, required), content (string with richtext format, required), author (string), published_date (string with date format), and tags (array). Save it at base44/entities/article.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/entities/article.jsonc",
+          "description": "base44/entities/article.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/entities/article.jsonc",
+          "description": "base44/entities/article.jsonc is valid JSON"
+        },
+        {
+          "type": "entity-config",
+          "filePath": "base44/entities/article.jsonc",
+          "target": "file",
+          "description": "Entity config validates (base44/entities/article.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/article.jsonc",
+          "pattern": "\"format\"\\s*:\\s*\"richtext\"",
+          "description": "Has format field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/article.jsonc",
+          "pattern": "\"type\"\\s*:\\s*\"array\"",
+          "description": "Has type field"
+        }
+      ]
+    },
+    {
+      "name": "cli-entity-complex",
+      "description": "Create entity with complex nested properties",
+      "prompt": "Create an entity called 'Company' with fields: name (string, required), website (string with uri format), email (string with email format), address (object with properties: street, city, state, zip_code), and employee_count (integer). Save it at base44/entities/company.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/entities/company.jsonc",
+          "description": "base44/entities/company.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/entities/company.jsonc",
+          "description": "base44/entities/company.jsonc is valid JSON"
+        },
+        {
+          "type": "entity-config",
+          "filePath": "base44/entities/company.jsonc",
+          "target": "file",
+          "description": "Entity config validates (base44/entities/company.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/company.jsonc",
+          "pattern": "\"format\"\\s*:\\s*\"uri\"",
+          "description": "Has format field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/company.jsonc",
+          "pattern": "\"format\"\\s*:\\s*\"email\"",
+          "description": "Has format field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/company.jsonc",
+          "pattern": "\"type\"\\s*:\\s*\"integer\"",
+          "description": "Has type field"
+        }
+      ]
+    },
+    {
+      "name": "cli-entity-multiple",
+      "description": "Create multiple related entities",
+      "prompt": "Create two related entities: 1) 'Author' with fields name (string, required) and bio (string), saved at base44/entities/author.jsonc. 2) 'Book' with fields title (string, required), isbn (string), price (number), and author_name (string), saved at base44/entities/book.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/entities/author.jsonc",
+          "description": "base44/entities/author.jsonc exists"
+        },
+        {
+          "type": "file-exists",
+          "filePath": "base44/entities/book.jsonc",
+          "description": "base44/entities/book.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/entities/author.jsonc",
+          "description": "base44/entities/author.jsonc is valid JSON"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/entities/book.jsonc",
+          "description": "base44/entities/book.jsonc is valid JSON"
+        },
+        {
+          "type": "entity-config",
+          "filePath": "base44/entities/author.jsonc",
+          "target": "file",
+          "description": "Entity config validates (base44/entities/author.jsonc)"
+        },
+        {
+          "type": "entity-config",
+          "filePath": "base44/entities/book.jsonc",
+          "target": "file",
+          "description": "Entity config validates (base44/entities/book.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/author.jsonc",
+          "pattern": "\"name\"\\s*:\\s*\"Author\"",
+          "description": "Has name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/book.jsonc",
+          "pattern": "\"name\"\\s*:\\s*\"Book\"",
+          "description": "Has name field"
+        }
+      ]
+    },
+    {
+      "name": "cli-entity-naming",
+      "description": "Test entity naming conventions",
+      "prompt": "Create an entity called 'TeamMember' with fields: full_name (string, required), role (string), department (string), and is_active (boolean, default true). Remember that entity names must be PascalCase alphanumeric and the file must be kebab-case. Save it at base44/entities/team-member.jsonc.",
+      "expectedSkills": [
+        "base44-cli"
+      ],
+      "checks": [
+        {
+          "type": "file-exists",
+          "filePath": "base44/entities/team-member.jsonc",
+          "description": "base44/entities/team-member.jsonc exists"
+        },
+        {
+          "type": "valid-json",
+          "filePath": "base44/entities/team-member.jsonc",
+          "description": "base44/entities/team-member.jsonc is valid JSON"
+        },
+        {
+          "type": "entity-config",
+          "filePath": "base44/entities/team-member.jsonc",
+          "target": "file",
+          "description": "Entity config validates (base44/entities/team-member.jsonc)"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/team-member.jsonc",
+          "pattern": "\"name\"\\s*:\\s*\"TeamMember\"",
+          "description": "Has name field"
+        },
+        {
+          "type": "file-content",
+          "filePath": "base44/entities/team-member.jsonc",
+          "pattern": "\"type\"\\s*:\\s*\"boolean\"",
+          "description": "Has type field"
+        }
+      ]
+    }
+  ]
+}
