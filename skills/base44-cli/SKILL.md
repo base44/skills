@@ -25,12 +25,14 @@ This skill activates on ANY mention of "base44" or when a `base44/` folder exist
 
 NEVER call `base44` directly. The CLI is installed locally as a dev dependency and must be accessed via a package manager:
 
-- `npx base44 <command>` (npm - recommended)
+- `npx base44@latest <command>` (npm - recommended)
 - `yarn base44 <command>` (yarn)
 - `pnpm base44 <command>` (pnpm)
 
+**IMPORTANT: Always use `@latest` with npx to ensure you're running the most recent version of the base44 CLI.**
+
 WRONG: `base44 login`
-RIGHT: `npx base44 login`
+RIGHT: `npx base44@latest login`
 
 ## MANDATORY: Authentication Check at Session Start
 
@@ -38,7 +40,7 @@ RIGHT: `npx base44 login`
 
 1. **Check authentication status** by running:
    ```bash
-   npx base44 whoami
+   npx base44@latest whoami
    ```
 
 2. **If the user is logged in** (command succeeds and shows an email):
@@ -49,7 +51,7 @@ RIGHT: `npx base44 login`
    - **DO NOT proceed** with any CLI operations
    - **Ask the user to login manually** by running:
      ```bash
-     npx base44 login
+     npx base44@latest login
    ```
    - Wait for the user to confirm they have logged in before continuing
 
@@ -67,7 +69,7 @@ The Base44 CLI provides command-line tools for authentication, creating projects
 - Directory is missing `base44/config.jsonc`
 - User mentions: "create a new project", "initialize project", "setup a project", "start a new Base44 app"
 - Deploying, pushing entities, or authenticating via CLI
-- Working with CLI commands (`npx base44 ...`)
+- Working with CLI commands (`npx base44@latest...`)
 
 **Use base44-sdk when:**
 - Building features in an **EXISTING** Base44 project
@@ -126,7 +128,7 @@ my-app/
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
 - `base44/functions/*/function.jsonc` - Function config and optional `automations` (CRON, simple triggers, entity hooks)
 - `base44/agents/*.jsonc` - Agent configurations (optional)
-- `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44 types generate`)
+- `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44@latesttypes generate`)
 - `base44/connectors/*.jsonc` - OAuth connector configurations (optional)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
 
@@ -176,7 +178,7 @@ npm install --save-dev base44
 Then run commands using `npx`:
 
 ```bash
-npx base44 <command>
+npx base44@latest<command>
 ```
 
 **Note:** All commands in this documentation use `npx base44`. You can also use `yarn base44`, or `pnpm base44` if preferred.
@@ -386,27 +388,27 @@ For full schemas and examples, see [automations.md](references/automations.md).
 
 2. Authenticate with Base44:
    ```bash
-   npx base44 login
+   npx base44@latestlogin
    ```
 
 3. Create a new project (ALWAYS provide name and `--path` flag):
    ```bash
-   npx base44 create my-app -p .
+   npx base44@latestcreate my-app -p .
    ```
 
 4. Build and deploy everything:
    ```bash
    npm run build
-   npx base44 deploy -y
+   npx base44@latestdeploy -y
    ```
 
 Or deploy individual resources:
-- `npx base44 entities push` - Push entities only
-- `npx base44 functions deploy` - Deploy functions only
-- `npx base44 agents push` - Push agents only
-- `npx base44 connectors pull` - Pull connectors from Base44
-- `npx base44 connectors push` - Push connectors only
-- `npx base44 site deploy -y` - Deploy site only
+- `npx base44@latestentities push` - Push entities only
+- `npx base44@latestfunctions deploy` - Deploy functions only
+- `npx base44@latestagents push` - Push agents only
+- `npx base44@latestconnectors pull` - Pull connectors from Base44
+- `npx base44@latestconnectors push` - Push connectors only
+- `npx base44@latestsite deploy -y` - Deploy site only
 
 ## Common Workflows
 
@@ -422,25 +424,25 @@ Failure to follow the create.md instructions will result in broken project scaff
 ### Linking an Existing Project
 ```bash
 # If you have base44/config.jsonc but no .app.jsonc
-npx base44 link --create --name my-app
+npx base44@latestlink --create --name my-app
 ```
 
 ### Deploying All Changes
 ```bash
 # Generate types (optional, for TypeScript projects)
-npx base44 types generate
+npx base44@latesttypes generate
 
 # Build your project first
 npm run build
 
 # Deploy everything (entities, functions, and site)
-npx base44 deploy -y
+npx base44@latestdeploy -y
 ```
 
 ### Generating TypeScript Types
 ```bash
 # Generate types from entities, functions, and agents
-npx base44 types generate
+npx base44@latesttypes generate
 ```
 
 This creates `base44/.types/types.d.ts` with typed registries for the `@base44/sdk` module. Run this after changing entities, functions, or agents to keep your types in sync. No authentication required.
@@ -448,28 +450,28 @@ This creates `base44/.types/types.d.ts` with typed registries for the `@base44/s
 ### Deploying Individual Resources
 ```bash
 # Push only entities
-npx base44 entities push
+npx base44@latestentities push
 
 # Deploy only functions
-npx base44 functions deploy
+npx base44@latestfunctions deploy
 
 # Push only agents
-npx base44 agents push
+npx base44@latestagents push
 
 # Pull connectors from Base44
-npx base44 connectors pull
+npx base44@latestconnectors pull
 
 # Push only connectors
-npx base44 connectors push
+npx base44@latestconnectors push
 
 # Deploy only site
-npx base44 site deploy -y
+npx base44@latestsite deploy -y
 ```
 
 ### Opening the Dashboard
 ```bash
 # Open app dashboard in browser
-npx base44 dashboard
+npx base44@latestdashboard
 ```
 
 ## Authentication
@@ -480,7 +482,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 
 | Error                       | Solution                                                                            |
 | --------------------------- | ----------------------------------------------------------------------------------- |
-| Not authenticated           | Run `npx base44 login` first                                                        |
+| Not authenticated           | Run `npx base44@latestlogin` first                                                        |
 | No entities found           | Ensure entities exist in `base44/entities/` directory                               |
 | Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
 | No functions found          | Ensure functions exist in `base44/functions/` with valid `function.jsonc` configs   |
@@ -489,7 +491,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | No connectors found         | Ensure connectors exist in `base44/connectors/` directory with valid `.jsonc` configs |
 | Invalid connector type      | Connector `type` must be one of the supported services (googlecalendar, slack, etc.) |
 | Duplicate connector type    | Each connector type can only be defined once per project                            |
-| Connector authorization timeout | Re-run `npx base44 connectors push` and complete the OAuth flow in your browser  |
+| Connector authorization timeout | Re-run `npx base44@latestconnectors push` and complete the OAuth flow in your browser  |
 | No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
 | Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded                        |
 | Update available message    | If prompted to update, run `npm install -g base44@latest` (or use npx for local installs) |

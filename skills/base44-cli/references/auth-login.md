@@ -5,7 +5,7 @@ Authenticate with Base44 using device code flow.
 ## Syntax
 
 ```bash
-npx base44 login
+npx base44@latestlogin
 ```
 
 ## Authentication
@@ -27,7 +27,7 @@ The login command uses OAuth 2.0 device code flow for authentication:
 ## Interactive Flow
 
 ```bash
-$ npx base44 login
+$ npx base44@latestlogin
 
 Please visit: https://auth.base44.com/device
 Enter code: ABCD-EFGH
@@ -44,8 +44,8 @@ Logged in as: user@example.com
 - Tokens include expiration timestamps
 - The session persists across CLI sessions
 - Other commands will automatically use your stored credentials
-- Use `npx base44 logout` to clear your session
-- Use `npx base44 whoami` to check your current authentication status
+- Use `npx base44@latestlogout` to clear your session
+- Use `npx base44@latestwhoami` to check your current authentication status
 
 ## Notes
 

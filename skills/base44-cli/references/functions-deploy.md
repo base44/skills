@@ -5,7 +5,7 @@ Deploy local function definitions to Base44.
 ## Syntax
 
 ```bash
-npx base44 functions deploy
+npx base44@latestfunctions deploy
 ```
 
 ## Authentication
@@ -29,7 +29,7 @@ npx base44 functions deploy
 ## Output
 
 ```bash
-$ npx base44 functions deploy
+$ npx base44@latestfunctions deploy
 
 Found 2 functions to deploy
 Deploying functions to Base44...
@@ -51,13 +51,13 @@ The deploy operation synchronizes your local functions with Base44:
 
 If no functions are found in your project:
 ```bash
-$ npx base44 functions deploy
+$ npx base44@latestfunctions deploy
 No functions found. Create functions in the 'functions' directory.
 ```
 
 If a function has configuration errors:
 ```bash
-$ npx base44 functions deploy
+$ npx base44@latestfunctions deploy
 Function deployment errors:
 'my-function' function: Entry point cannot be empty
 ```

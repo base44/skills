@@ -5,7 +5,7 @@ Pull connector configurations from Base44 to local files. Replaces all local con
 ## Syntax
 
 ```bash
-npx base44 connectors pull
+npx base44@latestconnectors pull
 ```
 
 ## Authentication
@@ -27,7 +27,7 @@ npx base44 connectors pull
 ## Output
 
 ```bash
-$ npx base44 connectors pull
+$ npx base44@latestconnectors pull
 
 Fetching connectors from Base44...
 ✓ Connectors fetched successfully
@@ -55,7 +55,7 @@ The pull operation synchronizes remote connectors to your local files:
 
 If no connectors exist on Base44:
 ```bash
-$ npx base44 connectors pull
+$ npx base44@latestconnectors pull
 All connectors are already up to date
 ```
 

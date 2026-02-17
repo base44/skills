@@ -57,7 +57,7 @@ Each function requires a `function.jsonc` configuration file:
 
 ## Automations
 
-Functions can define automations (triggers) so they run on a schedule or when entity data changes. Add an optional `automations` array to `function.jsonc`. Supported types: **scheduled** (one-time, CRON, or simple interval) and **entity hooks** (on entity create/update/delete). Automations are deployed with the function via `npx base44 functions deploy`. For full schemas and examples, see [automations.md](automations.md).
+Functions can define automations (triggers) so they run on a schedule or when entity data changes. Add an optional `automations` array to `function.jsonc`. Supported types: **scheduled** (one-time, CRON, or simple interval) and **entity hooks** (on entity create/update/delete). Automations are deployed with the function via `npx base44@latestfunctions deploy`. For full schemas and examples, see [automations.md](automations.md).
 
 ## Entry Point File
 
@@ -222,7 +222,7 @@ Deno.serve(async (req) => {
 After creating your function, deploy it to Base44:
 
 ```bash
-npx base44 functions deploy
+npx base44@latestfunctions deploy
 ```
 
 For more details on deploying, see [functions-deploy.md](functions-deploy.md).

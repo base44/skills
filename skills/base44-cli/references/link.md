@@ -6,14 +6,14 @@ Links an existing local Base44 project to a Base44 app in the cloud. Use this wh
 
 | Scenario | Command |
 |----------|---------|
-| Starting fresh, no `base44/` folder | `npx base44 create` |
-| Have `base44/config.jsonc` but no `.app.jsonc` | `npx base44 link` |
+| Starting fresh, no `base44/` folder | `npx base44@latestcreate` |
+| Have `base44/config.jsonc` but no `.app.jsonc` | `npx base44@latestlink` |
 | Project already linked (has `.app.jsonc`) | Already done, use `deploy` |
 
 ## Syntax
 
 ```bash
-npx base44 link [options]
+npx base44@latestlink [options]
 ```
 
 ## Options
@@ -31,33 +31,33 @@ For CI/CD or agent use:
 
 **Create a new project:**
 ```bash
-npx base44 link --create --name my-app
+npx base44@latestlink --create --name my-app
 ```
 
 **Link to an existing project:**
 ```bash
-npx base44 link --projectId <project-id>
+npx base44@latestlink --projectId <project-id>
 ```
 
-WRONG: `npx base44 link --create` (missing --name)
-WRONG: `npx base44 link --create --projectId <id>` (cannot use both)
-RIGHT: `npx base44 link --create --name my-app`
-RIGHT: `npx base44 link --projectId <id>`
+WRONG: `npx base44@latestlink --create` (missing --name)
+WRONG: `npx base44@latestlink --create --projectId <id>` (cannot use both)
+RIGHT: `npx base44@latestlink --create --name my-app`
+RIGHT: `npx base44@latestlink --projectId <id>`
 
 ## Examples
 
 ```bash
 # Interactive mode - prompts for project details
-npx base44 link
+npx base44@latestlink
 
 # Non-interactive - create and link in one step
-npx base44 link --create --name my-app
+npx base44@latestlink --create --name my-app
 
 # With description
-npx base44 link --create --name my-app --description "My awesome app"
+npx base44@latestlink --create --name my-app --description "My awesome app"
 
 # Link to a specific existing project by ID
-npx base44 link --projectId abc123
+npx base44@latestlink --projectId abc123
 ```
 
 ## What It Does
@@ -73,9 +73,9 @@ npx base44 link --projectId abc123
 
 - Must have `base44/config.jsonc` in the project
 - Must NOT have `base44/.app.jsonc` (use `deploy` if already linked)
-- Must be authenticated (run `npx base44 login` first)
+- Must be authenticated (run `npx base44@latestlogin` first)
 
 ## Notes
 
-- After linking, you can deploy resources with `npx base44 deploy`
+- After linking, you can deploy resources with `npx base44@latestdeploy`
 - The `.app.jsonc` file should be git-ignored (contains your app ID)

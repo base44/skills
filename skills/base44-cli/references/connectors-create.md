@@ -122,7 +122,7 @@ Note: Notion uses a page-based access model where users select which pages to sh
 After creating connector files, push them to Base44:
 
 ```bash
-npx base44 connectors push
+npx base44@latestconnectors push
 ```
 
 This will prompt you to authorize each new connector in your browser. See [connectors-push.md](connectors-push.md) for details.
@@ -130,7 +130,7 @@ This will prompt you to authorize each new connector in your browser. See [conne
 To pull existing connectors from Base44 to local files:
 
 ```bash
-npx base44 connectors pull
+npx base44@latestconnectors pull
 ```
 
 See [connectors-pull.md](connectors-pull.md) for details.
