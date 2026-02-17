@@ -128,7 +128,7 @@ my-app/
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
 - `base44/functions/*/function.jsonc` - Function config and optional `automations` (CRON, simple triggers, entity hooks)
 - `base44/agents/*.jsonc` - Agent configurations (optional)
-- `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44@latesttypes generate`)
+- `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44@latest types generate`)
 - `base44/connectors/*.jsonc` - OAuth connector configurations (optional)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
 
@@ -178,7 +178,7 @@ npm install --save-dev base44
 Then run commands using `npx`:
 
 ```bash
-npx base44@latest<command>
+npx base44@latest <command>
 ```
 
 **Note:** All commands in this documentation use `npx base44`. You can also use `yarn base44`, or `pnpm base44` if preferred.
@@ -388,27 +388,27 @@ For full schemas and examples, see [automations.md](references/automations.md).
 
 2. Authenticate with Base44:
    ```bash
-   npx base44@latestlogin
+   npx base44@latest login
    ```
 
 3. Create a new project (ALWAYS provide name and `--path` flag):
    ```bash
-   npx base44@latestcreate my-app -p .
+   npx base44@latest create my-app -p .
    ```
 
 4. Build and deploy everything:
    ```bash
    npm run build
-   npx base44@latestdeploy -y
+   npx base44@latest deploy -y
    ```
 
 Or deploy individual resources:
-- `npx base44@latestentities push` - Push entities only
-- `npx base44@latestfunctions deploy` - Deploy functions only
-- `npx base44@latestagents push` - Push agents only
-- `npx base44@latestconnectors pull` - Pull connectors from Base44
-- `npx base44@latestconnectors push` - Push connectors only
-- `npx base44@latestsite deploy -y` - Deploy site only
+- `npx base44@latest entities push` - Push entities only
+- `npx base44@latest functions deploy` - Deploy functions only
+- `npx base44@latest agents push` - Push agents only
+- `npx base44@latest connectors pull` - Pull connectors from Base44
+- `npx base44@latest connectors push` - Push connectors only
+- `npx base44@latest site deploy -y` - Deploy site only
 
 ## Common Workflows
 
@@ -424,25 +424,25 @@ Failure to follow the create.md instructions will result in broken project scaff
 ### Linking an Existing Project
 ```bash
 # If you have base44/config.jsonc but no .app.jsonc
-npx base44@latestlink --create --name my-app
+npx base44@latest link --create --name my-app
 ```
 
 ### Deploying All Changes
 ```bash
 # Generate types (optional, for TypeScript projects)
-npx base44@latesttypes generate
+npx base44@latest types generate
 
 # Build your project first
 npm run build
 
 # Deploy everything (entities, functions, and site)
-npx base44@latestdeploy -y
+npx base44@latest deploy -y
 ```
 
 ### Generating TypeScript Types
 ```bash
 # Generate types from entities, functions, and agents
-npx base44@latesttypes generate
+npx base44@latest types generate
 ```
 
 This creates `base44/.types/types.d.ts` with typed registries for the `@base44/sdk` module. Run this after changing entities, functions, or agents to keep your types in sync. No authentication required.
@@ -450,28 +450,28 @@ This creates `base44/.types/types.d.ts` with typed registries for the `@base44/s
 ### Deploying Individual Resources
 ```bash
 # Push only entities
-npx base44@latestentities push
+npx base44@latest entities push
 
 # Deploy only functions
-npx base44@latestfunctions deploy
+npx base44@latest functions deploy
 
 # Push only agents
-npx base44@latestagents push
+npx base44@latest agents push
 
 # Pull connectors from Base44
-npx base44@latestconnectors pull
+npx base44@latest connectors pull
 
 # Push only connectors
-npx base44@latestconnectors push
+npx base44@latest connectors push
 
 # Deploy only site
-npx base44@latestsite deploy -y
+npx base44@latest site deploy -y
 ```
 
 ### Opening the Dashboard
 ```bash
 # Open app dashboard in browser
-npx base44@latestdashboard
+npx base44@latest dashboard
 ```
 
 ## Authentication
@@ -482,7 +482,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 
 | Error                       | Solution                                                                            |
 | --------------------------- | ----------------------------------------------------------------------------------- |
-| Not authenticated           | Run `npx base44@latestlogin` first                                                        |
+| Not authenticated           | Run `npx base44@latest login` first                                                        |
 | No entities found           | Ensure entities exist in `base44/entities/` directory                               |
 | Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
 | No functions found          | Ensure functions exist in `base44/functions/` with valid `function.jsonc` configs   |
@@ -491,7 +491,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | No connectors found         | Ensure connectors exist in `base44/connectors/` directory with valid `.jsonc` configs |
 | Invalid connector type      | Connector `type` must be one of the supported services (googlecalendar, slack, etc.) |
 | Duplicate connector type    | Each connector type can only be defined once per project                            |
-| Connector authorization timeout | Re-run `npx base44@latestconnectors push` and complete the OAuth flow in your browser  |
+| Connector authorization timeout | Re-run `npx base44@latest connectors push` and complete the OAuth flow in your browser  |
 | No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
 | Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded                        |
 | Update available message    | If prompted to update, run `npm install -g base44@latest` (or use npx for local installs) |

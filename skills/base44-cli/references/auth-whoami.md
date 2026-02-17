@@ -5,7 +5,7 @@ Display the currently authenticated user.
 ## Syntax
 
 ```bash
-npx base44@latestwhoami
+npx base44@latest whoami
 ```
 
 ## Authentication
@@ -20,7 +20,7 @@ npx base44@latestwhoami
 ## Output
 
 ```bash
-$ npx base44@latestwhoami
+$ npx base44@latest whoami
 Logged in as: user@example.com
 ```
 

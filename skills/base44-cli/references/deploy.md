@@ -5,7 +5,7 @@ Deploys all project resources (entities, functions, and site) to Base44 in a sin
 ## Syntax
 
 ```bash
-npx base44@latestdeploy [options]
+npx base44@latest deploy [options]
 ```
 
 ## Options
@@ -27,10 +27,10 @@ The command automatically detects and deploys:
 
 ```bash
 # Interactive mode - shows what will be deployed and asks for confirmation
-npx base44@latestdeploy
+npx base44@latest deploy
 
 # Non-interactive - skip confirmation (for CI/CD or agent use)
-npx base44@latestdeploy -y
+npx base44@latest deploy -y
 ```
 
 ## Typical Workflow
@@ -42,7 +42,7 @@ npx base44@latestdeploy -y
 npm run build
 
 # 3. Deploy everything
-npx base44@latestdeploy -y
+npx base44@latest deploy -y
 ```
 
 ## What It Does
@@ -61,7 +61,7 @@ npx base44@latestdeploy -y
 ## Requirements
 
 - Must be run from a linked Base44 project directory
-- Must be authenticated (run `npx base44@latestlogin` first)
+- Must be authenticated (run `npx base44@latest login` first)
 - For site deployment, must run `npm run build` first
 
 ## Output

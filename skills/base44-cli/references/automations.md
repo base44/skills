@@ -1,6 +1,6 @@
 # Function Automations
 
-Automations are triggers attached to backend functions. They cause a function to run automatically on a schedule (CRON, simple interval, or one-time) or when entity data changes (create, update, delete). Automations are defined in the `automations` array inside each function's `function.jsonc` and are deployed together with the function via `npx base44@latestfunctions deploy`.
+Automations are triggers attached to backend functions. They cause a function to run automatically on a schedule (CRON, simple interval, or one-time) or when entity data changes (create, update, delete). Automations are defined in the `automations` array inside each function's `function.jsonc` and are deployed together with the function via `npx base44@latest functions deploy`.
 
 ## Overview
 
@@ -326,7 +326,7 @@ Deno.serve(async (req) => {
 Automations are deployed with their function. There is no separate automation deploy command.
 
 ```bash
-npx base44@latestfunctions deploy
+npx base44@latest functions deploy
 ```
 
 This deploys all functions in `base44/functions/` and their `automations` arrays. For more on deployment, see [functions-deploy.md](functions-deploy.md).
@@ -340,4 +340,4 @@ This deploys all functions in `base44/functions/` and their `automations` arrays
 | Assuming `base44.auth.me()` is the user who triggered the entity change | Use `data` / `old_data` (e.g. `created_by`, `updated_by`) if you need who did the action | In automations, `auth.me()` is the user who **created the automation**. The triggering user is not available. |
 | `schedule_type: "cron"` without `cron_expression` | Always set `cron_expression` for cron | Cron schedules require a valid cron expression |
 | Putting automations in a separate file | Put `automations` inside `function.jsonc` | Automations are part of the function config |
-| Expecting a separate `base44 automations deploy` | Use `npx base44@latestfunctions deploy` | Automations deploy with the function |
+| Expecting a separate `base44 automations deploy` | Use `npx base44@latest functions deploy` | Automations deploy with the function |

@@ -5,7 +5,7 @@ Pull AI agent configurations from Base44 to local files. Agents are conversation
 ## Syntax
 
 ```bash
-npx base44@latestagents pull
+npx base44@latest agents pull
 ```
 
 ## Authentication
@@ -27,7 +27,7 @@ npx base44@latestagents pull
 ## Output
 
 ```bash
-$ npx base44@latestagents pull
+$ npx base44@latest agents pull
 
 Fetching agents from Base44...
 ✓ Agents fetched successfully
@@ -54,7 +54,7 @@ The pull operation synchronizes remote agents to your local files:
 
 If no agents exist on Base44:
 ```bash
-$ npx base44@latestagents pull
+$ npx base44@latest agents pull
 No agents found on Base44
 ```
 

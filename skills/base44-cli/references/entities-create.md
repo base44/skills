@@ -549,7 +549,7 @@ In this example, only users with the `hr` role can read or update the `salary` f
 The `entities push` command will push all entities that exist in the `base44/entities` folder.
 
 ```bash
-npx base44@latestentities push
+npx base44@latest entities push
 ```
 
 For more details on the push command, see [entities-push.md](entities-push.md).

@@ -5,7 +5,7 @@ Download the code for an existing Base44 project to your local machine.
 ## Syntax
 
 ```bash
-npx base44@latesteject [options]
+npx base44@latest eject [options]
 ```
 
 ## Options
@@ -32,13 +32,13 @@ The `eject` command allows you to download the source code of a Base44 project t
 
 ```bash
 # Interactive mode - select project from list and specify path
-npx base44@latesteject
+npx base44@latest eject
 
 # Specify the output path
-npx base44@latesteject -p ./my-project
+npx base44@latest eject -p ./my-project
 
 # Non-interactive - specify project ID and skip confirmations
-npx base44@latesteject --project-id abc123 -p ./my-project -y
+npx base44@latest eject --project-id abc123 -p ./my-project -y
 ```
 
 ## Workflow
@@ -57,7 +57,7 @@ When you run `eject`:
 
 ## Requirements
 
-- Must be authenticated (run `npx base44@latestlogin` first)
+- Must be authenticated (run `npx base44@latest login` first)
 - The project must be ejectable (have managed source code)
 
 ## Use Cases

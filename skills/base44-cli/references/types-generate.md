@@ -5,7 +5,7 @@ Generate TypeScript declaration file (`types.d.ts`) from project resources (enti
 ## Usage
 
 ```bash
-npx base44@latesttypes generate
+npx base44@latest types generate
 ```
 
 ## What It Does

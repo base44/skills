@@ -5,7 +5,7 @@ Push local AI agent configurations to Base44. Agents are conversational AI assis
 ## Syntax
 
 ```bash
-npx base44@latestagents push
+npx base44@latest agents push
 ```
 
 ## Authentication
@@ -28,7 +28,7 @@ npx base44@latestagents push
 ## Output
 
 ```bash
-$ npx base44@latestagents push
+$ npx base44@latest agents push
 
 Found 2 agents to push
 Pushing agents to Base44...
@@ -54,13 +54,13 @@ The push operation synchronizes your local agents with Base44:
 
 If no agents are found in your project:
 ```bash
-$ npx base44@latestagents push
+$ npx base44@latest agents push
 No local agents found - this will delete all remote agents
 ```
 
 If an agent has an invalid name:
 ```bash
-$ npx base44@latestagents push
+$ npx base44@latest agents push
 Error: Agent name must be lowercase alphanumeric with underscores
 ```
 

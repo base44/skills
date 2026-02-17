@@ -5,7 +5,7 @@ Push local entity definitions to Base44.
 ## Syntax
 
 ```bash
-npx base44@latestentities push
+npx base44@latest entities push
 ```
 
 ## Authentication
@@ -28,7 +28,7 @@ npx base44@latestentities push
 ## Output
 
 ```bash
-$ npx base44@latestentities push
+$ npx base44@latest entities push
 
 Found 3 entities to push
 Pushing entities to Base44...
@@ -52,7 +52,7 @@ The push operation synchronizes your local entity schema with Base44:
 
 If no entities are found in your project:
 ```bash
-$ npx base44@latestentities push
+$ npx base44@latest entities push
 No entities found in project
 ```
 

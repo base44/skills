@@ -36,7 +36,7 @@ This skill activates on ANY mention of "base44" or when a `base44/` folder exist
 - ❌ Initializing new Base44 projects (use `base44-cli` instead)
 - ❌ Empty directories without Base44 configuration
 - ❌ When user says "create a new Base44 project/app/site" and no project exists
-- ❌ CLI commands like `npx base44@latestcreate`, `npx base44@latestdeploy`, `npx base44@latestlogin` (use `base44-cli`)
+- ❌ CLI commands like `npx base44@latest create`, `npx base44@latest deploy`, `npx base44@latest login` (use `base44-cli`)
 
 **Skill Dependencies:**
 - `base44-sdk` assumes a Base44 project is **already initialized**
