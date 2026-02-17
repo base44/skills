@@ -212,6 +212,7 @@ npx base44 <command>
 | ---------------------- | ------------------------------------------- | --------------------------------------------------- |
 | Create Entities        | Define entities in `base44/entities` folder | [entities-create.md](references/entities-create.md) |
 | `base44 entities push` | Push local entities to Base44               | [entities-push.md](references/entities-push.md)     |
+| `base44 entities records *` | CRUD operations on entity records (data) | [entities-records.md](references/entities-records.md) |
 | RLS Patterns           | Row-level security examples and operators   | [rls-examples.md](references/rls-examples.md) ⚠️ **READ FOR RLS** |
 
 #### Entity Schema (Quick Reference)
@@ -464,6 +465,24 @@ npx base44 connectors push
 
 # Deploy only site
 npx base44 site deploy -y
+```
+
+### Managing Entity Records (Data)
+```bash
+# List records
+npx base44 entities records list Task
+
+# Get a specific record
+npx base44 entities records get Task <record-id>
+
+# Create a record
+npx base44 entities records create Task --data '{"title": "My task", "status": "todo"}'
+
+# Update a record
+npx base44 entities records update Task <record-id> --data '{"status": "done"}'
+
+# Delete a record
+npx base44 entities records delete Task <record-id> -y
 ```
 
 ### Opening the Dashboard
