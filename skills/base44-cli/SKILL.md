@@ -291,8 +291,8 @@ Agents are conversational AI assistants that can interact with users, access you
 **Optional fields:** `tool_configs` (defaults to `[]`), `whatsapp_greeting`
 
 **Tool config types:**
-- **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
-- **Backend function tools**: `function_name` + `description`
+- **Entity tools**: `entity_name` (MUST reference an existing `name` field of an entity configuration defined in `base44/entities/`) + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
+- **Backend function tools**: `function_name` (MUST reference an existing `name` of a backend function configuration defined in `base44/functions/`) + `description`
 
 ### Connector Management
 
