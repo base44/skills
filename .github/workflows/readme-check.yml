@@ -5,8 +5,6 @@ on:
     types: [opened, synchronize, ready_for_review, reopened]
     paths:
       - "skills/**"
-      - "README.md"
-      - "CONTRIBUTING.md"
   workflow_dispatch:
     # Run from Actions tab to test: use a branch that has an open PR, or run on default to see check result in the job log only.
 
@@ -23,6 +21,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 1
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -49,7 +48,7 @@ jobs:
             PR number for this run (use this exact number in gh pr comment; if blank/empty, do not comment—print conclusion to the terminal only): ${{ github.event.pull_request.number }}
 
             RULES:
-            1. If everything matches: If the PR number line above has a number, run: gh pr comment <that number> --body "README check ran. README is up to date." If it is empty (manual run), print "README check ran. README is up to date." to the terminal and exit.
+            1. If everything matches, do nothing and exit.
             2. If you find discrepancies: Update README.md with the correct content (use the Write or Edit tool). If the PR number line above has a number (i.e. this is a PR-triggered run), commit and push the fix by running each git command as a SEPARATE Bash call (do NOT chain with && or ;):
                - git config user.name "github-actions[bot]"
                - git config user.email "github-actions[bot]@users.noreply.github.com"
