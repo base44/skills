@@ -18,7 +18,7 @@ Deploy built site files to Base44 hosting.
 ## Syntax
 
 ```bash
-npx base44 site deploy [options]
+npx base44@latest site deploy [options]
 ```
 
 ## Options
@@ -30,7 +30,7 @@ npx base44 site deploy [options]
 Use `-y` flag for non-interactive/automated deployments:
 
 ```bash
-npx base44 site deploy -y
+npx base44@latest site deploy -y
 ```
 
 ## Authentication
@@ -56,7 +56,7 @@ npx base44 site deploy -y
 ## Interactive Flow
 
 ```bash
-$ npx base44 site deploy
+$ npx base44@latest site deploy
 
 Deploy site from ./dist? (yes/no) yes
 
@@ -76,7 +76,7 @@ Visit your site at: https://my-app.base44.app
 npm run build
 
 # 2. Deploy to Base44
-npx base44 site deploy
+npx base44@latest site deploy
 ```
 
 ## Configuration
@@ -92,7 +92,7 @@ The `site.outputDirectory` in your project configuration should point to where y
 
 If site configuration is missing:
 ```bash
-$ npx base44 site deploy
+$ npx base44@latest site deploy
 Error: No site configuration found in project
 ```
 

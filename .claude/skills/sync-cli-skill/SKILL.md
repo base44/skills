@@ -235,8 +235,8 @@ Documented (references/create.md):
 
 Changes detected:
   - BREAKING: --name (-n) option converted to positional argument <name>
-    Old syntax: npx base44 create -n my-app
-    New syntax: npx base44 create my-app
+    Old syntax: npx base44@latest create -n my-app
+    New syntax: npx base44@latest create my-app
 ```
 
 #### Step 5c: Update Reference File
@@ -251,7 +251,7 @@ Update or create `references/{command-name}.md` with the following format:
 ## Syntax
 
 ```bash
-npx base44 {command} [options]
+npx base44@latest{command} [options]
 ```
 
 ## Options
@@ -321,8 +321,8 @@ After all updates, present a summary to the user:
 
 ### Breaking Changes (highlight prominently)
 - `create`: `-n, --name` option converted to positional argument
-  - Old: `npx base44 create -n my-app`
-  - New: `npx base44 create my-app`
+  - Old: `npx base44@latest create -n my-app`
+  - New: `npx base44@latest create my-app`
 
 ### Option Changes
 - `deploy --env`: now required (was optional)

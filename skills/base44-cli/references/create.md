@@ -6,14 +6,14 @@ Creates a new Base44 project from a template. This command is framework-agnostic
 
 ALWAYS provide both the project name AND `--path` flag. Without both, the command opens an interactive TUI which agents cannot use properly.
 
-WRONG: `npx base44 create`
-WRONG: `npx base44 create my-app`
-RIGHT: `npx base44 create my-app -p ./my-app`
+WRONG: `npx base44@latest create`
+WRONG: `npx base44@latest create my-app`
+RIGHT: `npx base44@latest create my-app -p ./my-app`
 
 ## Syntax
 
 ```bash
-npx base44 create [name] --path <path> [options]
+npx base44@latest create [name] --path <path> [options]
 ```
 
 ## Arguments & Options
@@ -43,11 +43,11 @@ npx base44 create [name] --path <path> [options]
 
 - **For `backend-and-client` template (new projects):** Use a new subfolder path
   ```bash
-  npx base44 create my-app -p ./my-app -t backend-and-client
+  npx base44@latest create my-app -p ./my-app -t backend-and-client
   ```
 - **For `backend-only` template (existing projects):** Use `-p .` in the current directory
   ```bash
-  npx base44 create my-app -p .
+  npx base44@latest create my-app -p .
   ```
 
 ## Workflow: Using `backend-only` with External Frameworks
@@ -69,7 +69,7 @@ cd my-app
 npm install --save-dev base44
 
 # Step 4: Add Base44 configuration
-npx base44 create my-app -p .
+npx base44@latest create my-app -p .
 ```
 
 **WARNING:** Do NOT:
@@ -84,19 +84,19 @@ npx base44 create my-app -p .
 
 ```bash
 # RECOMMENDED: Create full-stack project (for new apps)
-npx base44 create my-app -p ./my-app -t backend-and-client
+npx base44@latest create my-app -p ./my-app -t backend-and-client
 
 # Create full-stack and deploy in one step
-npx base44 create my-app -p ./my-app -t backend-and-client --deploy
+npx base44@latest create my-app -p ./my-app -t backend-and-client --deploy
 
 # Add Base44 to EXISTING project (must be inside the project folder)
-npx base44 create my-app -p .
+npx base44@latest create my-app -p .
 
 # Add Base44 to existing project and deploy
-npx base44 create my-app -p . --deploy
+npx base44@latest create my-app -p . --deploy
 
 # Create without adding AI agent skills
-npx base44 create my-app -p . --no-skills
+npx base44@latest create my-app -p . --no-skills
 ```
 
 ## What It Does

@@ -5,7 +5,7 @@ Opens the published site in your default web browser.
 ## Syntax
 
 ```bash
-npx base44 site open
+npx base44@latest site open
 ```
 
 ## Authentication
@@ -21,7 +21,7 @@ npx base44 site open
 ## Example
 
 ```bash
-$ npx base44 site open
+$ npx base44@latest site open
 
 Site opened at https://my-app.base44.app
 ```
@@ -29,7 +29,7 @@ Site opened at https://my-app.base44.app
 ## Requirements
 
 - Must be run from a linked Base44 project directory
-- Must be authenticated (run `npx base44 login` first)
+- Must be authenticated (run `npx base44@latest login` first)
 - Site must have been deployed at least once
 
 ## Notes

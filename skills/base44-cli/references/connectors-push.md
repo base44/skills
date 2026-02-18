@@ -5,7 +5,7 @@ Push local connector configurations to Base44, synchronizing scopes and handling
 ## Usage
 
 ```bash
-npx base44 connectors push
+npx base44@latest connectors push
 ```
 
 ## What It Does
@@ -83,7 +83,7 @@ In CI environments (when `CI` environment variable is set), the OAuth flow is sk
 Skipped OAuth in CI. Pending: slack, notion. Run 'base44 connectors push' locally to authorize.
 ```
 
-You must run `npx base44 connectors push` locally to complete authorization for new connectors.
+You must run `npx base44@latest connectors push` locally to complete authorization for new connectors.
 
 ## Skipping Authorization
 
@@ -110,7 +110,7 @@ Run the command again when you're ready to authorize.
 
 | Problem | Solution |
 |---------|----------|
-| Authorization timed out | Re-run `npx base44 connectors push` and complete OAuth faster |
+| Authorization timed out | Re-run `npx base44@latest connectors push` and complete OAuth faster |
 | Authorization failed | Check that you approved all requested permissions |
 | Wrong account connected | Remove the connector file, push to delete it, then add it back and authorize with the correct account |
 | Browser didn't open | Copy the URL shown in the terminal and open it manually |

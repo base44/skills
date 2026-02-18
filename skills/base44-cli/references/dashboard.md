@@ -5,7 +5,7 @@ Opens the Base44 app dashboard in your default web browser.
 ## Syntax
 
 ```bash
-npx base44 dashboard open
+npx base44@latest dashboard open
 ```
 
 ## Authentication
@@ -22,13 +22,13 @@ npx base44 dashboard open
 
 ```bash
 # Open dashboard for current project
-npx base44 dashboard open
+npx base44@latest dashboard open
 ```
 
 ## Output
 
 ```bash
-$ npx base44 dashboard open
+$ npx base44@latest dashboard open
 
 Dashboard opened at https://base44.cloud/apps/your-app-id
 ```
@@ -36,7 +36,7 @@ Dashboard opened at https://base44.cloud/apps/your-app-id
 ## Requirements
 
 - Must be run from a linked Base44 project directory (contains `base44/.app.jsonc`)
-- Must be authenticated (run `npx base44 login` first)
+- Must be authenticated (run `npx base44@latest login` first)
 
 ## Notes
 
