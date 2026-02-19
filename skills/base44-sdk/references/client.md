@@ -13,7 +13,7 @@ How to create and configure the Base44 client.
 
 ## In Base44-Generated Apps
 
-The client is pre-configured and available as `base44`. Just use it:
+Inside a Base44 app, the client is automatically created and configured. Import it from `@/api/base44Client` and use it as `base44`:
 
 ```javascript
 const tasks = await base44.entities.Task.list();
@@ -21,7 +21,7 @@ const tasks = await base44.entities.Task.list();
 
 ## In External Apps
 
-Install the SDK and create a client:
+When using Base44 as a backend from an external app, install the SDK and create a client by calling `createClient()` directly:
 
 ```bash
 npm install @base44/sdk
@@ -52,7 +52,7 @@ const base44 = createClient({
 
 ## In Backend Functions
 
-Use `createClientFromRequest` to get a client with the caller's auth context:
+`createClientFromRequest()` is designed for Base44-hosted backend functions. It extracts auth from request headers that Base44 injects and returns a client that includes service role access (`base44.asServiceRole`). For frontends and external backends, use `createClient()` instead.
 
 ```javascript
 import { createClientFromRequest } from "@base44/sdk";
@@ -127,22 +127,22 @@ Deno.serve(async (req) => {
 The client exposes these modules:
 
 ```javascript
-base44.entities      // CRUD operations
-base44.auth          // Authentication
 base44.agents        // AI conversations
-base44.functions     // Backend function invocation
-base44.integrations  // Third-party services
 base44.analytics     // Event tracking
 base44.appLogs       // App usage logging
+base44.auth          // Authentication
+base44.entities      // CRUD operations
+base44.functions     // Backend function invocation
+base44.integrations  // Third-party services
 base44.users         // User invitations
 
 // Service role only (backend)
-base44.asServiceRole.entities
 base44.asServiceRole.agents
-base44.asServiceRole.functions
-base44.asServiceRole.integrations
 base44.asServiceRole.appLogs
 base44.asServiceRole.connectors
+base44.asServiceRole.entities
+base44.asServiceRole.functions
+base44.asServiceRole.integrations
 ```
 
 ## Client Methods
@@ -204,7 +204,7 @@ interface CreateClientConfig {
   appId: string;
   /** User authentication token. Used to authenticate as a specific user. */
   token?: string;
-  /** Service role authentication token (backend only). */
+  /** @internal Service role token; only set automatically in Base44-hosted backend functions. */
   serviceToken?: string;
   /** Additional client options. */
   options?: CreateClientOptions;
@@ -222,20 +222,20 @@ interface CreateClientOptions {
 ```typescript
 /** The Base44 client instance. */
 interface Base44Client {
-  /** Entities module for CRUD operations on your data models. */
-  entities: EntitiesModule;
-  /** Integrations module for calling pre-built integration endpoints. */
-  integrations: IntegrationsModule;
-  /** Auth module for user authentication and management. */
-  auth: AuthModule;
-  /** Functions module for invoking custom backend functions. */
-  functions: FunctionsModule;
   /** Agents module for managing AI agent conversations. */
   agents: AgentsModule;
-  /** App logs module for tracking app usage. */
-  appLogs: AppLogsModule;
   /** Analytics module for tracking custom events. */
   analytics: AnalyticsModule;
+  /** App logs module for tracking app usage. */
+  appLogs: AppLogsModule;
+  /** Auth module for user authentication and management. */
+  auth: AuthModule;
+  /** Entities module for CRUD operations on your data models. */
+  entities: EntitiesModule;
+  /** Functions module for invoking custom backend functions. */
+  functions: FunctionsModule;
+  /** Integrations module for calling pre-built integration methods. */
+  integrations: IntegrationsModule;
 
   /** Cleanup function to disconnect WebSocket connections. */
   cleanup(): void;
@@ -245,12 +245,12 @@ interface Base44Client {
 
   /** Provides access to modules with elevated service role permissions (backend only). */
   readonly asServiceRole: {
-    entities: EntitiesModule;
-    integrations: IntegrationsModule;
-    connectors: ConnectorsModule;
-    functions: FunctionsModule;
     agents: AgentsModule;
     appLogs: AppLogsModule;
+    connectors: ConnectorsModule;
+    entities: EntitiesModule;
+    functions: FunctionsModule;
+    integrations: IntegrationsModule;
     cleanup(): void;
   };
 }
