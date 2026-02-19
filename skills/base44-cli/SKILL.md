@@ -204,7 +204,7 @@ npx base44 <command>
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 deploy` | Deploy all resources (entities, functions, site) | [deploy.md](references/deploy.md) |
+| `base44 deploy` | Deploy all resources (entities, functions, agents, connectors, and site) | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 
@@ -362,9 +362,9 @@ For full schemas and examples, see [automations.md](references/automations.md).
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 types generate` | Generate TypeScript types (`types.d.ts`) from entities, functions, and agents | [types-generate.md](references/types-generate.md) |
+| `base44 types generate` | Generate TypeScript types (`types.d.ts`) from entities, functions, agents, and connectors | [types-generate.md](references/types-generate.md) |
 
-**Output:** `base44/.types/types.d.ts` — augments `@base44/sdk` module with typed registries (`EntityTypeRegistry`, `FunctionNameRegistry`, `AgentNameRegistry`).
+**Output:** `base44/.types/types.d.ts` — augments `@base44/sdk` module with typed registries (`EntityTypeRegistry`, `FunctionNameRegistry`, `AgentNameRegistry`, `ConnectorTypeRegistry`).
 
 **No authentication required.** Runs entirely locally. Automatically updates `tsconfig.json` to include the generated types.
 
@@ -439,11 +439,11 @@ npx base44 deploy -y
 
 ### Generating TypeScript Types
 ```bash
-# Generate types from entities, functions, and agents
+# Generate types from entities, functions, agents, and connectors
 npx base44 types generate
 ```
 
-This creates `base44/.types/types.d.ts` with typed registries for the `@base44/sdk` module. Run this after changing entities, functions, or agents to keep your types in sync. No authentication required.
+This creates `base44/.types/types.d.ts` with typed registries for the `@base44/sdk` module. Run this after changing entities, functions, agents, or connectors to keep your types in sync. No authentication required.
 
 ### Deploying Individual Resources
 ```bash

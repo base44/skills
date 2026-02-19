@@ -77,10 +77,10 @@ Summary:
 
 ## CI/CD Environments
 
-In CI environments (when `CI` environment variable is set), the OAuth flow is skipped automatically:
+In non-interactive environments (no TTY, such as CI/CD pipelines), the OAuth flow is skipped automatically:
 
 ```
-Skipped OAuth in CI. Pending: slack, notion. Run 'base44 connectors push' locally to authorize.
+Skipped OAuth in non-interactive mode. Run 'base44 connectors push' locally or open the links above to authorize.
 ```
 
 You must run `npx base44 connectors push` locally to complete authorization for new connectors.
