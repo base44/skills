@@ -174,7 +174,7 @@ Custom integrations allow workspace administrators to connect any external API b
 ```javascript
 const response = await base44.integrations.custom.call(
   slug,        // Integration identifier (set by admin)
-  operationId, // Endpoint in "method:path" format
+  operationId, // Endpoint in "method:path" format (e.g. "get:/contacts", "post:/repos/{owner}/{repo}/issues")
   params       // Optional: payload, pathParams, queryParams
 );
 ```
@@ -328,16 +328,14 @@ interface CoreIntegrations {
 ### Custom Integrations
 
 ```typescript
-/** Parameters for calling a custom integration endpoint. */
+/** Parameters for calling a custom integration method. */
 interface CustomIntegrationCallParams {
   /** Request body payload. */
   payload?: Record<string, any>;
-  /** Path parameters to substitute in the URL. */
+  /** Path parameters to substitute in the URL. For example, { owner: "user", repo: "repo" }. */
   pathParams?: Record<string, string>;
   /** Query string parameters. */
   queryParams?: Record<string, any>;
-  /** Additional headers for this request. */
-  headers?: Record<string, string>;
 }
 
 /** Response from a custom integration call. */
@@ -350,13 +348,13 @@ interface CustomIntegrationCallResponse {
   data: any;
 }
 
-/** Module for calling custom workspace-level API integrations. */
+/** Module for calling custom pre-configured API integrations. */
 interface CustomIntegrationsModule {
   /**
-   * Call a custom integration endpoint.
-   * @param slug - The integration's unique identifier.
-   * @param operationId - The operation ID from the OpenAPI spec.
-   * @param params - Optional payload, pathParams, queryParams, headers.
+   * Call a custom integration method.
+   * @param slug - The integration's unique identifier (set by workspace admin).
+   * @param operationId - The endpoint in "method:path" format (e.g. "get:/contacts", "post:/users/{id}").
+   * @param params - Optional payload, pathParams, queryParams.
    */
   call(slug: string, operationId: string, params?: CustomIntegrationCallParams): Promise<CustomIntegrationCallResponse>;
 }
@@ -365,7 +363,7 @@ interface CustomIntegrationsModule {
 ### IntegrationsModule
 
 ```typescript
-/** Integrations module for calling integration endpoints. */
+/** Integrations module for calling integration methods. */
 type IntegrationsModule = {
   /** Core package with built-in integrations. */
   Core: CoreIntegrations;

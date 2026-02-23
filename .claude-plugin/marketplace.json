@@ -1,0 +1,25 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "base44-skills",
+  "owner": {
+    "name": "base44"
+  },
+  "metadata": {
+    "description": "Official Base44 skills for Claude Code",
+    "version": "1.0.0-beta.1"
+  },
+  "plugins": [
+    {
+      "name": "base44",
+      "source": "./",
+      "description": "Build and deploy Base44 full-stack apps with CLI project management and JavaScript/TypeScript SDK development skills",
+      "version": "1.0.0-beta.1",
+      "author": { "name": "base44" },
+      "homepage": "https://docs.base44.com",
+      "repository": "https://github.com/base44/skills",
+      "license": "MIT",
+      "keywords": ["base44", "full-stack", "sdk", "cli", "deployment"],
+      "category": "development"
+    }
+  ]
+}

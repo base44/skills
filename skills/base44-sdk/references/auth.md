@@ -125,10 +125,10 @@ interface AuthModule {
 |--------|-----------|-------------|-------------|
 | `register()` | `params: RegisterParams` | `Promise<any>` | Create new user account |
 | `loginViaEmailPassword()` | `email: string, password: string, turnstileToken?: string` | `Promise<LoginResponse>` | Authenticate with email/password |
-| `loginWithProvider()` | `provider: Provider, fromUrl?: string` | `void` | Initiate OAuth login flow |
+| `loginWithProvider()` | `provider: Provider, fromUrl?: string` | `void` | Initiate OAuth login flow. Providers: `'google'` (default), `'microsoft'`, `'facebook'` (enable in app settings) |
 | `me()` | None | `Promise<User>` | Get current authenticated user |
 | `updateMe()` | `data: Partial<User>` | `Promise<User>` | Update current user's profile |
-| `logout()` | `redirectUrl?: string` | `void` | Clear session, optionally redirect |
+| `logout()` | `redirectUrl?: string` | `void` | Redirect to server-side logout (clears HTTP-only cookies and session), then to redirectUrl or current URL |
 | `redirectToLogin()` | `nextUrl: string` | `void` | ⚠️ **Avoid** - Prefer custom login UI with `loginViaEmailPassword()` or `loginWithProvider()` |
 | `isAuthenticated()` | None | `Promise<boolean>` | Check if user is logged in |
 | `setToken()` | `token: string, saveToStorage?: boolean` | `void` | Manually set auth token |
@@ -215,6 +215,8 @@ try {
 
 ### Login with OAuth Provider
 
+Supported providers: `'google'` (enabled by default), `'microsoft'`, and `'facebook'`. Enable Microsoft or Facebook in your app's authentication settings before using them.
+
 ```javascript
 // Redirect to Google OAuth
 base44.auth.loginWithProvider('google');
@@ -222,8 +224,9 @@ base44.auth.loginWithProvider('google');
 // Redirect to Google OAuth and return to current page after
 base44.auth.loginWithProvider('google', window.location.href);
 
-// Supported providers: 'google', 'microsoft', 'facebook'
+// Microsoft or Facebook (enable in app settings first)
 base44.auth.loginWithProvider('microsoft');
+base44.auth.loginWithProvider('facebook', '/dashboard');
 ```
 
 ### Get Current User
@@ -297,11 +300,13 @@ try {
 
 ### Logout
 
+Logout redirects the user to the server-side logout endpoint (`/api/apps/auth/logout`) to clear HTTP-only cookies and the session, then redirects to the given URL (or the current page if omitted). Requires a browser environment.
+
 ```javascript
-// Simple logout
+// Logout: clears session via server, then redirects to current page
 base44.auth.logout();
 
-// Logout and redirect to goodbye page
+// Logout and redirect to goodbye page after
 base44.auth.logout("/goodbye");
 
 // Logout and redirect to homepage
@@ -591,6 +596,10 @@ Configure authentication providers in your app dashboard:
 - **GitHub**
 
 ### Using OAuth Providers
+
+- **Google** – enabled by default.
+- **Microsoft** – enable in your app's authentication settings before use.
+- **Facebook** – enable in your app's authentication settings before use.
 
 ```javascript
 // Initiate OAuth login flow

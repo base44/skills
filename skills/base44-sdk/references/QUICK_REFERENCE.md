@@ -29,26 +29,26 @@ setToken(token, saveToStorage?) → void
 ## Entities (`base44.entities.EntityName.*`)
 
 ```
-create(data) → Promise<any>
-bulkCreate(dataArray) → Promise<any[]>
-list(sort?, limit?, skip?, fields?) → Promise<any[]>
-filter(query, sort?, limit?, skip?, fields?) → Promise<any[]>
-get(id) → Promise<any>
-update(id, data) → Promise<any>
-delete(id) → Promise<any>
-deleteMany(query) → Promise<any>
-importEntities(file) → Promise<any>          // frontend only
-subscribe(callback) → () => void             // returns unsubscribe fn
+create(data) → Promise<T>
+bulkCreate(dataArray) → Promise<T[]>
+list(sort?, limit?, skip?, fields?) → Promise<Pick<T, K>[]>
+filter(query, sort?, limit?, skip?, fields?) → Promise<Pick<T, K>[]>
+get(id) → Promise<T>
+update(id, data) → Promise<T>
+delete(id) → Promise<DeleteResult>
+deleteMany(query) → Promise<DeleteManyResult>
+importEntities(file) → Promise<ImportResult<T>>   // frontend only
+subscribe(callback) → () => void                  // returns unsubscribe fn
 ```
 
-**Sort:** Use `-fieldName` for descending (e.g., `-created_date`)
+**Sort:** Use `SortField<T>`: `-fieldName` for descending (e.g., `-created_date`). Max 5,000 per request for list/filter.
 
 ---
 
 ## Functions (`base44.functions.*`)
 
 ```
-invoke(functionName, data) → Promise<any>
+invoke(functionName, data?) → Promise<any>
 ```
 
 **Backend:** Use `base44.asServiceRole.functions.invoke()` for admin access.
@@ -70,7 +70,7 @@ ExtractDataFromUploadedFile({file_url, json_schema}) → Promise<object>
 ### Custom Integrations (`base44.integrations.custom.*`)
 
 ```
-call(slug, operationId, {payload?, pathParams?, queryParams?, headers?}?) → Promise<{success, status_code, data}>
+call(slug, operationId, {payload?, pathParams?, queryParams?}?) → Promise<{success, status_code, data}>
 ```
 
 **operationId format:** `"method:/path"` (e.g., `"get:/contacts"`, `"post:/users/{id}"`)
@@ -153,3 +153,9 @@ import { createClient } from "@base44/sdk";
 
 const base44 = createClient({ appId: "your-app-id" });  // MUST use 'appId'
 ```
+
+---
+
+## TypeScript type registries
+
+For typed entities, function names, and agent names (autocomplete and type checking), the Base44 CLI generates types and wires them into your project. Use the **base44-cli** skill for how to generate types.
