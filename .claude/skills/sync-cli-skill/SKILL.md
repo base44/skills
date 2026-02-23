@@ -139,13 +139,34 @@ Action: Update SKILL.md "Configuration" or "Troubleshooting" section
 
 For **each changed command file**, perform the following steps:
 
-#### Step 5a: Read Existing Skill Reference
+#### Step 5a: Route Command to the Correct Skill
 
-Read the corresponding reference file from `skills/base44-cli/references/`:
+Commands are split across skills by concern. Before reading or updating a reference, determine which skill owns the command.
+
+**Known command routing:**
+
+| Command | Target Skill | Reason |
+|---------|-------------|--------|
+| `logs` | `skills/base44-troubleshooter/` | Troubleshooting / debugging concern |
+| Everything else | `skills/base44-cli/` | Project management concern |
+
+**For new/unknown commands**, reason about ownership based on the command's purpose:
+
+| Concern | Target Skill | Examples |
+|---------|-------------|----------|
+| Observability, debugging, diagnostics, monitoring | `skills/base44-troubleshooter/` | `logs`, `monitor`, `status`, `health` |
+| Project setup, resource management, deployment, auth | `skills/base44-cli/` | `create`, `deploy`, `entities push`, `login` |
+
+If a new command's purpose is ambiguous, read its source code and ask: **"Would a developer use this to build/manage the app, or to investigate/debug it?"** Route accordingly. When genuinely unclear, ask the user.
+
+Use the target skill's `references/` folder for reading and writing reference files, and update that skill's `SKILL.md` command table accordingly.
+
+#### Step 5b: Read Existing Skill Reference
+
+Read the corresponding reference file from the target skill's `references/` folder:
 
 ```
-Skill reference structure:
-skills/base44-cli/
+skills/base44-cli/                      <- project management commands
 ├── SKILL.md
 └── references/
     ├── auth-login.md      <- for <commands-path>/auth/login.ts
@@ -159,13 +180,18 @@ skills/base44-cli/
     ├── functions-deploy.md
     ├── rls-examples.md
     └── site-deploy.md
+
+skills/base44-troubleshooter/           <- troubleshooting commands
+├── SKILL.md
+└── references/
+    └── project-logs.md    <- for <commands-path>/logs.ts (or similar)
 ```
 
 **Mapping rule**: `<commands-path>/{parent}/{name}.ts` → `references/{parent}-{name}.md`
 
-If no reference file exists for a new command, note it for creation.
+If no reference file exists for a new command, note it for creation in the appropriate skill.
 
-#### Step 5b: Compare Source with Documentation
+#### Step 5c: Compare Source with Documentation
 
 Compare the CLI source code with the existing skill documentation:
 
@@ -239,7 +265,7 @@ Changes detected:
     New syntax: npx base44 create my-app
 ```
 
-#### Step 5c: Update Reference File
+#### Step 5d: Update Reference File
 
 Update or create `references/{command-name}.md` with the following format:
 
@@ -271,15 +297,22 @@ npx base44 {command} [options]
 {Any important behavioral notes}
 ```
 
-### Step 6: Update Main Skill File (if needed)
+### Step 6: Update Main Skill Files (if needed)
 
-After processing all changed commands:
+After processing all changed commands, update the SKILL.md of each affected skill:
 
-1. Update the **Available Commands** tables in `skills/base44-cli/SKILL.md` if commands were added/removed
+**For `skills/base44-cli/SKILL.md`** (project management commands):
+1. Update the **Available Commands** tables if commands were added/removed
 2. Update **Quick Start** if workflow changed
 3. Update **Common Workflows** sections if relevant
-4. Keep the existing structure and formatting
-5. Do NOT change the frontmatter description unless explicitly asked
+
+**For `skills/base44-troubleshooter/SKILL.md`** (troubleshooting commands):
+1. Update the **Available Commands** table if troubleshooting commands were added/removed
+2. Update the **Troubleshooting Flow** if command behavior changed
+
+**General rules:**
+- Keep the existing structure and formatting of each skill
+- Do NOT change the frontmatter description unless explicitly asked
 
 ### Step 7: Update CLI_VERSION
 
