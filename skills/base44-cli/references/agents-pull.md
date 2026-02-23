@@ -15,9 +15,8 @@ npx base44 agents pull
 ## What It Does
 
 1. Fetches all agents from Base44
-2. Writes agent files to the `base44/agents/` directory
-3. Deletes local agent files that don't exist remotely
-4. Reports written and deleted agents
+2. Syncs agent files to the `base44/agents/` directory (writes new/updated, deletes removed)
+3. Reports written, deleted, or up-to-date status
 
 ## Prerequisites
 
@@ -32,11 +31,27 @@ $ npx base44 agents pull
 Fetching agents from Base44...
 ✓ Agents fetched successfully
 
-Writing agent files...
-✓ Agent files written successfully
+Syncing agent files...
+✓ Agent files synced successfully
 
 Written: support_agent, order_bot
 Deleted: old_agent
+
+Pulled 2 agents to base44/agents
+```
+
+When there are no changes:
+
+```bash
+$ npx base44 agents pull
+
+Fetching agents from Base44...
+✓ Agents fetched successfully
+
+Syncing agent files...
+✓ Agent files synced successfully
+
+All agents are already up to date
 
 Pulled 2 agents to base44/agents
 ```
@@ -49,14 +64,6 @@ The pull operation synchronizes remote agents to your local files:
 - **Deleted**: Local agent files removed (didn't exist remotely)
 
 **Warning**: This operation replaces all local agent configurations with remote versions. Any local changes not pushed to Base44 will be overwritten.
-
-## Error Handling
-
-If no agents exist on Base44:
-```bash
-$ npx base44 agents pull
-No agents found on Base44
-```
 
 ## Use Cases
 

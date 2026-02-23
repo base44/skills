@@ -249,6 +249,7 @@ For complete documentation, see [entities-create.md](references/entities-create.
 | Create Functions          | Define functions in `base44/functions` folder | [functions-create.md](references/functions-create.md)   |
 | Configure Automations     | CRON, simple triggers, entity hooks in `function.jsonc` | [automations.md](references/automations.md)   |
 | `base44 functions deploy` | Deploy local functions (and automations) to Base44 | [functions-deploy.md](references/functions-deploy.md)   |
+| `base44 logs`             | Fetch function logs for this app              | [project-logs.md](references/project-logs.md)           |
 
 ### Agent Management
 
