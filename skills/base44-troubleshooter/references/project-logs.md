@@ -18,7 +18,6 @@ npx base44 logs [options]
 | `--level <level>` | Filter by log level: `log`, `info`, `warn`, `error`, `debug` | No |
 | `-n, --limit <n>` | Number of results to return (1-1000, default: 50) | No |
 | `--order <order>` | Sort order: `asc` or `desc` (default: `desc`) | No |
-| `--json` | Output raw JSON instead of formatted log lines | No |
 
 ## Examples
 
@@ -46,9 +45,6 @@ npx base44 logs -n 100 --order asc
 
 # Last 10 errors for a specific function
 npx base44 logs --function myFunction --level error --limit 10
-
-# Output logs as JSON for piping to other tools
-npx base44 logs --json
 ```
 
 ## Notes

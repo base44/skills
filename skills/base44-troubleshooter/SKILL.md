@@ -57,5 +57,4 @@ npx base44 logs --function <function_name> --since <start_time> --until <end_tim
 
 - Look for stack traces and error messages in the output
 - Check timestamps to correlate with user-reported issues
-- Use `--json` for structured output when you need to parse details
 - Use `--limit` to fetch more entries if the default 50 isn't enough
