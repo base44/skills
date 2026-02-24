@@ -12,6 +12,6 @@
     "license": "MIT",
     "logo": "./assets/base44-logo.png",
     "keywords": ["base44", "full-stack", "sdk", "cli", "deployment", "entities", "backend-functions", "javascript", "typescript"],
-    "skills": ["./skills/base44-cli/", "./skills/base44-sdk/"]
+    "skills": ["./skills/base44-cli/", "./skills/base44-sdk/", "./skills/base44-troubleshooter/"]
   }
   
