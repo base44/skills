@@ -32,13 +32,28 @@ $ npx base44 agents pull
 Fetching agents from Base44...
 ✓ Agents fetched successfully
 
-Writing agent files...
-✓ Agent files written successfully
+Syncing agent files...
+✓ Agent files synced successfully
 
 Written: support_agent, order_bot
 Deleted: old_agent
 
 Pulled 2 agents to base44/agents
+```
+
+When agents are already up to date (no changes):
+```bash
+$ npx base44 agents pull
+
+Fetching agents from Base44...
+✓ Agents fetched successfully
+
+Syncing agent files...
+✓ Agent files synced successfully
+
+All agents are already up to date
+
+Pulled 3 agents to base44/agents
 ```
 
 ## Agent Synchronization
@@ -49,14 +64,6 @@ The pull operation synchronizes remote agents to your local files:
 - **Deleted**: Local agent files removed (didn't exist remotely)
 
 **Warning**: This operation replaces all local agent configurations with remote versions. Any local changes not pushed to Base44 will be overwritten.
-
-## Error Handling
-
-If no agents exist on Base44:
-```bash
-$ npx base44 agents pull
-No agents found on Base44
-```
 
 ## Use Cases
 
