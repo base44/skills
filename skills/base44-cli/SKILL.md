@@ -198,6 +198,7 @@ npx base44 <command>
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
 | `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
+| `base44 dev` | Start the local development server | [dev.md](references/dev.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 
 ### Deployment
