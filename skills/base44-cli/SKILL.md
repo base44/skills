@@ -358,6 +358,16 @@ Automations are triggers defined in the `automations` array inside `function.jso
 
 For full schemas and examples, see [automations.md](references/automations.md).
 
+### Secrets Management
+
+Manage project secrets (environment variables stored securely in Base44). These commands are hidden from `--help` output but are fully functional.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 secrets list` | List the names of all secrets | [secrets-list.md](references/secrets-list.md) |
+| `base44 secrets set` | Set one or more secrets (KEY=VALUE or --env-file) | [secrets-set.md](references/secrets-set.md) |
+| `base44 secrets delete <key>` | Delete a secret by name | [secrets-delete.md](references/secrets-delete.md) |
+
 ### Type Generation
 
 | Command | Description | Reference |
