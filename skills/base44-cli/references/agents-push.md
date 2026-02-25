@@ -140,6 +140,11 @@ When giving agents access to entities, be explicit in the instructions about usi
 
 Without explicit instructions to use the entity tools, the agent may not proactively query user data when asked.
 
+**Tool configuration validation:**
+- **Entity tools**: The `entity_name` MUST reference an existing `name` field of an entity configuration defined in `base44/entities/`
+- **Backend function tools**: The `function_name` MUST reference an existing `name` of a backend function configuration defined in `base44/functions/`
+- **Allowed operations**: Must be one or more of: `read`, `create`, `update`, `delete`
+
 ## Use Cases
 
 - After defining new agents in your project
