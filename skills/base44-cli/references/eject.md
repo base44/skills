@@ -74,6 +74,7 @@ When you run `eject`:
 - If the current directory is empty, the default path is `./`
 - If the current directory has files, the default path is `./{kebab-case-project-name}`
 - Only projects with `isManagedSourceCode !== false` can be ejected
+- If no ejectable projects exist, the command exits with "No projects available to eject."
 
 ## Related Commands
 
