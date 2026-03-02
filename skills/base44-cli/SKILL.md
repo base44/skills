@@ -360,7 +360,7 @@ For full schemas and examples, see [automations.md](references/automations.md).
 
 ### Secrets Management
 
-Manage project secrets (environment variables stored securely in Base44). These commands are hidden from `--help` output but are fully functional.
+Manage project secrets (environment variables stored securely in Base44).
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
