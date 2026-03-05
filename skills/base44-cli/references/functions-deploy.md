@@ -58,8 +58,8 @@ No functions found. Create functions in the 'functions' directory.
 If a function has configuration errors:
 ```bash
 $ npx base44 functions deploy
-Function deployment errors:
-'my-function' function: Entry point cannot be empty
+Function deployment errors
+  • 'my-function': Entry point cannot be empty
 ```
 
 ## Use Cases
