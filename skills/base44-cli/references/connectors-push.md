@@ -75,9 +75,9 @@ Summary:
   Removed: slack
 ```
 
-## CI/CD Environments
+## Non-Interactive Environments
 
-In non-interactive environments (no TTY, such as CI/CD pipelines), the OAuth flow is skipped automatically:
+In non-interactive environments (CI/CD pipelines, no TTY), the OAuth flow is skipped automatically:
 
 ```
 Skipped OAuth in non-interactive mode. Run 'base44 connectors push' locally or open the links above to authorize.
