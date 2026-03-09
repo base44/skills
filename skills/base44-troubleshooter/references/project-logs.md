@@ -18,6 +18,7 @@ npx base44 logs [options]
 | `--level <level>` | Filter by log level: `log`, `info`, `warn`, `error`, `debug` | No |
 | `-n, --limit <n>` | Number of results to return (1-1000, default: 50) | No |
 | `--order <order>` | Sort order: `asc` or `desc` (default: `desc`) | No |
+| `--json` | Output logs as JSON instead of human-readable format | No |
 
 ## Examples
 
@@ -45,6 +46,12 @@ npx base44 logs -n 100 --order asc
 
 # Last 10 errors for a specific function
 npx base44 logs --function myFunction --level error --limit 10
+
+# Output logs as JSON (useful for piping to jq or other tools)
+npx base44 logs --json
+
+# JSON output for a specific function
+npx base44 logs --function my-function --level error --json
 ```
 
 ## Notes
@@ -55,3 +62,4 @@ npx base44 logs --function myFunction --level error --limit 10
 - If `--function` is omitted, logs are fetched for **all functions** defined in `base44/config.jsonc`.
 - The `--limit` applies after merging logs from all specified functions.
 - The `--since` and `--until` values are normalized to UTC if no timezone is provided (appends `Z`).
+- Use `--json` to get structured output suitable for piping to `jq` or other tools. Each entry has `time`, `level`, `message`, and `source` (function name) fields.

@@ -205,6 +205,7 @@ npx base44 <command>
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 deploy` | Deploy all resources (entities, functions, agents, connectors, and site) | [deploy.md](references/deploy.md) |
+| `base44 dev` | Start the local development server for testing backend functions | [dev.md](references/dev.md) |
 
 ### Entity Management
 

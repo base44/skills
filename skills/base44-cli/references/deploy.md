@@ -63,7 +63,7 @@ npx base44 deploy -y
 
 ## Connector OAuth Flow
 
-If any connectors require authorization after deployment, the CLI will prompt you to open your browser to complete OAuth. In non-interactive environments (CI/CD, no TTY), OAuth prompts are skipped automatically.
+If any connectors require authorization after deployment, the CLI will prompt you to open your browser to complete OAuth. In non-interactive environments (CI/CD, no TTY) or when `-y` is used, OAuth prompts are skipped automatically.
 
 ```
 Some connectors still require authorization. Run 'base44 connectors push' or open the links above in your browser.

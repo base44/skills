@@ -42,4 +42,4 @@ Dashboard opened at https://base44.cloud/apps/your-app-id
 
 - The dashboard provides a web interface to manage your app's entities, functions, agents, users, and settings
 - If you're not in a project directory, the command will fail with an error
-- The command will not open a browser in CI environments (when `process.env.CI` is set)
+- The command will not open a browser in non-interactive environments (CI/CD pipelines or when no TTY is available)

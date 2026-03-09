@@ -34,6 +34,6 @@ Site opened at https://my-app.base44.app
 
 ## Notes
 
-- The command will not open a browser in CI environments (when `process.env.CI` is set)
+- The command will not open a browser in non-interactive environments (CI/CD pipelines or when no TTY is available)
 - Use this command to quickly view your deployed site
 - The site URL is also displayed after deploying with `base44 site deploy` or `base44 deploy`
