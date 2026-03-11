@@ -199,6 +199,7 @@ npx base44 <command>
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
 | `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
+| `base44 dev` | Start the local development server for backend functions | [dev.md](references/dev.md) |
 
 ### Deployment
 
@@ -298,11 +299,12 @@ Agents are conversational AI assistants that can interact with users, access you
 
 Connectors are OAuth integrations that let your app connect to external services (Google Calendar, Slack, Notion, etc.). They provide access tokens that you can use in backend functions to call external APIs.
 
-| Action / Command            | Description                                     | Reference                                             |
-| --------------------------- | ----------------------------------------------- | ----------------------------------------------------- |
-| Create Connectors           | Define connectors in `base44/connectors` folder | [connectors-create.md](references/connectors-create.md) |
-| `base44 connectors pull`    | Pull remote connectors to local files           | [connectors-pull.md](references/connectors-pull.md)   |
-| `base44 connectors push`    | Push local connectors to Base44                 | [connectors-push.md](references/connectors-push.md)   |
+| Action / Command                        | Description                                     | Reference                                                                     |
+| --------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------- |
+| Create Connectors                       | Define connectors in `base44/connectors` folder | [connectors-create.md](references/connectors-create.md)                       |
+| `base44 connectors list-available`      | List all available OAuth integration types      | [connectors-list-available.md](references/connectors-list-available.md)       |
+| `base44 connectors pull`                | Pull remote connectors to local files           | [connectors-pull.md](references/connectors-pull.md)                           |
+| `base44 connectors push`                | Push local connectors to Base44                 | [connectors-push.md](references/connectors-push.md)                           |
 
 **Note:** Connector commands perform full synchronization - pushing replaces all remote connectors with local ones (and triggers OAuth for new ones), and pulling replaces all local connectors with remote ones.
 
