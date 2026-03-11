@@ -296,15 +296,16 @@ Agents are conversational AI assistants that can interact with users, access you
 
 ### Connector Management
 
-Connectors are OAuth integrations that let your app connect to external services (Google Calendar, Slack, Notion, etc.). They provide access tokens that you can use in backend functions to call external APIs.
+Connectors let your app connect to external services (Google Calendar, Slack, Stripe, etc.). Most connectors use OAuth to provide access tokens for backend functions to call external APIs. Stripe is the exception — it is provisioned automatically on the server side with no OAuth browser flow.
 
-| Action / Command            | Description                                     | Reference                                             |
-| --------------------------- | ----------------------------------------------- | ----------------------------------------------------- |
-| Create Connectors           | Define connectors in `base44/connectors` folder | [connectors-create.md](references/connectors-create.md) |
-| `base44 connectors pull`    | Pull remote connectors to local files           | [connectors-pull.md](references/connectors-pull.md)   |
-| `base44 connectors push`    | Push local connectors to Base44                 | [connectors-push.md](references/connectors-push.md)   |
+| Action / Command                   | Description                                          | Reference                                                           |
+| ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------- |
+| Create Connectors                  | Define connectors in `base44/connectors` folder      | [connectors-create.md](references/connectors-create.md)             |
+| `base44 connectors pull`           | Pull remote connectors to local files                | [connectors-pull.md](references/connectors-pull.md)                 |
+| `base44 connectors push`           | Push local connectors to Base44                      | [connectors-push.md](references/connectors-push.md)                 |
+| `base44 connectors list-available` | List all available integration types from Base44     | [connectors-list-available.md](references/connectors-list-available.md) |
 
-**Note:** Connector commands perform full synchronization - pushing replaces all remote connectors with local ones (and triggers OAuth for new ones), and pulling replaces all local connectors with remote ones.
+**Note:** Connector commands perform full synchronization - pushing replaces all remote connectors with local ones (and triggers OAuth for new OAuth connectors), and pulling replaces all local connectors with remote ones.
 
 #### Connector Schema (Quick Reference)
 
@@ -325,20 +326,22 @@ Connectors are OAuth integrations that let your app connect to external services
 **Optional fields:** `scopes` (defaults to `[]`)
 
 **Supported connector types:**
-| Service | Type |
-|---------|------|
-| Google Calendar | `googlecalendar` |
-| Google Drive | `googledrive` |
-| Google Sheets | `googlesheets` |
-| Google Docs | `googledocs` |
-| Google Slides | `googleslides` |
-| Gmail | `gmail` |
-| Slack | `slack` |
-| Notion | `notion` |
-| Salesforce | `salesforce` |
-| HubSpot | `hubspot` |
-| LinkedIn | `linkedin` |
-| TikTok | `tiktok` |
+| Service | Type | Notes |
+|---------|------|-------|
+| Google Calendar | `googlecalendar` | |
+| Google Drive | `googledrive` | |
+| Google Sheets | `googlesheets` | |
+| Google Docs | `googledocs` | |
+| Google Slides | `googleslides` | |
+| Gmail | `gmail` | |
+| Google BigQuery | `googlebigquery` | |
+| Slack | `slack` | |
+| Notion | `notion` | |
+| Salesforce | `salesforce` | |
+| HubSpot | `hubspot` | |
+| LinkedIn | `linkedin` | |
+| TikTok | `tiktok` | |
+| Stripe | `stripe` | No OAuth needed — provisioned automatically by Base44 |
 
 For complete documentation, see [connectors-create.md](references/connectors-create.md).
 

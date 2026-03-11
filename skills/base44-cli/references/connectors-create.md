@@ -50,12 +50,14 @@ Each connector file must specify a `type` and optionally a list of `scopes`:
 | Google Docs | `googledocs` | [Google Docs Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#docs) |
 | Google Slides | `googleslides` | [Google Slides Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#slides) |
 | Gmail | `gmail` | [Gmail Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#gmail) |
+| Google BigQuery | `googlebigquery` | [BigQuery Authorization](https://cloud.google.com/bigquery/docs/authorization) |
 | Slack | `slack` | [Slack Scopes](https://api.slack.com/scopes) |
 | Notion | `notion` | [Notion Authorization](https://developers.notion.com/docs/authorization) |
 | Salesforce | `salesforce` | [Salesforce Scopes](https://developer.salesforce.com/docs/platform/mobile-sdk/guide/oauth-scope-parameter-values.html) |
 | HubSpot | `hubspot` | [HubSpot Scopes](https://developers.hubspot.com/docs/api/scopes) |
 | LinkedIn | `linkedin` | [LinkedIn Scopes](https://learn.microsoft.com/en-us/linkedin/marketing/increasing-access) |
 | TikTok | `tiktok` | [TikTok Scopes](https://developers.tiktok.com/doc/scopes-overview) |
+| Stripe | `stripe` | No scopes needed — Base44 provisions the Stripe sandbox automatically (no OAuth browser flow) |
 
 ## Examples
 
@@ -109,6 +111,18 @@ Note: Notion uses a page-based access model where users select which pages to sh
 }
 ```
 
+### Stripe (Sandbox)
+
+```jsonc
+// base44/connectors/stripe.jsonc
+{
+  "type": "stripe",
+  "scopes": []
+}
+```
+
+Note: Stripe does not require an OAuth browser flow. When you push this connector, Base44 automatically provisions a Stripe sandbox account on the server side. You may receive a claim URL in the push output to link the sandbox to your Stripe account.
+
 ## Rules and Constraints
 
 1. **One connector per type**: You cannot have multiple connectors of the same type (e.g., two `googlecalendar` connectors)
@@ -125,7 +139,7 @@ After creating connector files, push them to Base44:
 npx base44 connectors push
 ```
 
-This will prompt you to authorize each new connector in your browser. See [connectors-push.md](connectors-push.md) for details.
+This will prompt you to authorize each new OAuth connector in your browser. Stripe is the exception — it is provisioned automatically without a browser flow. See [connectors-push.md](connectors-push.md) for details.
 
 To pull existing connectors from Base44 to local files:
 
