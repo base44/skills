@@ -103,8 +103,10 @@ Run the command again when you're ready to authorize.
 |--------|---------|
 | Synced | Connector already existed, scopes updated if needed |
 | Added | New connector successfully authorized |
+| Provisioned | Stripe sandbox was provisioned (special case for `stripe` connector) |
 | Removed | Connector was deleted from Base44 (not in local files) |
-| Failed | Authorization timed out, failed, or was skipped |
+| Skipped | Authorization was skipped by user |
+| Failed | Authorization timed out, failed, or was not completed |
 
 ## Troubleshooting
 
