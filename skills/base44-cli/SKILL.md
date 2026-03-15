@@ -301,9 +301,9 @@ Connectors let your app connect to external services (Google Calendar, Slack, St
 | Action / Command                   | Description                                          | Reference                                                           |
 | ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------- |
 | Create Connectors                  | Define connectors in `base44/connectors` folder      | [connectors-create.md](references/connectors-create.md)             |
+| `base44 connectors list-available` | List all available integration types from Base44     | [connectors-list-available.md](references/connectors-list-available.md) |
 | `base44 connectors pull`           | Pull remote connectors to local files                | [connectors-pull.md](references/connectors-pull.md)                 |
 | `base44 connectors push`           | Push local connectors to Base44                      | [connectors-push.md](references/connectors-push.md)                 |
-| `base44 connectors list-available` | List all available integration types from Base44     | [connectors-list-available.md](references/connectors-list-available.md) |
 
 **Note:** Connector commands perform full synchronization - pushing replaces all remote connectors with local ones (and triggers OAuth for new OAuth connectors), and pulling replaces all local connectors with remote ones.
 
@@ -325,23 +325,7 @@ Connectors let your app connect to external services (Google Calendar, Slack, St
 **Required fields:** `type`
 **Optional fields:** `scopes` (defaults to `[]`)
 
-**Supported connector types:**
-| Service | Type | Notes |
-|---------|------|-------|
-| Google Calendar | `googlecalendar` | |
-| Google Drive | `googledrive` | |
-| Google Sheets | `googlesheets` | |
-| Google Docs | `googledocs` | |
-| Google Slides | `googleslides` | |
-| Gmail | `gmail` | |
-| Google BigQuery | `googlebigquery` | |
-| Slack | `slack` | |
-| Notion | `notion` | |
-| Salesforce | `salesforce` | |
-| HubSpot | `hubspot` | |
-| LinkedIn | `linkedin` | |
-| TikTok | `tiktok` | |
-| Stripe | `stripe` | No OAuth needed — provisioned automatically by Base44 |
+**Available connector types:** Run `npx base44 connectors list-available` to see all supported integration types.
 
 For complete documentation, see [connectors-create.md](references/connectors-create.md).
 
@@ -500,7 +484,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | No agents found             | Ensure agents exist in `base44/agents/` directory with valid `.jsonc` configs       |
 | Invalid agent name          | Agent names must be lowercase alphanumeric with underscores only                    |
 | No connectors found         | Ensure connectors exist in `base44/connectors/` directory with valid `.jsonc` configs |
-| Invalid connector type      | Connector `type` must be one of the supported services (googlecalendar, slack, etc.) |
+| Invalid connector type      | Run `npx base44 connectors list-available` to see valid types |
 | Duplicate connector type    | Each connector type can only be defined once per project                            |
 | Connector authorization timeout | Re-run `npx base44 connectors push` and complete the OAuth flow in your browser  |
 | No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
