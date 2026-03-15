@@ -42,7 +42,7 @@ Each connector file must specify a `type` and optionally a list of `scopes`:
 
 ## Discovering Available Connector Types
 
-Run the following command to get the up-to-date list of supported connector types:
+Run the following command to get the up-to-date list of supported connector types. Note: `stripe` is also a valid type but is not returned by this command — treat it as supported (see Stripe example below).
 
 ```bash
 npx base44 connectors list-available
