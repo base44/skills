@@ -109,7 +109,7 @@ inviteUser(userEmail, role) → Promise<any>    // role: 'user' | 'admin'
 getAccessToken(integrationType) → Promise<string>
 ```
 
-**Types:** `'googlecalendar'`, `'googledrive'`, `'slack'`, `'notion'`, `'salesforce'`, `'hubspot'`, `'linkedin'`, `'tiktok'`, `'github'`
+**Types:** Run `npx base44 connectors list-available` to see all available integration types.
 
 ---
 

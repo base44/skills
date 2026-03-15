@@ -37,83 +37,73 @@ Each connector file must specify a `type` and optionally a list of `scopes`:
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `type` | string | Yes | The integration type (see supported types below) |
+| `type` | string | Yes | The integration type (run `npx base44 connectors list-available` to see options) |
 | `scopes` | string[] | No | OAuth scopes to request (defaults to `[]`) |
 
-## Supported Connector Types
+## Discovering Available Connector Types
 
-| Service | Type | Scopes Documentation |
-|---------|------|---------------------|
-| Google Calendar | `googlecalendar` | [Google Calendar Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#calendar) |
-| Google Drive | `googledrive` | [Google Drive Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#drive) |
-| Google Sheets | `googlesheets` | [Google Sheets Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#sheets) |
-| Google Docs | `googledocs` | [Google Docs Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#docs) |
-| Google Slides | `googleslides` | [Google Slides Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#slides) |
-| Gmail | `gmail` | [Gmail Scopes](https://developers.google.com/identity/protocols/oauth2/scopes#gmail) |
-| Slack | `slack` | [Slack Scopes](https://api.slack.com/scopes) |
-| Notion | `notion` | [Notion Authorization](https://developers.notion.com/docs/authorization) |
-| Salesforce | `salesforce` | [Salesforce Scopes](https://developer.salesforce.com/docs/platform/mobile-sdk/guide/oauth-scope-parameter-values.html) |
-| HubSpot | `hubspot` | [HubSpot Scopes](https://developers.hubspot.com/docs/api/scopes) |
-| LinkedIn | `linkedin` | [LinkedIn Scopes](https://learn.microsoft.com/en-us/linkedin/marketing/increasing-access) |
-| TikTok | `tiktok` | [TikTok Scopes](https://developers.tiktok.com/doc/scopes-overview) |
+Run the following command to get the up-to-date list of supported connector types. Note: `stripe` is also a valid type but is not returned by this command — treat it as supported (see Stripe example below).
 
-## Examples
+```bash
+npx base44 connectors list-available
+```
 
-### Google Calendar (Read and Write Events)
+This returns a JSON object with all available integrations, their display names, descriptions, and any required connection config fields. Example output (trimmed):
 
-```jsonc
-// base44/connectors/googlecalendar.jsonc
+```json
 {
-  "type": "googlecalendar",
-  "scopes": [
-    "https://www.googleapis.com/auth/calendar.readonly",
-    "https://www.googleapis.com/auth/calendar.events"
-  ]
+    "integrations": [
+        {
+            "integration_type": "googlecalendar",
+            "display_name": "Google Calendar",
+            "description": "Access and manage Google Calendar events",
+            "connection_config_fields": []
+        },
+        {
+            "integration_type": "slack",
+            "display_name": "Slack User",
+            "description": "Send messages and interact with Slack as yourself (user integration)",
+            "connection_config_fields": []
+        },
+        {
+            "integration_type": "share_point",
+            "display_name": "SharePoint",
+            "description": "Manage documents, lists, sites, and collaboration content in SharePoint",
+            "connection_config_fields": [
+                {
+                    "name": "subdomain",
+                    "display_name": "SharePoint Site",
+                    "description": "The name of your SharePoint site (e.g., sites/mysite)",
+                    "placeholder": "sites/mysite",
+                    "required": true,
+                    "validation_pattern": "^[a-zA-Z0-9/_-]+$",
+                    "validation_error": "Please enter a valid SharePoint site path"
+                }
+            ]
+        }
+    ]
 }
 ```
 
-### Slack (Send Messages and Read Channels)
+Use the `integration_type` value from this output as the `type` field in your connector file. Some connectors require additional `connection_config_fields` — check the output for details.
+
+### Stripe (Sandbox)
 
 ```jsonc
-// base44/connectors/slack.jsonc
+// base44/connectors/stripe.jsonc
 {
-  "type": "slack",
-  "scopes": [
-    "chat:write",
-    "channels:read"
-  ]
-}
-```
-
-### Notion (Default Access)
-
-```jsonc
-// base44/connectors/notion.jsonc
-{
-  "type": "notion",
+  "type": "stripe",
   "scopes": []
 }
 ```
 
-Note: Notion uses a page-based access model where users select which pages to share during OAuth authorization.
-
-### Google Sheets (Read Only)
-
-```jsonc
-// base44/connectors/googlesheets.jsonc
-{
-  "type": "googlesheets",
-  "scopes": [
-    "https://www.googleapis.com/auth/spreadsheets.readonly"
-  ]
-}
-```
+Note: Stripe does not require an OAuth browser flow. When you push this connector, Base44 automatically provisions a Stripe sandbox account on the server side. You may receive a claim URL in the push output to link the sandbox to your Stripe account.
 
 ## Rules and Constraints
 
 1. **One connector per type**: You cannot have multiple connectors of the same type (e.g., two `googlecalendar` connectors)
 
-2. **Type must be valid**: The `type` field must be one of the supported connector types listed above
+2. **Type must be valid**: The `type` field must be a valid integration type (run `npx base44 connectors list-available` to see available types)
 
 3. **Scopes are provider-specific**: Each service has its own scope format - refer to the provider's documentation
 
@@ -125,7 +115,7 @@ After creating connector files, push them to Base44:
 npx base44 connectors push
 ```
 
-This will prompt you to authorize each new connector in your browser. See [connectors-push.md](connectors-push.md) for details.
+This will prompt you to authorize each new OAuth connector in your browser. Stripe is the exception — it is provisioned automatically without a browser flow. See [connectors-push.md](connectors-push.md) for details.
 
 To pull existing connectors from Base44 to local files:
 

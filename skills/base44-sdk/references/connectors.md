@@ -12,17 +12,7 @@ Returns a raw OAuth access token for the specified service.
 
 ## Supported Services
 
-| Integration Type | Service |
-|-----------------|---------|
-| `"googlecalendar"` | Google Calendar |
-| `"googledrive"` | Google Drive |
-| `"slack"` | Slack |
-| `"notion"` | Notion |
-| `"salesforce"` | Salesforce |
-| `"hubspot"` | HubSpot |
-| `"linkedin"` | LinkedIn |
-| `"tiktok"` | TikTok |
-| `"github"` | GitHub |
+Run `npx base44 connectors list-available` from the CLI to see all available integration types and their details.
 
 ## Example Usage
 

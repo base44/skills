@@ -12,7 +12,7 @@ npx base44 connectors push
 
 1. **Reads local connectors** from your `base44/connectors/` directory
 2. **Syncs with Base44** - updates scopes for existing connectors
-3. **Adds new connectors** - any new connector types trigger OAuth authorization
+3. **Adds new connectors** - new OAuth connector types trigger authorization; Stripe is provisioned automatically
 4. **Removes unlisted connectors** - connectors not in your local files are removed from Base44
 
 ## OAuth Authorization Flow
@@ -62,6 +62,21 @@ Summary:
   Added: slack, notion
 ```
 
+### Pushing Stripe (no OAuth required)
+
+Stripe is provisioned automatically — no browser flow is needed:
+
+```
+Found 2 connectors to push: googlecalendar, stripe
+✓ Connectors pushed
+
+Summary:
+  ✓ Stripe sandbox provisioned
+    Claim your Stripe sandbox: https://dashboard.stripe.com/...
+    Connectors dashboard: https://app.base44.com/...
+  Synced: googlecalendar
+```
+
 ### Removing connectors
 
 If you delete a connector file locally and push, it will be removed:
@@ -101,8 +116,9 @@ Run the command again when you're ready to authorize.
 
 | Status | Meaning |
 |--------|---------|
+| Provisioned | Stripe sandbox was created automatically (no OAuth needed) |
 | Synced | Connector already existed, scopes updated if needed |
-| Added | New connector successfully authorized |
+| Added | New connector successfully authorized via OAuth |
 | Removed | Connector was deleted from Base44 (not in local files) |
 | Failed | Authorization timed out, failed, or was skipped |
 
