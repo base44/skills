@@ -327,6 +327,8 @@ Connectors let your app connect to external services (Google Calendar, Slack, St
 
 **Available connector types:** Run `npx base44 connectors list-available` to see all supported integration types.
 
+**Note:** Stripe (`stripe`) is not listed by `list-available` — it is provisioned automatically by Base44 with no OAuth browser flow. See [connectors-create.md](references/connectors-create.md) for details.
+
 For complete documentation, see [connectors-create.md](references/connectors-create.md).
 
 #### Automation Quick Reference
