@@ -248,7 +248,10 @@ For complete documentation, see [entities-create.md](references/entities-create.
 | ------------------------- | --------------------------------------------- | ------------------------------------------------------- |
 | Create Functions          | Define functions in `base44/functions` folder | [functions-create.md](references/functions-create.md)   |
 | Configure Automations     | CRON, simple triggers, entity hooks in `function.jsonc` | [automations.md](references/automations.md)   |
-| `base44 functions deploy` | Deploy local functions (and automations) to Base44 | [functions-deploy.md](references/functions-deploy.md)   |
+| `base44 functions deploy [names...] [--force]` | Deploy local functions (and automations) to Base44; optionally target specific functions or prune removed ones | [functions-deploy.md](references/functions-deploy.md)   |
+| `base44 functions delete <names...>` | Delete one or more deployed functions from Base44 | [functions-delete.md](references/functions-delete.md) |
+| `base44 functions list`   | List all deployed functions on Base44 remote  | [functions-list.md](references/functions-list.md)       |
+| `base44 functions pull [name]` | Pull deployed functions from Base44 to local files | [functions-pull.md](references/functions-pull.md)  |
 
 ### Agent Management
 
@@ -402,6 +405,9 @@ Manage project secrets (environment variables stored securely in Base44). These 
 Or deploy individual resources:
 - `npx base44 entities push` - Push entities only
 - `npx base44 functions deploy` - Deploy functions only
+- `npx base44 functions delete <name>` - Delete a deployed function
+- `npx base44 functions list` - List all deployed functions
+- `npx base44 functions pull` - Pull deployed functions to local files
 - `npx base44 agents push` - Push agents only
 - `npx base44 connectors pull` - Pull connectors from Base44
 - `npx base44 connectors push` - Push connectors only
@@ -449,8 +455,12 @@ This creates `base44/.types/types.d.ts` with typed registries for the `@base44/s
 # Push only entities
 npx base44 entities push
 
-# Deploy only functions
+# Deploy only functions (all)
 npx base44 functions deploy
+# Deploy specific functions
+npx base44 functions deploy my-function other-function
+# Deploy and prune removed functions
+npx base44 functions deploy --force
 
 # Push only agents
 npx base44 agents push
