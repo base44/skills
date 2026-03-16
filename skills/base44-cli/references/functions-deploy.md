@@ -32,7 +32,7 @@ npx base44 functions deploy [names...] [options]
 
 - Must be run from a Base44 project directory
 - Project must have function definitions in the `base44/functions/` folder
-- Each function must have a valid `function.jsonc` config file
+- Each function subdirectory should contain a `function.jsonc` config and an entry point file, or just an `entry.ts` for zero-config functions
 
 ## Examples
 
@@ -58,7 +58,7 @@ $ npx base44 functions deploy
 ◇ [2/2] Deploying send-notification...
 ✓ send-notification           deployed
 
-✓ 2 deployed
+└ 2 deployed
 ```
 
 With `--force`:
@@ -67,11 +67,14 @@ $ npx base44 functions deploy --force
 
 ◆ Found 2 functions to deploy
 ...
+
 ◆ Found 1 remote function to delete
 ◇ [1/1] Deleting old-function...
 ✓ old-function                deleted
 
-✓ 1 deleted
+◆ 1 deleted
+
+└ 2 deployed
 ```
 
 ## Error Handling

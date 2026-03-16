@@ -42,16 +42,21 @@ npx base44 functions delete process-order,send-notification
 Single function:
 ```bash
 $ npx base44 functions delete process-order
+◇ Deleting process-order...
 ✓ process-order deleted
-✓ Function "process-order" deleted
+
+└ Function "process-order" deleted
 ```
 
 Multiple functions:
 ```bash
 $ npx base44 functions delete process-order send-notification
+◇ Deleting process-order...
 ✓ process-order deleted
+◇ Deleting send-notification...
 ✓ send-notification deleted
-✓ 2/2 deleted
+
+└ 2/2 deleted
 ```
 
 ## Error Handling
