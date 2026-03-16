@@ -4,16 +4,18 @@ Creates a new Base44 project from a template. This command is framework-agnostic
 
 ## Critical: Non-Interactive Mode Required
 
-ALWAYS provide both the project name AND `--path` flag. Without both, the command opens an interactive TUI which agents cannot use properly.
+ALWAYS provide the project name. Without it, the command opens an interactive TUI which agents cannot use properly.
 
 WRONG: `npx base44 create`
-WRONG: `npx base44 create my-app`
-RIGHT: `npx base44 create my-app -p ./my-app`
+RIGHT: `npx base44 create my-app`                          (auto-creates at `./my-app`)
+RIGHT: `npx base44 create my-app -p ./projects/my-app`    (explicit path)
+
+When a name is provided without `--path`, the CLI automatically uses `./{kebab-case-name}` as the project path.
 
 ## Syntax
 
 ```bash
-npx base44 create [name] --path <path> [options]
+npx base44 create [name] [--path <path>] [options]
 ```
 
 ## Arguments & Options
@@ -21,12 +23,12 @@ npx base44 create [name] --path <path> [options]
 | Argument/Option | Description | Required |
 |--------|-------------|----------|
 | `name` | Project name (positional argument) | Yes* |
-| `-p, --path <path>` | Path where to create the project | Yes* |
+| `-p, --path <path>` | Path where to create the project (default: `./{name}`) | No |
 | `-t, --template <id>` | Template ID (see templates below) | No |
 | `--deploy` | Build and deploy the site (includes pushing entities) | No |
 | `--no-skills` | Skip AI agent skills installation (skills are added by default) | No |
 
-*Required for non-interactive mode. Both `name` and `--path` must be provided together.
+*Required for non-interactive mode. If `--path` is omitted, defaults to `./{kebab-case-name}`.
 
 ## Template Selection (CRITICAL - Choose Appropriately)
 
@@ -83,11 +85,14 @@ npx base44 create my-app -p .
 ## Examples
 
 ```bash
-# RECOMMENDED: Create full-stack project (for new apps)
-npx base44 create my-app -p ./my-app -t backend-and-client
+# RECOMMENDED: Create full-stack project (for new apps) - path auto-set to ./my-app
+npx base44 create my-app -t backend-and-client
 
 # Create full-stack and deploy in one step
-npx base44 create my-app -p ./my-app -t backend-and-client --deploy
+npx base44 create my-app -t backend-and-client --deploy
+
+# Create with an explicit path
+npx base44 create my-app -p ./projects/my-app -t backend-and-client
 
 # Add Base44 to EXISTING project (must be inside the project folder)
 npx base44 create my-app -p .

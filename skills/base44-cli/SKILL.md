@@ -244,11 +244,14 @@ For complete documentation, see [entities-create.md](references/entities-create.
 
 ### Function Management
 
-| Action / Command          | Description                                   | Reference                                               |
-| ------------------------- | --------------------------------------------- | ------------------------------------------------------- |
-| Create Functions          | Define functions in `base44/functions` folder | [functions-create.md](references/functions-create.md)   |
-| Configure Automations     | CRON, simple triggers, entity hooks in `function.jsonc` | [automations.md](references/automations.md)   |
-| `base44 functions deploy` | Deploy local functions (and automations) to Base44 | [functions-deploy.md](references/functions-deploy.md)   |
+| Action / Command                     | Description                                                   | Reference                                               |
+| ------------------------------------ | ------------------------------------------------------------- | ------------------------------------------------------- |
+| Create Functions                     | Define functions in `base44/functions` folder                 | [functions-create.md](references/functions-create.md)   |
+| Configure Automations                | CRON, simple triggers, entity hooks in `function.jsonc`       | [automations.md](references/automations.md)             |
+| `base44 functions deploy [names...]` | Deploy local functions (and automations) to Base44            | [functions-deploy.md](references/functions-deploy.md)   |
+| `base44 functions delete <names...>` | Delete deployed functions from Base44                         | [functions-delete.md](references/functions-delete.md)   |
+| `base44 functions list`              | List all deployed functions on Base44 remote                  | [functions-list.md](references/functions-list.md)       |
+| `base44 functions pull [name]`       | Pull deployed functions from Base44 to local files            | [functions-pull.md](references/functions-pull.md)       |
 
 ### Agent Management
 
@@ -388,9 +391,9 @@ Manage project secrets (environment variables stored securely in Base44). These 
    npx base44 login
    ```
 
-3. Create a new project (ALWAYS provide name and `--path` flag):
+3. Create a new project (provide a name; `--path` defaults to `./{name}`):
    ```bash
-   npx base44 create my-app -p .
+   npx base44 create my-app
    ```
 
 4. Build and deploy everything:
@@ -449,8 +452,9 @@ This creates `base44/.types/types.d.ts` with typed registries for the `@base44/s
 # Push only entities
 npx base44 entities push
 
-# Deploy only functions
+# Deploy only functions (all, or specific ones)
 npx base44 functions deploy
+npx base44 functions deploy my-function another-function
 
 # Push only agents
 npx base44 agents push
