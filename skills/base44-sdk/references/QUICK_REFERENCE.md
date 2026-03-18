@@ -35,10 +35,12 @@ list(sort?, limit?, skip?, fields?) → Promise<Pick<T, K>[]>
 filter(query, sort?, limit?, skip?, fields?) → Promise<Pick<T, K>[]>
 get(id) → Promise<T>
 update(id, data) → Promise<T>
+updateMany(query, mongoUpdateOp) → Promise<UpdateManyResult>   // e.g. { $set: { field: val } }
+bulkUpdate(dataArray) → Promise<T[]>                           // each item must have id
 delete(id) → Promise<DeleteResult>
 deleteMany(query) → Promise<DeleteManyResult>
-importEntities(file) → Promise<ImportResult<T>>   // frontend only
-subscribe(callback) → () => void                  // returns unsubscribe fn
+importEntities(file) → Promise<ImportResult<T>>                // frontend only
+subscribe(callback) → () => void                               // returns unsubscribe fn
 ```
 
 **Sort:** Use `SortField<T>`: `-fieldName` for descending (e.g., `-created_date`). Max 5,000 per request for list/filter.
@@ -49,6 +51,7 @@ subscribe(callback) → () => void                  // returns unsubscribe fn
 
 ```
 invoke(functionName, data?) → Promise<any>
+fetch(path, init?) → Promise<Response>   // low-level, for streaming/custom methods
 ```
 
 **Backend:** Use `base44.asServiceRole.functions.invoke()` for admin access.
@@ -89,6 +92,8 @@ track({eventName, properties?}) → void
 
 ```
 logUserInApp(pageName) → Promise<void>
+fetchLogs(params?) → Promise<any>
+getStats(params?) → Promise<any>
 ```
 
 ---
@@ -101,15 +106,26 @@ inviteUser(userEmail, role) → Promise<any>    // role: 'user' | 'admin'
 
 ---
 
-## Connectors (`base44.asServiceRole.connectors.*`)
+## Service Role Connectors (`base44.asServiceRole.connectors.*`)
+
+**Backend only, service role required.** App-scoped (shared account).
+
+```
+getConnection(integrationType) → Promise<{accessToken, connectionConfig}>   // recommended
+getAccessToken(integrationType) → Promise<string>                           // deprecated
+```
+
+**Types:** Run `npx base44 connectors list-available` to see all available integration types.
+
+---
+
+## SSO (`base44.asServiceRole.sso.*`)
 
 **Backend only, service role required.**
 
 ```
-getAccessToken(integrationType) → Promise<string>
+getAccessToken(userId) → Promise<{access_token}>
 ```
-
-**Types:** Run `npx base44 connectors list-available` to see all available integration types.
 
 ---
 
@@ -120,7 +136,8 @@ getAccessToken(integrationType) → Promise<string>
 ```javascript
 base44.asServiceRole.entities.Task.list()
 base44.asServiceRole.functions.invoke('name', data)
-base44.asServiceRole.connectors.getAccessToken('slack')
+base44.asServiceRole.connectors.getConnection('slack')
+base44.asServiceRole.sso.getAccessToken(userId)
 ```
 
 ---

@@ -9,7 +9,9 @@ Invoke custom backend functions via `base44.functions`.
 - [Setup Requirements](#setup-requirements)
 - [Authentication Modes](#authentication-modes)
 
-## Method
+## Methods
+
+### `invoke`
 
 ```javascript
 base44.functions.invoke(functionName, data?): Promise<any>
@@ -18,6 +20,18 @@ base44.functions.invoke(functionName, data?): Promise<any>
 - `functionName`: Name of the backend function
 - `data`: Optional object of parameters (sent as JSON, or multipart if contains File objects)
 - Returns: Whatever the function returns
+
+### `fetch`
+
+```javascript
+base44.functions.fetch(path, init?): Promise<Response>
+```
+
+Low-level method that performs a direct HTTP request to a backend function path and returns the native `Response` object. Use when you need streaming responses, custom HTTP methods, or raw response access.
+
+- `path`: Function path (e.g., `/streaming_demo` or `/my-function/endpoint`)
+- `init`: Optional native fetch options (`RequestInit`)
+- Returns: Native `Response` object
 
 ## Invoking Functions
 
@@ -30,6 +44,36 @@ const result = await base44.functions.invoke("processOrder", {
 });
 
 console.log(result);
+```
+
+### Streaming Response (using fetch)
+
+```javascript
+// Use fetch() for streaming responses (SSE, chunked text, etc.)
+const response = await base44.functions.fetch("/stream-data", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ prompt: "Tell me a story" })
+});
+
+// Read as a stream
+const reader = response.body.getReader();
+const decoder = new TextDecoder();
+while (true) {
+  const { done, value } = await reader.read();
+  if (done) break;
+  console.log(decoder.decode(value));
+}
+```
+
+### Custom HTTP Methods (using fetch)
+
+```javascript
+// PUT, PATCH, DELETE, or other methods
+const response = await base44.functions.fetch("/my-resource/123", {
+  method: "DELETE"
+});
+console.log(response.status); // 204
 ```
 
 ### With File Upload
@@ -213,6 +257,11 @@ interface FunctionNameRegistry {}
  */
 type FunctionName = keyof FunctionNameRegistry extends never ? string : keyof FunctionNameRegistry;
 
+/**
+ * Options for functions.fetch(). Uses native fetch options directly.
+ */
+type FunctionsFetchInit = RequestInit;
+
 /** Functions module for invoking custom backend functions. */
 interface FunctionsModule {
   /**
@@ -226,5 +275,17 @@ interface FunctionsModule {
    * @returns Promise resolving to the function's response.
    */
   invoke(functionName: FunctionName, data?: Record<string, any>): Promise<any>;
+
+  /**
+   * Performs a direct HTTP request to a backend function path and returns the native Response.
+   *
+   * Use for streaming responses (SSE, chunked text), custom HTTP methods,
+   * or when you need raw access to the response.
+   *
+   * @param path - Function path, e.g. `/streaming_demo` or `/my-function/endpoint`
+   * @param init - Optional native fetch options.
+   * @returns Promise resolving to a native fetch Response.
+   */
+  fetch(path: string, init?: FunctionsFetchInit): Promise<Response>;
 }
 ```
