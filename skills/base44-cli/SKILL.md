@@ -360,6 +360,14 @@ Manage project secrets (environment variables stored securely in Base44). These 
 | `base44 secrets set` | Set one or more secrets (KEY=VALUE or --env-file) | [secrets-set.md](references/secrets-set.md) |
 | `base44 secrets delete <key>` | Delete a secret by name | [secrets-delete.md](references/secrets-delete.md) |
 
+### Script Execution
+
+Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use it to perform CRUD operations on entities (`base44.entities.MyEntity.list/create/update/delete`), call backend functions (`base44.functions.invoke("myFunction", args)`), invoke agents, or access any other resource exposed by the SDK — without deploying a full function. Useful for data migrations, bulk operations, debugging, and automation scripts.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 exec` | Run a script (via stdin) with the Base44 SDK pre-authenticated | [exec.md](references/exec.md) |
+
 ### Type Generation
 
 | Command | Description | Reference |
