@@ -106,20 +106,6 @@ inviteUser(userEmail, role) → Promise<any>    // role: 'user' | 'admin'
 
 ---
 
-## User Connectors (`base44.connectors.*`)
-
-Per-user OAuth flows. Frontend and backend.
-
-```
-getCurrentAppUserAccessToken(connectorId) → Promise<string>
-connectAppUser(connectorId) → Promise<string>      // returns redirect URL
-disconnectAppUser(connectorId) → Promise<void>
-```
-
-> `connectorId` is the OrgConnector database ID (not the integration type string).
-
----
-
 ## Service Role Connectors (`base44.asServiceRole.connectors.*`)
 
 **Backend only, service role required.** App-scoped (shared account).

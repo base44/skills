@@ -1,53 +1,13 @@
 # Connectors Module
 
-OAuth token management for external services. The SDK exposes **two** connectors modules:
+OAuth token management for external services.
 
-- **`base44.connectors`** — User-scoped OAuth flows (frontend & backend). Manages per-user connections.
 - **`base44.asServiceRole.connectors`** — App-scoped OAuth tokens (backend/service role only). All users share the same connected account.
 
 ## Contents
-- [User Connectors (`base44.connectors`)](#user-connectors-base44connectors)
 - [Service Role Connectors (`base44.asServiceRole.connectors`)](#service-role-connectors-base44asserviceroleconnectors)
 - [Available Services](#available-services)
 - [Type Definitions](#type-definitions)
-
----
-
-## User Connectors (`base44.connectors`)
-
-Per-user OAuth flows. Each end user has their own connection. Available in frontend and backend.
-
-### Methods
-
-| Method | Signature | Description |
-|--------|-----------|-------------|
-| `getCurrentAppUserAccessToken(connectorId)` | `Promise<string>` | Get OAuth access token for the current user's connection |
-| `connectAppUser(connectorId)` | `Promise<string>` | Initiate OAuth flow — returns redirect URL |
-| `disconnectAppUser(connectorId)` | `Promise<void>` | Remove current user's OAuth connection |
-
-> **Note:** `connectorId` is the OrgConnector database ID (set in the Base44 dashboard), not the integration type string.
-
-### Examples
-
-```javascript
-// Check if the current user has connected — get their token
-const token = await base44.connectors.getCurrentAppUserAccessToken("abc123def");
-
-const response = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events", {
-  headers: { "Authorization": `Bearer ${token}` }
-});
-```
-
-```javascript
-// Initiate OAuth flow — redirect the user to authorize
-const redirectUrl = await base44.connectors.connectAppUser("abc123def");
-window.location.href = redirectUrl;
-```
-
-```javascript
-// Disconnect the current user's OAuth connection
-await base44.connectors.disconnectAppUser("abc123def");
-```
 
 ---
 
@@ -157,7 +117,6 @@ Run `npx base44 connectors list-available` from the CLI to see all available typ
 ## Important Notes
 
 - **Service role connectors**: One account per connector per app — all users share the same connected account
-- **User connectors**: Each end user connects their own account
 - **You handle the API calls**: Base44 provides the token; you make the actual API requests
 - **Token refresh**: Base44 handles token refresh automatically
 
@@ -195,24 +154,4 @@ interface ConnectorsModule {
   getAccessToken(integrationType: ConnectorIntegrationType): Promise<string>;
 }
 
-/** User connectors module (per-user OAuth). Frontend and backend. */
-interface UserConnectorsModule {
-  /**
-   * Retrieves the OAuth access token for the current user's connection.
-   * @param connectorId - The OrgConnector database ID.
-   */
-  getCurrentAppUserAccessToken(connectorId: string): Promise<string>;
-
-  /**
-   * Initiates OAuth flow for the current user. Returns a redirect URL.
-   * @param connectorId - The OrgConnector database ID.
-   */
-  connectAppUser(connectorId: string): Promise<string>;
-
-  /**
-   * Removes the current user's OAuth connection.
-   * @param connectorId - The OrgConnector database ID.
-   */
-  disconnectAppUser(connectorId: string): Promise<void>;
-}
 ```

@@ -133,7 +133,6 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `agents` | AI conversations and messages | [base44-agents.md](references/base44-agents.md) |
 | `functions` | Backend function invocation | [functions.md](references/functions.md) |
 | `integrations` | AI, email, file uploads, custom APIs | [integrations.md](references/integrations.md) |
-| `connectors` | Per-user OAuth flows (frontend & backend) | [connectors.md](references/connectors.md) |
 | `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
 | `appLogs` | Log user activity in app | [app-logs.md](references/app-logs.md) |
 | `users` | Invite users to the app | [users.md](references/users.md) |
@@ -222,7 +221,6 @@ const base44 = createClient({
 - Send emails → `integrations.Core.SendEmail()`
 - Upload files → `integrations.Core.UploadFile()`
 - Custom APIs → `integrations.custom.call()`
-- Per-user OAuth (user connects their own account) → `connectors.connectAppUser()` / `connectors.getCurrentAppUserAccessToken()`
 - App-scoped OAuth (app builder's account) → `asServiceRole.connectors.getConnection()` (backend only)
 
 **Tracking and analytics?**
@@ -300,7 +298,6 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `analytics` | Yes | Yes |
 | `appLogs` | Yes | Yes |
 | `users` | Yes | Yes |
-| `connectors` (user OAuth flows) | Yes | Yes |
 | `asServiceRole.*` | No | Yes |
 | `asServiceRole.connectors` (app OAuth) | No | Yes |
 | `asServiceRole.sso` | No | Yes |
