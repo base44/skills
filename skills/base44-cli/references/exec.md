@@ -13,6 +13,16 @@ echo "<code>" | npx base44 exec
 
 The `exec` command reads a script from stdin and runs it server-side with the Base44 SDK pre-authenticated as the currently logged-in user. This allows you to run one-off scripts against your app's data without writing a full function.
 
+## Available Globals
+
+> **`base44`** — a preinitialized SDK client, available as a global variable in every exec script. You do not need to import or configure it — it is ready to use immediately.
+
+Use it to interact with your app's resources:
+
+- `base44.entities.<EntityName>` — CRUD operations on entities (`.list()`, `.get(id)`, `.create(data)`, `.update(id, data)`, `.delete(id)`)
+- `base44.functions.invoke(name, data?)` — call a backend function
+- `base44.agents.<AgentName>` — invoke AI agents
+
 ## Examples
 
 ```bash
