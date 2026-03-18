@@ -1,0 +1,53 @@
+name: Sync SDK Skill
+
+on:
+  repository_dispatch:
+    types: [sdk-release]
+  workflow_dispatch:
+    inputs:
+      sdk_version:
+        description: 'SDK version tag to sync (e.g., v1.0.0)'
+        required: false
+        default: 'main'
+      additional_instructions:
+        description: 'Additional instructions for Claude (optional)'
+        required: false
+        default: ''
+
+jobs:
+  sync-skill:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+      - name: Checkout skills repo
+        uses: actions/checkout@v4
+
+      - name: Checkout SDK repo
+        uses: actions/checkout@v4
+        with:
+          repository: base44/javascript-sdk
+          ref: ${{ github.event.client_payload.version || inputs.sdk_version || 'main' }}
+          path: base44-sdk
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Run Claude Code to sync skill
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          allowed_bots: 'base44-github-actions[bot]'
+          claude_args: '--allowedTools "Edit,Write,MultiEdit,Bash(git:*),Bash(gh pr:*),Bash(mkdir:*)"'
+          prompt: |
+            read the skill in '.claude/skills/sync-sdk-skill/SKILL.md' and follow the steps to sync the SDK skill.
+
+            SDK source folder path: ./base44-sdk
+            SDK version: ${{ github.event.client_payload.version || inputs.sdk_version || 'latest' }}
+
+            After syncing, create a pull request with the changes.
+            PR title: "Update base44-sdk skill to ${{ github.event.client_payload.version || inputs.sdk_version || 'latest' }} {human-readable-time}"
+
+            ${{ inputs.additional_instructions && format('Additional instructions: {0}', inputs.additional_instructions) || '' }}
