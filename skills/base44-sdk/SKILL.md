@@ -133,10 +133,12 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `agents` | AI conversations and messages | [base44-agents.md](references/base44-agents.md) |
 | `functions` | Backend function invocation | [functions.md](references/functions.md) |
 | `integrations` | AI, email, file uploads, custom APIs | [integrations.md](references/integrations.md) |
-| `connectors` | OAuth tokens (service role only) | [connectors.md](references/connectors.md) |
+| `connectors` | Per-user OAuth flows (frontend & backend) | [connectors.md](references/connectors.md) |
 | `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
 | `appLogs` | Log user activity in app | [app-logs.md](references/app-logs.md) |
 | `users` | Invite users to the app | [users.md](references/users.md) |
+| `asServiceRole.connectors` | App-scoped OAuth tokens (service role only) | [connectors.md](references/connectors.md) |
+| `asServiceRole.sso` | SSO token generation (service role only) | [sso.md](references/sso.md) |
 
 For client setup and authentication modes, see [client.md](references/client.md).
 
@@ -220,7 +222,8 @@ const base44 = createClient({
 - Send emails → `integrations.Core.SendEmail()`
 - Upload files → `integrations.Core.UploadFile()`
 - Custom APIs → `integrations.custom.call()`
-- OAuth tokens (Google, Slack) → `connectors` (backend only)
+- Per-user OAuth (user connects their own account) → `connectors.connectAppUser()` / `connectors.getCurrentAppUserAccessToken()`
+- App-scoped OAuth (app builder's account) → `asServiceRole.connectors.getConnection()` (backend only)
 
 **Tracking and analytics?**
 - Track custom events → `analytics.track()`
@@ -292,11 +295,14 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `auth` | Yes | Yes |
 | `agents` | Yes | Yes |
 | `functions.invoke()` | Yes | Yes |
+| `functions.fetch()` | Yes | Yes |
 | `integrations` | Yes | Yes |
 | `analytics` | Yes | Yes |
 | `appLogs` | Yes | Yes |
 | `users` | Yes | Yes |
+| `connectors` (user OAuth flows) | Yes | Yes |
 | `asServiceRole.*` | No | Yes |
-| `connectors` | No | Yes |
+| `asServiceRole.connectors` (app OAuth) | No | Yes |
+| `asServiceRole.sso` | No | Yes |
 
 Backend functions use `Deno.serve()` and `createClientFromRequest(req)` to get a properly authenticated client.

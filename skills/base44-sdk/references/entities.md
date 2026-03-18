@@ -21,6 +21,8 @@ CRUD operations on data models. Access via `base44.entities.EntityName.method()`
 | `filter(query, sort?, limit?, skip?, fields?)` | `Promise<Pick<T, K>[]>` | Get records matching conditions |
 | `get(id)` | `Promise<T>` | Get single record by ID |
 | `update(id, data)` | `Promise<T>` | Update record (partial update) |
+| `updateMany(query, data)` | `Promise<UpdateManyResult>` | Update all matching records using MongoDB update operators |
+| `bulkUpdate(dataArray)` | `Promise<T[]>` | Update multiple records by ID, each with its own data |
 | `delete(id)` | `Promise<DeleteResult>` | Delete record by ID |
 | `deleteMany(query)` | `Promise<DeleteManyResult>` | Delete all matching records |
 | `importEntities(file)` | `Promise<ImportResult<T>>` | Import from CSV (frontend only) |
@@ -117,6 +119,34 @@ console.log("Deleted:", result.success);
 // Multiple records matching query
 const manyResult = await base44.entities.Task.deleteMany({ status: "archived" });
 console.log("Deleted:", manyResult.deleted);
+```
+
+### Update Many (MongoDB-style)
+
+```javascript
+// Update all pending tasks to status "in-progress"
+const result = await base44.entities.Task.updateMany(
+  { status: "pending" },                     // query: which records to update
+  { $set: { status: "in-progress" } }        // MongoDB update operator
+);
+console.log("Updated:", result.updated);
+
+// Increment a counter field
+await base44.entities.Task.updateMany(
+  { category: "bugs" },
+  { $inc: { priority: 1 } }
+);
+```
+
+### Bulk Update (by ID)
+
+```javascript
+// Update multiple records, each with different data
+const updated = await base44.entities.Task.bulkUpdate([
+  { id: "task-1", status: "done", completedAt: new Date().toISOString() },
+  { id: "task-2", status: "in-progress", assignedTo: userId },
+  { id: "task-3", priority: 5 }
+]);
 ```
 
 ### Import from File
@@ -221,6 +251,14 @@ type RealtimeCallback<T = any> = (event: RealtimeEvent<T>) => void;
 ### Result Types
 
 ```typescript
+/** Result returned when updating multiple entities. */
+interface UpdateManyResult {
+  /** Whether the update was successful. */
+  success: boolean;
+  /** Number of entities that were updated. */
+  updated: number;
+}
+
 /** Result returned when deleting a single entity. */
 interface DeleteResult {
   /** Whether the deletion was successful. */
@@ -326,6 +364,16 @@ interface EntityHandler<T = any> {
 
   /** Creates multiple records in a single request. */
   bulkCreate(data: Partial<T>[]): Promise<T[]>;
+
+  /**
+   * Updates multiple records matching a query using MongoDB update operators.
+   * @param query - Filter to select which records to update.
+   * @param data - MongoDB update operator object (e.g., `{ $set: { field: value } }`).
+   */
+  updateMany(query: Partial<T>, data: Record<string, Record<string, any>>): Promise<UpdateManyResult>;
+
+  /** Updates multiple records by ID, each with its own update data. */
+  bulkUpdate(data: (Partial<T> & { id: string })[]): Promise<T[]>;
 
   /** Imports records from a file (frontend only). */
   importEntities(file: File): Promise<ImportResult<T>>;

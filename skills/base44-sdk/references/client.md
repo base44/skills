@@ -131,6 +131,7 @@ base44.agents        // AI conversations
 base44.analytics     // Event tracking
 base44.appLogs       // App usage logging
 base44.auth          // Authentication
+base44.connectors    // Per-user OAuth flows (UserConnectorsModule)
 base44.entities      // CRUD operations
 base44.functions     // Backend function invocation
 base44.integrations  // Third-party services
@@ -139,10 +140,11 @@ base44.users         // User invitations
 // Service role only (backend)
 base44.asServiceRole.agents
 base44.asServiceRole.appLogs
-base44.asServiceRole.connectors
+base44.asServiceRole.connectors  // App-scoped OAuth tokens (ConnectorsModule)
 base44.asServiceRole.entities
 base44.asServiceRole.functions
 base44.asServiceRole.integrations
+base44.asServiceRole.sso         // SSO token generation
 ```
 
 ## Client Methods
@@ -243,14 +245,20 @@ interface Base44Client {
   /** Sets a new authentication token for all subsequent requests. */
   setToken(newToken: string): void;
 
+  /** Per-user OAuth flows. Each end user has their own connection. */
+  connectors: UserConnectorsModule;
+
   /** Provides access to modules with elevated service role permissions (backend only). */
   readonly asServiceRole: {
     agents: AgentsModule;
     appLogs: AppLogsModule;
+    /** App-scoped OAuth tokens. All users share the same connected account. */
     connectors: ConnectorsModule;
     entities: EntitiesModule;
     functions: FunctionsModule;
     integrations: IntegrationsModule;
+    /** SSO token generation for users. */
+    sso: SsoModule;
     cleanup(): void;
   };
 }
