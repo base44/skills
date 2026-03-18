@@ -360,6 +360,12 @@ Manage project secrets (environment variables stored securely in Base44). These 
 | `base44 secrets set` | Set one or more secrets (KEY=VALUE or --env-file) | [secrets-set.md](references/secrets-set.md) |
 | `base44 secrets delete <key>` | Delete a secret by name | [secrets-delete.md](references/secrets-delete.md) |
 
+### Script Execution
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 exec` | Run a script (via stdin) with the Base44 SDK pre-authenticated | [exec.md](references/exec.md) |
+
 ### Type Generation
 
 | Command | Description | Reference |
