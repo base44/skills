@@ -366,6 +366,8 @@ Manage project secrets (environment variables stored securely in Base44). These 
 |---------|-------------|-----------|
 | `base44 exec` | Run a script (via stdin) with the Base44 SDK pre-authenticated | [exec.md](references/exec.md) |
 
+Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use it to perform CRUD operations on entities (`base44.entities.MyEntity.list/create/update/delete`), call backend functions (`base44.functions.myFunction()`), invoke agents, or access any other resource exposed by the SDK — without deploying a full function. Useful for data migrations, bulk operations, debugging, and automation scripts.
+
 ### Type Generation
 
 | Command | Description | Reference |
