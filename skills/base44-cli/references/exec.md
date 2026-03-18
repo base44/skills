@@ -22,6 +22,7 @@ Use it to interact with your app's resources:
 - `base44.entities.<EntityName>` — CRUD operations on entities (`.list()`, `.get(id)`, `.create(data)`, `.update(id, data)`, `.delete(id)`)
 - `base44.functions.invoke(name, data?)` — call a backend function
 - `base44.agents.<AgentName>` — invoke AI agents
+- For more available resources and methods, see the [Base44 SDK reference](../../base44-sdk/SKILL.md)
 
 ## Examples
 
