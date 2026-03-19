@@ -620,6 +620,7 @@ base44.auth.loginWithProvider('microsoft', '/dashboard');
 | **Frontend** | ✅ Yes | All methods available |
 | **Backend Functions** | ✅ Yes | Use `createClientFromRequest(req)` for authenticated client |
 | **Service Role** | ❌ No | Auth methods not available in service role context |
+| **Chrome Extension (service worker)** | ⚠️ Partial | `loginWithProvider()` and `logout()` require `window` — see Chrome Extension section below |
 
 ### Frontend Usage
 ```javascript
@@ -641,6 +642,52 @@ Deno.serve(async (req) => {
   return Response.json({ user });
 });
 ```
+
+### Chrome Extension Usage (MV3 Service Worker)
+
+`loginWithProvider()` and `logout()` use `window.location.href` internally and **will throw in a service worker** (`window is not defined`). You must handle OAuth manually.
+
+**Critical requirements:**
+1. **`from_url` must be the app's own deployed subdomain** (e.g., `https://myapp-abc123.base44.app/`). Base44 rejects all other domains — including `chrome-extension://` URLs and the main `https://base44.app/` domain.
+2. **Deploy the site first** (`npx base44 site deploy -y`) to get the app's hosted URL before implementing OAuth.
+3. **Use `chrome.tabs.onUpdated`** to intercept the `?access_token=` param from the redirect URL. Add `"tabs"` permission to `manifest.json`.
+
+**Complete pattern:**
+```typescript
+// manifest.json: add "tabs" to permissions
+
+// In the service worker:
+const APP_ID = 'your-app-id';
+const AUTH_URL = 'https://base44.app/api/apps/auth';
+// IMPORTANT: must be YOUR app's deployed Base44 subdomain
+const CALLBACK_URL = 'https://your-app-id.base44.app/';
+
+// LOGIN handler
+const authUrl = `${AUTH_URL}/login?app_id=${APP_ID}&from_url=${encodeURIComponent(CALLBACK_URL)}`;
+const tab = await chrome.tabs.create({ url: authUrl });
+
+const onTabUpdated = (tabId, changeInfo) => {
+  if (tabId !== tab.id || !changeInfo.url) return;
+  try {
+    const url = new URL(changeInfo.url);
+    const token = url.searchParams.get('access_token');
+    if (!token) return;
+    chrome.tabs.onUpdated.removeListener(onTabUpdated);
+    // Store token in chrome.storage.local and set on SDK client
+    client.setToken(token);
+    chrome.storage.local.set({ auth_token: token });
+    chrome.tabs.remove(tabId).catch(() => {});
+  } catch {}
+};
+chrome.tabs.onUpdated.addListener(onTabUpdated);
+
+// LOGOUT handler — clear manually (logout() uses window.location)
+delete axios.defaults.headers.common['Authorization'];
+await chrome.storage.local.remove('auth_token');
+```
+
+**Why `loginViaEmailPassword` is simpler in extensions:**
+Unlike `loginWithProvider`, `loginViaEmailPassword()` is a direct API call that returns `{ access_token, user }` — no redirects, no `window` dependency. If your app can use email/password auth, it avoids the redirect complexity entirely. See the [Buzz extension example](https://github.com/base44/apps-examples/tree/main/buzz) for this approach.
 
 ---
 
