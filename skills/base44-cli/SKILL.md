@@ -350,6 +350,28 @@ Automations are triggers defined in the `automations` array inside `function.jso
 
 For full schemas and examples, see [automations.md](references/automations.md).
 
+### Auth Config Management
+
+Manage app authentication settings (hidden from `--help` output but fully functional). The auth config controls which login methods are enabled for your app. Auth config is also deployed as part of `base44 deploy`.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 auth pull` | Pull auth config from Base44 to local file | [auth-pull.md](references/auth-pull.md) |
+| `base44 auth push` | Push local auth config to Base44 | [auth-push.md](references/auth-push.md) |
+| `base44 auth password-login <enable\|disable>` | Enable or disable username & password authentication | [auth-password-login.md](references/auth-password-login.md) |
+
+**Workflow:**
+```bash
+# Pull current auth config from Base44
+npx base44 auth pull
+
+# Enable or disable password login locally
+npx base44 auth password-login enable
+
+# Push changes back to Base44
+npx base44 auth push -y
+```
+
 ### Secrets Management
 
 Manage project secrets (environment variables stored securely in Base44). These commands are hidden from `--help` output but are fully functional.
@@ -486,7 +508,7 @@ npx base44 site deploy -y
 ### Opening the Dashboard
 ```bash
 # Open app dashboard in browser
-npx base44 dashboard
+npx base44 dashboard open
 ```
 
 ## Authentication
