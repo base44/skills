@@ -20,5 +20,8 @@ Thumbs.db
 *.swp
 *.swo
 
+# Superset
+.superset/
+
 # Node (if applicable)
 node_modules/

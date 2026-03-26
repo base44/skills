@@ -314,7 +314,7 @@ After processing all changed commands, update the SKILL.md of each affected skil
 - Keep the existing structure and formatting of each skill
 - Do NOT change the frontmatter description unless explicitly asked
 
-### Step 7: Update CLI_VERSION
+### Step 7: Update CLI_VERSION and Skill Frontmatter
 
 After successfully updating all changed commands:
 
@@ -324,7 +324,9 @@ After successfully updating all changed commands:
    git describe --tags --always
    ```
 
-2. Update `CLI_VERSION` in the skills repository root with the new version
+2. Update `CLI_VERSION` in the skills repository root with the new version (e.g., `v0.0.47`)
+
+3. Update the `sourcePackage.version` field in `skills/base44-cli/SKILL.md` frontmatter to match (without the `v` prefix, e.g., `0.0.47`). This allows the Base44 CLI to detect when installed skills are out of date.
 
 ### Step 8: Present Summary
 
@@ -351,6 +353,7 @@ After all updates, present a summary to the user:
 - references/entities-push.md (updated description)
 - SKILL.md (updated command table, added timeout note)
 - CLI_VERSION (v0.0.17 → v0.0.20)
+- skills/base44-cli/SKILL.md frontmatter sourcePackage.version (0.0.17 → 0.0.20)
 
 ### Breaking Changes (highlight prominently)
 - `create`: `-n, --name` option converted to positional argument
