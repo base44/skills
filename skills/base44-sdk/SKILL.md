@@ -273,7 +273,7 @@ while (true) {
 
 ### Use the REST API for data migrations
 
-For one-time backfills or large data operations, use the [REST API](references/rest-api.md) from a local script instead of a backend function.
+For one-time backfills or large data operations, use the Base44 REST API (`https://app.base44.com/api/apps/{appId}/entities/{EntityName}`) from a local script instead of a backend function.
 
 ## Common Patterns
 

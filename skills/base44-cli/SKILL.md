@@ -391,7 +391,7 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 | Command | Description |
 |---------|-------------|
-| `base44 logs [function-name]` | View function execution logs |
+| `base44 logs [options]` | View function execution logs |
 
 **Flags:**
 - `--function <name>` — Filter by function name (comma-separated for multiple)
@@ -405,6 +405,8 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 ```bash
 npx base44 logs --function my-function --level error --since 2024-03-01T00:00:00Z
 ```
+
+For detailed logs documentation, see the base44-troubleshooter skill.
 
 ## Quick Start
 

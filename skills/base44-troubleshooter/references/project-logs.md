@@ -15,7 +15,7 @@ npx base44 logs [options]
 | `--function <names>` | Filter by function name(s), comma-separated. If omitted, fetches logs for all project functions | No |
 | `--since <datetime>` | Show logs from this time (ISO format) | No |
 | `--until <datetime>` | Show logs until this time (ISO format) | No |
-| `--level <level>` | Filter by log level: `log`, `info`, `warn`, `error`, `debug` | No |
+| `--level <level>` | Filter by log level: `info`, `warning`, `error`, `debug` | No |
 | `-n, --limit <n>` | Number of results to return (1-1000, default: 50) | No |
 | `--order <order>` | Sort order: `asc` or `desc` (default: `desc`) | No |
 
