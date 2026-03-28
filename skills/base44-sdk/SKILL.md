@@ -200,6 +200,9 @@ const base44 = createClient({
 - Import data from file → `entities.importEntities()`
 - Realtime updates → `entities.EntityName.subscribe()`
 
+**Direct API access?**
+- REST API for migrations, backfills, debugging → See [rest-api.md](references/rest-api.md)
+
 **User management?**
 - Login/register/logout → `auth`
 - Get current user → `auth.me()`
