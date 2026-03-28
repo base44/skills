@@ -227,6 +227,54 @@ const base44 = createClient({
 - Track custom events → `analytics.track()`
 - Log page views/activity → `appLogs.logUserInApp()`
 
+## Backend Function Best Practices
+
+### Avoid scanning large collections
+
+Backend functions run in Deno with limited memory. Fetching large entity collections with `list()` may fail for collections with thousands of records.
+
+**Instead of scan-and-aggregate:**
+```javascript
+// ❌ Fragile — fails as collection grows
+const allUsages = await base44.entities.Usage.list("-created_date", 5000);
+const counts = {};
+for (const u of allUsages) { counts[u.user_id] = (counts[u.user_id] || 0) + 1; }
+```
+
+**Use incremental pre-computed stats:**
+```javascript
+// ✅ Update a stats record on each new event (via entity hook automation)
+const stats = await base44.entities.UserStats.filter({ user_id: userId }, null, 1);
+if (stats.length > 0) {
+  await base44.entities.UserStats.update(stats[0].id, { total: stats[0].total + 1 });
+}
+```
+
+### Use filter() with specific conditions
+
+`filter()` with targeted conditions returns smaller result sets and works reliably:
+```javascript
+// ✅ Small, targeted query
+const userStats = await base44.entities.UserStats.filter({ user_id: "U123" }, null, 1);
+```
+
+### Use pagination for large reads
+
+When you need to process many records, paginate with `skip`:
+```javascript
+let skip = 0;
+while (true) {
+  const batch = await base44.entities.Task.list("-created_date", 100, skip);
+  if (batch.length === 0) break;
+  // process batch
+  skip += 100;
+}
+```
+
+### Use the REST API for data migrations
+
+For one-time backfills or large data operations, use the [REST API](references/rest-api.md) from a local script instead of a backend function.
+
 ## Common Patterns
 
 ### Filter and Sort Data

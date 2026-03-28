@@ -387,6 +387,25 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
 
+### Logs
+
+| Command | Description |
+|---------|-------------|
+| `base44 logs [function-name]` | View function execution logs |
+
+**Flags:**
+- `--function <name>` — Filter by function name (comma-separated for multiple)
+- `--level <info|warning|error|debug>` — Filter by log level
+- `--since <ISO-datetime>` — Show logs after this time
+- `--until <ISO-datetime>` — Show logs before this time
+- `--limit <N>` — Results per page (1-1000)
+- `--order <asc|desc>` — Sort order (default: desc)
+
+**Example:**
+```bash
+npx base44 logs --function my-function --level error --since 2024-03-01T00:00:00Z
+```
+
 ## Quick Start
 
 1. Install the CLI in your project:
