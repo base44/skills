@@ -326,7 +326,14 @@ After successfully updating all changed commands:
 
 2. Update `CLI_VERSION` in the skills repository root with the new version (e.g., `v0.0.47`)
 
-3. Update the `sourcePackage` field in `skills/base44-cli/SKILL.md` frontmatter. Set `name` to `base44` (the npm package being synced) and `version` to the new version without the `v` prefix (e.g., `0.0.47`). This allows the Base44 CLI to detect when installed skills are out of date.
+3. Update `metadata.sourcePackage` in `skills/base44-cli/SKILL.md` frontmatter. Set `name` to `base44` (the npm package being synced) and `version` to the new version without the `v` prefix (e.g., `0.0.47`). Example:
+   ```yaml
+   metadata:
+     sourcePackage:
+       name: base44
+       version: 0.0.47
+   ```
+   This allows the Base44 CLI to detect when installed skills are out of date.
 
 ### Step 8: Present Summary
 
@@ -353,7 +360,7 @@ After all updates, present a summary to the user:
 - references/entities-push.md (updated description)
 - SKILL.md (updated command table, added timeout note)
 - CLI_VERSION (v0.0.17 → v0.0.20)
-- skills/base44-cli/SKILL.md frontmatter sourcePackage.version (0.0.17 → 0.0.20)
+- skills/base44-cli/SKILL.md frontmatter metadata.sourcePackage.version (0.0.17 → 0.0.20)
 
 ### Breaking Changes (highlight prominently)
 - `create`: `-n, --name` option converted to positional argument
