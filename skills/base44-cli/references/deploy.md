@@ -22,7 +22,8 @@ The command automatically detects and deploys:
 2. **Functions** - All functions in `base44/functions/`
 3. **Agents** - All agent configurations in `base44/agents/`
 4. **Connectors** - All connector configurations in `base44/connectors/`
-5. **Site** - Built files from `site.outputDirectory` (if configured)
+5. **Auth Config** - Authentication settings from `base44/auth/` (if present)
+6. **Site** - Built files from `site.outputDirectory` (if configured)
 
 ## Examples
 
@@ -57,6 +58,7 @@ npx base44 deploy -y
    - Deploys functions
    - Pushes agent configurations
    - Pushes connector configurations
+   - Pushes auth configuration
    - Uploads site files
 6. Handles OAuth authorization for any new connectors that require it
 7. Displays the dashboard URL and app URL (if site was deployed)
@@ -95,4 +97,5 @@ After successful deployment:
 | `base44 functions deploy` | Deploy only functions |
 | `base44 agents push` | Push only agents |
 | `base44 connectors push` | Push only connectors |
+| `base44 auth push` | Push only auth config |
 | `base44 site deploy` | Deploy only the site |

@@ -204,7 +204,7 @@ npx base44 <command>
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 deploy` | Deploy all resources (entities, functions, agents, connectors, and site) | [deploy.md](references/deploy.md) |
+| `base44 deploy` | Deploy all resources (entities, functions, agents, connectors, auth config, and site) | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 
@@ -350,6 +350,18 @@ Automations are triggers defined in the `automations` array inside `function.jso
 
 For full schemas and examples, see [automations.md](references/automations.md).
 
+### Auth Configuration
+
+Manage your app's authentication settings (e.g., username & password login). Auth config is stored in `base44/auth/` and synced with Base44 via `auth push`/`auth pull`.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 auth password-login <enable\|disable>` | Enable or disable username & password authentication | [auth-password-login.md](references/auth-password-login.md) |
+| `base44 auth pull` | Pull auth config from Base44 to local files | [auth-pull.md](references/auth-pull.md) |
+| `base44 auth push` | Push local auth config to Base44 | [auth-push.md](references/auth-push.md) |
+
+**Note:** Auth config is also deployed as part of `base44 deploy`.
+
 ### Secrets Management
 
 Manage project secrets (environment variables stored securely in Base44). These commands are hidden from `--help` output but are fully functional.
@@ -419,6 +431,8 @@ Or deploy individual resources:
 - `npx base44 agents push` - Push agents only
 - `npx base44 connectors pull` - Pull connectors from Base44
 - `npx base44 connectors push` - Push connectors only
+- `npx base44 auth pull` - Pull auth config from Base44
+- `npx base44 auth push` - Push auth config only
 - `npx base44 site deploy -y` - Deploy site only
 
 ## Common Workflows
