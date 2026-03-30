@@ -1,6 +1,10 @@
 ---
 name: base44-cli
 description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, ai agents), initialization and actions (resource creation, deployment). This skill is the place for learning about how to configure resources. When you plan or implement a feature, you must learn this skill"
+metadata:
+  sourcePackage:
+    name: base44
+    version: 0.0.50
 ---
 
 # Base44 CLI
