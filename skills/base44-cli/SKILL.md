@@ -139,6 +139,7 @@ my-app/
 {
   "name": "My App",                    // Required: project name
   "description": "App description",    // Optional: project description
+  "visibility": "private",             // Optional: "public" | "private" | "workspace"
   "entitiesDir": "./entities",         // Optional: default "entities"
   "functionsDir": "./functions",       // Optional: default "functions"
   "agentsDir": "./agents",             // Optional: default "agents"
@@ -158,6 +159,7 @@ my-app/
 |----------|-------------|---------|
 | `name` | Project name (required) | - |
 | `description` | Project description | - |
+| `visibility` | App visibility: `"public"` (no login required), `"private"` (owner only), `"workspace"` (workspace members only, Business tier) | omitted (no change on deploy) |
 | `entitiesDir` | Directory for entity schemas | `"entities"` |
 | `functionsDir` | Directory for backend functions | `"functions"` |
 | `agentsDir` | Directory for agent configs | `"agents"` |
