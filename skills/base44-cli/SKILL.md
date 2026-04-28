@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.0.50
+    version: 0.0.51
 ---
 
 # Base44 CLI
@@ -210,6 +210,12 @@ npx base44 <command>
 |---------|-------------|-----------|
 | `base44 deploy` | Deploy all resources (entities, functions, agents, connectors, auth config, and site) | [deploy.md](references/deploy.md) |
 
+### Local Development
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 dev` | Start the local development server | [dev.md](references/dev.md) |
+
 ### Entity Management
 
 | Action / Command       | Description                                 | Reference                                           |
@@ -361,6 +367,7 @@ Manage your app's authentication settings (e.g., username & password login). Aut
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 auth password-login <enable\|disable>` | Enable or disable username & password authentication | [auth-password-login.md](references/auth-password-login.md) |
+| `base44 auth social-login <provider> <action>` | Enable or disable social login providers (google, microsoft, facebook, apple) | [auth-social-login.md](references/auth-social-login.md) |
 | `base44 auth pull` | Pull auth config from Base44 to local files | [auth-pull.md](references/auth-pull.md) |
 | `base44 auth push` | Push local auth config to Base44 | [auth-push.md](references/auth-push.md) |
 
