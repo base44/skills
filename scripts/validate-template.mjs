@@ -217,29 +217,6 @@ async function validateComponentFrontmatter(pluginDir, pluginName) {
   }
 }
 
-async function validateCodexManifest(pluginDir) {
-  const manifestPath = path.join(pluginDir, ".codex-plugin", "plugin.json");
-  const pluginManifest = await readJsonFile(manifestPath, "Codex plugin manifest");
-  if (!pluginManifest) {
-    return;
-  }
-
-  const pluginName = pluginManifest.name ?? "<unknown>";
-
-  if (typeof pluginManifest.name !== "string" || !pluginNamePattern.test(pluginManifest.name)) {
-    addError(
-      '"name" in .codex-plugin/plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.'
-    );
-  }
-
-  if (typeof pluginManifest.skills !== "string") {
-    addError(`${pluginName}: field "skills" in .codex-plugin/plugin.json must be a string.`);
-    return;
-  }
-
-  await validateReferencedPath(pluginDir, "skills", pluginManifest.skills, pluginName);
-}
-
 async function main() {
   const pluginDir = repoRoot;
   const manifestPath = path.join(pluginDir, ".cursor-plugin", "plugin.json");
@@ -264,8 +241,6 @@ async function main() {
       await validateReferencedPath(pluginDir, field, value, pluginName);
     }
   }
-
-  await validateCodexManifest(pluginDir);
 
   await validateComponentFrontmatter(pluginDir, pluginName);
 
