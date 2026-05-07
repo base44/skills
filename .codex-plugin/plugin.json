@@ -16,7 +16,7 @@
     "shortDescription": "Build and deploy Base44 full-stack apps from Codex",
     "longDescription": "Build and deploy Base44 full-stack apps with Codex. Includes CLI project management, JavaScript/TypeScript SDK development, and production troubleshooting skills.",
     "developerName": "base44",
-    "category": "Engineering",
+    "category": "Coding",
     "capabilities": ["Read", "Write"],
     "websiteURL": "https://base44.com",
     "logo": "./assets/base44-logo.png"

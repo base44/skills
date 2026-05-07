@@ -4,7 +4,7 @@
 
 Install these skills so your coding agents can assist with [Base44](https://docs.base44.com/) development.
 
-Supports [many AI coding agents](https://github.com/vercel-labs/skills#available-agents), including Cursor, Claude Code, Codex, and OpenCode.
+Supports [many AI coding agents](https://github.com/vercel-labs/skills#available-agents), including Cursor, Claude Code, Codex CLI, and OpenCode.
 
 ## Installation
 
@@ -22,6 +22,16 @@ Or install directly:
 ```bash
 claude plugin install base44@base44-skills
 ```
+
+### Codex CLI
+
+In a terminal, register the marketplace:
+
+```bash
+codex plugin marketplace add base44/skills
+```
+
+Then in Codex CLI, run `/plugins`, select **Base44**, and choose **Install Plugin**.
 
 ### Other Agents (via skills CLI)
 
