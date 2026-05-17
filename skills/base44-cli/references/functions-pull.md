@@ -22,8 +22,9 @@ npx base44 functions pull [name]
 
 1. Fetches deployed functions from Base44
 2. Filters to the specified function if `[name]` is provided
-3. Writes function files to the local `functions/` directory (configured in `base44/config.jsonc`)
-4. Reports each file as `written` (new/updated) or `unchanged`
+3. Skips functions managed by plugins (source type "plugin") — these are reported as `plugin-owned, skipped`
+4. Writes function files to the local `functions/` directory (configured in `base44/config.jsonc`)
+5. Reports each file as `written` (new/updated), `unchanged`, or `plugin-owned, skipped`
 
 ## Examples
 
@@ -43,8 +44,9 @@ $ npx base44 functions pull
 ✓ Function files written successfully
 ✓ process-order              written
 ◆ send-notification          unchanged
+◆ plugin-func                plugin-owned, skipped
 
-✓ Pulled 2 functions to base44/functions
+✓ Pulled 2 functions to base44/functions; skipped 1 plugin-owned
 ```
 
 Single function:
@@ -65,10 +67,22 @@ $ npx base44 functions pull nonexistent
 ✓ Function "nonexistent" not found on remote
 ```
 
+If the specified function is plugin-owned:
+```bash
+$ npx base44 functions pull plugin-func
+✓ Function "plugin-func" is managed by a plugin and was not pulled into base44/functions
+```
+
 If no functions exist on remote:
 ```bash
 $ npx base44 functions pull
 ✓ No functions found on remote
+```
+
+If all remote functions are plugin-owned:
+```bash
+$ npx base44 functions pull
+✓ Skipped 2 plugin-owned functions; no project-owned functions to pull
 ```
 
 ## Notes

@@ -79,6 +79,8 @@ $ npx base44 functions deploy --force
 
 ## Error Handling
 
+If any function deployment fails, the command exits with code 1 and shows a summary. The `--force` prune step is skipped when there are failures.
+
 If no functions are found in your project:
 ```bash
 $ npx base44 functions deploy
