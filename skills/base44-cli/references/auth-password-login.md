@@ -12,7 +12,7 @@ npx base44 auth password-login <enable|disable>
 
 | Argument | Description | Required |
 |----------|-------------|----------|
-| `<enable\|disable>` | Enable or disable password authentication | Yes |
+| `<action>` | `enable` or `disable` password authentication | Yes |
 
 ## Examples
 

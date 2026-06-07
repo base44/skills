@@ -75,6 +75,7 @@ $ npx base44 functions pull
 
 - Files are written to the `functionsDir` configured in `base44/config.jsonc` (defaults to `functions/`)
 - Files already matching remote content are skipped (reported as `unchanged`)
+- Plugin-owned functions are automatically skipped and reported as `plugin-owned, skipped` — they are managed by the plugin and cannot be pulled
 - This overwrites existing local function files with remote versions — commit local changes first
 - Use `npx base44 functions deploy` to push local changes back to Base44
 - Use `npx base44 functions list` to see what functions are deployed on remote

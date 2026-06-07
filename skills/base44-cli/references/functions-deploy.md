@@ -110,6 +110,7 @@ error: Function not found in project: nonexistent
 - This command deploys the function code and configuration
 - Changes are applied to your Base44 project immediately
 - Deploy results per function: `deployed`, `unchanged`, or `error`
+- If any function fails to deploy, the command exits with code 1 after showing the full summary
 - `--force` cannot be combined with specific function names
 - Make sure to test functions in a development environment first
 - Function definitions are located in the `base44/functions/` directory
