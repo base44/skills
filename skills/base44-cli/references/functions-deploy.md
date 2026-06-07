@@ -97,6 +97,17 @@ $ npx base44 functions deploy nonexistent
 error: Function not found in project: nonexistent
 ```
 
+If any function fails to deploy, a summary is printed and the command exits with code 1 (no pruning happens even with `--force`):
+```bash
+$ npx base44 functions deploy
+◇ [1/2] Deploying process-order...
+✓ process-order               deployed
+◇ [2/2] Deploying bad-function...
+✗ bad-function                error: <reason>
+
+1 deployed, 1 error
+```
+
 ## Use Cases
 
 - After creating new functions in your project

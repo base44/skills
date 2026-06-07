@@ -21,9 +21,10 @@ npx base44 functions pull [name]
 ## What It Does
 
 1. Fetches deployed functions from Base44
-2. Filters to the specified function if `[name]` is provided
-3. Writes function files to the local `functions/` directory (configured in `base44/config.jsonc`)
-4. Reports each file as `written` (new/updated) or `unchanged`
+2. Skips plugin-owned functions (they are managed by plugins, not project files)
+3. Filters to the specified function if `[name]` is provided
+4. Writes function files to the local `functions/` directory (configured in `base44/config.jsonc`)
+5. Reports each file as `written` (new/updated), `unchanged`, or `plugin-owned, skipped`
 
 ## Examples
 
@@ -43,8 +44,9 @@ $ npx base44 functions pull
 ✓ Function files written successfully
 ✓ process-order              written
 ◆ send-notification          unchanged
+◆ plugin-func                plugin-owned, skipped
 
-✓ Pulled 2 functions to base44/functions
+✓ Pulled 2 functions to base44/functions; skipped 1 plugin-owned
 ```
 
 Single function:
@@ -65,7 +67,13 @@ $ npx base44 functions pull nonexistent
 ✓ Function "nonexistent" not found on remote
 ```
 
-If no functions exist on remote:
+If the specified function is plugin-owned:
+```bash
+$ npx base44 functions pull plugin-func
+✓ Function "plugin-func" is managed by a plugin and was not pulled into base44/functions
+```
+
+If no functions exist on remote (or all are plugin-owned):
 ```bash
 $ npx base44 functions pull
 ✓ No functions found on remote
@@ -75,6 +83,7 @@ $ npx base44 functions pull
 
 - Files are written to the `functionsDir` configured in `base44/config.jsonc` (defaults to `functions/`)
 - Files already matching remote content are skipped (reported as `unchanged`)
+- Plugin-owned functions are never written locally — they are managed by plugins
 - This overwrites existing local function files with remote versions — commit local changes first
 - Use `npx base44 functions deploy` to push local changes back to Base44
 - Use `npx base44 functions list` to see what functions are deployed on remote

@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.0.50
+    version: 0.0.53
 ---
 
 # Base44 CLI
@@ -204,6 +204,12 @@ npx base44 <command>
 | `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 
+### Development
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 dev` | Start the local development server (auto-creates `.env.local` on first run) | [dev.md](references/dev.md) |
+
 ### Deployment
 
 | Command | Description | Reference |
@@ -361,10 +367,12 @@ Manage your app's authentication settings (e.g., username & password login). Aut
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 auth password-login <enable\|disable>` | Enable or disable username & password authentication | [auth-password-login.md](references/auth-password-login.md) |
+| `base44 auth social-login <provider> <enable\|disable>` | Enable or disable social login (google, microsoft, facebook, apple) | [auth-social-login.md](references/auth-social-login.md) |
+| `base44 auth sso <enable\|disable>` | Configure SSO identity provider (google, microsoft, github, okta, custom) | [auth-sso.md](references/auth-sso.md) |
 | `base44 auth pull` | Pull auth config from Base44 to local files | [auth-pull.md](references/auth-pull.md) |
 | `base44 auth push` | Push local auth config to Base44 | [auth-push.md](references/auth-push.md) |
 
-**Note:** Auth config is also deployed as part of `base44 deploy`.
+**Note:** Auth config is also deployed as part of `base44 deploy`. Social login and SSO are mutually exclusive — enabling one disables the other in the local auth config.
 
 ### Secrets Management
 
