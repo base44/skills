@@ -200,6 +200,7 @@ npx base44 <command>
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
+| `base44 scaffold` | Scaffold a local project for an existing Base44 app (by app ID) | [scaffold.md](references/scaffold.md) |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
 | `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
