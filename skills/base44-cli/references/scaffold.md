@@ -51,6 +51,23 @@ npx base44 scaffold --app-id app_123 --no-skills
 3. Registers the project files against the existing app and writes `base44/.app.jsonc` with the app ID
 4. Installs AI agent skills (unless `--no-skills` is passed)
 
+## Provisioning Handoff (Stripe Projects / projects.dev)
+
+`scaffold` is the command to run after a Base44 app is provisioned through a Stripe Projects / projects.dev flow. **Use `scaffold`, not `create`** — the app already exists, so `create` would create a duplicate.
+
+When Base44 is provisioned that way, the credentials are injected into the environment under a `BASE44_PROJECTS_` prefix (e.g. `BASE44_PROJECTS_BASE44_APP_ID`, `BASE44_PROJECTS_BASE44_ACCESS_TOKEN`, `BASE44_PROJECTS_BASE44_REFRESH_TOKEN`). The CLI automatically normalizes these to the bare names it uses (`BASE44_APP_ID`, `BASE44_ACCESS_TOKEN`, …). As a result:
+
+- **App ID** is resolved from `BASE44_APP_ID` automatically — no `--app-id` flag needed.
+- **Authentication** is seeded from `BASE44_ACCESS_TOKEN` / `BASE44_REFRESH_TOKEN` — no interactive `npx base44 login` needed.
+
+So the entire post-provisioning step is just:
+
+```bash
+npx base44 scaffold
+```
+
+Run it from the directory where you want the project files. After scaffolding, push resources with `npx base44 deploy`.
+
 ## Notes
 
 - **Template:** Always uses the `backend-only` template (Base44 configuration only — no frontend is generated).
