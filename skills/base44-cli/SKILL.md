@@ -17,13 +17,16 @@ This skill activates on ANY mention of "base44" or when a `base44/` folder exist
 
 **Your first action MUST be:**
 1. Check if `base44/config.jsonc` exists in the current directory
-2. If **NO** (new project scenario):
-   - This skill (base44-cli) handles the request
-   - Guide user through project initialization
-   - Do NOT activate base44-sdk yet
-3. If **YES** (existing project scenario):
+2. If **YES** (existing project scenario):
    - Transfer to base44-sdk skill for implementation
    - This skill only handles CLI commands (login, deploy, entities push)
+3. If **NO**, decide between two initialization paths:
+   - **Provisioned app** — the Base44 app already exists because it was just provisioned through a Stripe Projects / projects.dev flow, OR `BASE44_APP_ID` (or `BASE44_PROJECTS_BASE44_APP_ID`) is present in the environment or a `.env`/`.env.local` file:
+     - Run `npx base44 scaffold` to set up local files for that **existing** app
+     - **DO NOT run `npx base44 create`** — that creates a second, duplicate app. See [scaffold.md](references/scaffold.md).
+   - **New project** — no app exists yet and none was provisioned:
+     - This skill (base44-cli) handles the request; guide the user through `npx base44 create`
+     - Do NOT activate base44-sdk yet
 
 ## Critical: Local Installation Only
 
@@ -59,6 +62,8 @@ RIGHT: `npx base44 login`
 
 **This check is mandatory and must happen before executing any other Base44 CLI commands.**
 
+**Provisioned via Stripe Projects / projects.dev?** When the app was provisioned through that flow, the CLI seeds authentication from the `BASE44_ACCESS_TOKEN` / `BASE44_REFRESH_TOKEN` environment variables it injects (the `BASE44_PROJECTS_*`-prefixed names are normalized automatically). In that case `npx base44 whoami` already succeeds and you do **not** need an interactive `npx base44 login`.
+
 ## Overview
 
 The Base44 CLI provides command-line tools for authentication, creating projects, managing entities, and deploying Base44 applications. It is framework-agnostic and works with popular frontend frameworks like Vite, Next.js, and Create React App, Svelte, Vue, and more.
@@ -68,6 +73,7 @@ The Base44 CLI provides command-line tools for authentication, creating projects
 **Use base44-cli when:**
 - Creating a **NEW** Base44 project from scratch
 - Initializing a project in an empty directory
+- Setting up local files for an **existing** app that was provisioned externally (e.g., through a Stripe Projects / projects.dev flow) → use `scaffold`
 - Directory is missing `base44/config.jsonc`
 - User mentions: "create a new project", "initialize project", "setup a project", "start a new Base44 app"
 - Deploying, pushing entities, or authenticating via CLI
@@ -88,10 +94,12 @@ The Base44 CLI provides command-line tools for authentication, creating projects
 **State Check Logic:**
 Before selecting a skill, check:
 - IF (user mentions "create/build app" OR "make a project"):
-  - IF (directory is empty OR no `base44/config.jsonc` exists):
-    → Use **base44-cli** (project initialization needed)
-  - ELSE:
+  - IF (`base44/config.jsonc` exists):
     → Use **base44-sdk** (project exists, build features)
+  - ELSE IF (app was provisioned externally — `BASE44_APP_ID`/`BASE44_PROJECTS_BASE44_APP_ID` set, or a Stripe Projects / projects.dev flow just ran):
+    → Use **base44-cli** → `npx base44 scaffold` (set up local files for the existing app; do NOT `create`)
+  - ELSE:
+    → Use **base44-cli** → `npx base44 create` (new project initialization needed)
 
 ## Project Structure
 
@@ -200,6 +208,7 @@ npx base44 <command>
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
+| `base44 scaffold` | Scaffold a local project for an existing Base44 app (by app ID) | [scaffold.md](references/scaffold.md) |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
 | `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
