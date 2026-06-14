@@ -112,32 +112,25 @@ curl -X POST "https://<app-domain>/functions/<function-name>" \
 
 Backend functions run on Deno. Must export using `Deno.serve()`.
 
-### Required Directory Structure
+### Function Directory Structure
 
-Each function must be in its own subdirectory under `base44/functions/` with a configuration file:
+A backend function is a folder under `base44/functions/` with an `entry.ts` or `entry.js` file:
 
 ```
 base44/
   functions/
-    process-order/          # kebab-case directory name
-      function.jsonc        # required configuration
-      index.ts              # entry point
+    process-order/
+      entry.ts
 ```
 
-**function.jsonc:**
-```jsonc
-{
-  "name": "process-order",
-  "entry": "index.ts"
-}
-```
+The function name is the path from `base44/functions/` to the folder containing `entry.ts`. For example, `base44/functions/process-order/entry.ts` deploys as `process-order`, and `base44/functions/orders/process/entry.ts` deploys as `orders/process`.
 
 For complete setup and deployment instructions, see [functions-create.md](../../base44-cli/references/functions-create.md) in base44-cli.
 
 ### Basic Structure
 
 ```javascript
-// base44/functions/process-order/index.ts
+// base44/functions/process-order/entry.ts
 import { createClientFromRequest } from "npm:@base44/sdk";
 
 Deno.serve(async (req) => {
@@ -228,7 +221,7 @@ Deno.serve(async (req) => {
 ## Setup Requirements
 
 1. Enable Backend Functions in app settings (requires appropriate plan)
-2. Create function files in `/functions` folder
+2. Create function files in `base44/functions/`
 3. Configure secrets via app dashboard for API keys
 
 ## Authentication Modes
