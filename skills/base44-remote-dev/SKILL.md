@@ -7,7 +7,8 @@ description: >-
   REST surface with a Base44 CLI token (Section 10). Covers connecting/
   authenticating, the available sandbox tools (run_command, read_file,
   write_file, edit_file, grep, list_directory, get_app_preview_url,
-  get_app_status, list_user_apps), the edit→preview→verify loop, how changes
+  get_app_status, list_user_apps, and the connector tools list_connectors /
+  initiate_connector_connection), the edit→preview→verify loop, how changes
   persist, builder/external-agent concurrency, the in-editor "Send to Coding
   Agent" button + onboarding README URLs, and tips like reading the Vite
   dev-server logs. Triggers on "develop my Base44 app remotely", "connect
@@ -284,3 +285,38 @@ https://app.base44.com/api/sandbox/<APP_ID>/local-agent/readme.md
 Everything else in this skill — the edit→preview→verify loop (Section 5), persistence
 (Section 6), concurrency (Section 7), and guardrails (Section 8) — applies identically; only the
 transport and auth differ.
+
+---
+
+## 11. Connectors (OAuth integrations)
+
+<!--
+  LOCAL ADDITION (not yet in the upstream base44-dev/apper SKILL.md). Documents the
+  MCP connector tools shipped in that PR (backend/app/mcp/connector_tools.py). Remove
+  this note and reconcile when the upstream skill documents these tools.
+-->
+
+Beyond the sandbox file/shell tools, the Base44 MCP server exposes two tools for managing a
+third-party OAuth connector (Google Calendar, Gmail, Slack, …) on an app. They don't touch the
+sandbox filesystem — they operate on the app's connector state directly. Both take `appId`.
+
+| Tool | Scope | Purpose |
+|---|---|---|
+| `list_connectors` | `apps:read` | List the app's connectors. With no `integrationTypes`, returns the full catalog (name, description, connected?, and — if connected — status and granted scopes). Pass `integrationTypes` for detail on specific ones. |
+| `initiate_connector_connection` | `apps:write` | Connect (or re-scope) a connector. Inputs: `appId`, `integrationType`, `scopes`, optional `connectionConfig`. |
+
+Two semantics to get right:
+
+- **Declarative scopes (replace, not merge).** `initiate_connector_connection` sets the connector
+  to **exactly** the `scopes` you pass. Omitted scopes are removed and the user is re-prompted to
+  consent. **Always call `list_connectors` first**, then pass the complete desired set (existing
+  scopes you want to keep **plus** any new ones).
+- **OAuth needs a human.** The tool returns either `already_authorized: true` (nothing to do) or a
+  `redirect_url` the **user** must open in a browser to sign in and consent — you can't complete it
+  yourself. After they finish, call `list_connectors` again to verify and read the **granted**
+  scopes (a provider may grant fewer than requested).
+
+These need only `apps:read` / `apps:write` — **not** `sandbox:write`. Over the HTTP/CLI surface
+(Section 10), the equivalent is the projectless `base44 connectors` commands
+(`list-available`, `initiate --integration-type <t> --scopes <s...> --app-id <id>`, `pull`), which
+print the same authorization URL.
