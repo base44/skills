@@ -1,6 +1,6 @@
 ---
 name: base44-sandbox
-description: "Develop a Base44 app remotely inside Base44's cloud sandbox using your own agent — no local checkout and no CLI. The implementation is remote: writing a file into the sandbox is what ships it (the platform builds and deploys from there). This skill is the place for learning what you can author in the sandbox today and how backend-function code is structured. Triggers on 'develop my Base44 app remotely', 'no local files', 'cloud sandbox', 'bring my own agent', or any work editing a Base44 app inside a sandbox."
+description: "Develop a Base44 app remotely inside Base44's cloud sandbox using your own agent — no local checkout. The implementation is remote: writing a backend-function file into the sandbox is what ships it (the platform builds and deploys from there), and OAuth connectors are set up against the remote app via MCP tools or the projectless `base44 connectors` CLI. This skill is the place for learning what you can author in the sandbox today, how backend-function code is structured, and how to connect a connector without a local filesystem. Triggers on 'develop my Base44 app remotely', 'no local files', 'cloud sandbox', 'connect a connector remotely', 'bring my own agent', or any work editing a Base44 app inside a sandbox."
 ---
 
 # Base44 in the Cloud Sandbox
@@ -11,9 +11,11 @@ For **how to connect** to the sandbox (MCP endpoint, the HTTP bridge, the `read_
 
 ## ⚡ The mental model: writing the file *is* the deploy
 
-You are working on a **remote** app, not a local checkout. There is **no Base44 CLI in this workflow** — `base44 deploy`, `base44 functions deploy`, `base44 ... push`, `base44 create`, etc. are local-project commands that do not apply and should not be run here.
+You are working on a **remote** app, not a local checkout. The project-level CLI workflow does **not** apply — never run `base44 deploy`, `base44 functions deploy`, `base44 ... push`, `base44 create`, or `base44 scaffold`. They assume a local project and a manual deploy step that does not exist here.
 
 Instead: **as soon as you write a backend-function file into the sandbox, the platform deploys it from there.** Your write is auto-committed (~5s debounce) and the function goes live. You do not run, and must not wait for, any deploy command.
+
+**One exception — connectors.** OAuth connectors aren't authored as files; they're set up against the remote app by its id, either with the MCP connector tools or with the dedicated, projectless `base44 connectors` commands (which take `--app-id` and need no local project). See [Connectors](#connectors-oauth-integrations) below.
 
 You *may* still use `run_command` for ordinary checks (e.g. `npm run build`, `npx tsc --noEmit`, `npm run lint`) and preview — that is verification, not deployment. See the edit→preview→verify loop in `base44-remote-dev`.
 
@@ -23,11 +25,11 @@ You *may* still use `run_command` for ordinary checks (e.g. `npm run build`, `np
 |----------|-----------------------|
 | **Backend functions** (`base44/functions/`) | ✅ Supported — write the files; they deploy from the sandbox. |
 | **Frontend code** (`src/…`) | ✅ Supported — edit normally; HMR/preview reflects it. Use the **`base44-sdk`** skill for SDK API usage. |
+| **Connectors** (OAuth integrations) | ✅ Supported — set up via the connect flow below (MCP tools or `base44 connectors`), **not** by writing files. |
 | **Entities** (`base44/entities/`) | 🚫 Not supported at the moment. |
-| **Connectors** (`base44/connectors/`) | 🚫 Not supported at the moment. |
 | **Agents** (`base44/agents/`) | 🚫 Not supported at the moment. |
 
-For entities, connectors, and agents, do not author or modify them through the sandbox for now.
+For entities and agents, do not author or modify them through the sandbox for now.
 
 ## Backend functions
 
@@ -66,9 +68,53 @@ Conventions:
 
 That's enough to author functions correctly. For deeper detail and more examples (service role, secrets, common mistakes), see the `base44-cli` skill's reference: [`functions-create.md`](../base44-cli/references/functions-create.md) — but **ignore its "Deploying Functions" / CLI sections**, which assume a local project and do not apply in the sandbox.
 
+## Connectors (OAuth integrations)
+
+Connectors (Google Calendar, Gmail, Slack, …) give your backend functions tokens to call third-party APIs. In remote-dev there are **no connector files to write** — you operate on the connector directly against the app by its id. Two surfaces, same backend and same behavior:
+
+> **Declarative scopes — read before you set.** Connecting a connector **replaces** its scope set with exactly the scopes you pass (it does not merge). Any scope you omit is removed and the user is re-prompted to consent. **Always list the connector's current scopes first and pass the complete desired set** (the ones you want to keep **plus** any new ones).
+
+> **OAuth needs a human.** Connecting returns an **authorization URL** the user must open in a browser to sign in and consent — you cannot complete it yourself. After they finish, re-list to confirm it's connected and to read the **granted** scopes (a provider may grant fewer than you requested).
+
+### Over MCP (`base44-remote-dev` transport)
+
+Two tools, both taking `appId`. Scopes: `list_connectors` needs `apps:read`; `initiate_connector_connection` needs `apps:write` (note: **not** `sandbox:write`).
+
+1. **`list_connectors`** — `{ appId, integrationTypes? }`. With no `integrationTypes`, returns the full catalog; each entry has the connector's name, description, whether it's connected, and (if connected) its status and granted scopes. Pass `integrationTypes` for full detail on specific connectors.
+2. **`initiate_connector_connection`** — `{ appId, integrationType, scopes, connectionConfig? }`. `scopes` is the **complete** desired set (see the declarative-scopes note). Returns either `already_authorized: true` (nothing to do) or a `redirect_url` for the user to open. After they sign in, call `list_connectors` again to verify.
+
+```
+On appId <APP_ID>: call list_connectors to read googlecalendar's current scopes,
+then initiate_connector_connection for googlecalendar with the full scope set
+(existing + the calendar.events scope I need). Give me the authorization URL.
+```
+
+### Over the CLI (projectless, `--app-id`)
+
+These `base44 connectors` subcommands work **without a local project** — they resolve the app id from `--app-id`, then `BASE44_APP_ID`, then a local `.app.jsonc`. No `config.jsonc` is required.
+
+```bash
+# 1. See available integration types for the app
+npx base44 connectors list-available --app-id <APP_ID>
+
+# 2. Initialize the connector and start OAuth (sets it to EXACTLY these scopes).
+#    Non-interactive: prints the authorization URL. Interactive: also opens the
+#    browser and polls until authorized.
+npx base44 connectors initiate --app-id <APP_ID> \
+  --integration-type googlecalendar \
+  --scopes https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar.events
+
+# 3. (optional) Fetch the resulting connector config
+npx base44 connectors pull --app-id <APP_ID> --dir ./connectors
+```
+
+`--scopes` accepts a space- or comma-separated list. As with MCP, the user must open the printed authorization URL to finish consent; afterwards `list-available` / `pull` reflects the connected state and granted scopes.
+
+> This is the **only** Base44 CLI use that belongs in remote-dev — it targets a remote app by id with no local project and no deploy step. It is not a contradiction of the "no CLI" rule above, which is about local-project/deploy commands.
+
 ## Workflow in the sandbox
 
 1. **Orient** — `list_directory` / `read_file` / `grep` to understand the app before changing anything.
-2. **Author** — create or edit backend-function files (and frontend code) following the conventions above.
+2. **Author** — create or edit backend-function files (and frontend code) following the conventions above; set up connectors via the connect flow.
 3. **Verify** — optionally `run_command` `npm run build` / `npx tsc --noEmit`, and use `get_app_preview_url` to eyeball changes (see `base44-remote-dev`).
 4. **Let it ship** — do **nothing** to deploy. Writing the file is the deploy; the auto-commit (~5s) persists and ships it. Pause a moment after your last edit before disconnecting so the commit lands.
