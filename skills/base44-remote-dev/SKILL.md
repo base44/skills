@@ -290,12 +290,6 @@ transport and auth differ.
 
 ## 11. Connectors (OAuth integrations)
 
-<!--
-  LOCAL ADDITION (not yet in the upstream base44-dev/apper SKILL.md). Documents the
-  MCP connector tools shipped in that PR (backend/app/mcp/connector_tools.py). Remove
-  this note and reconcile when the upstream skill documents these tools.
--->
-
 Beyond the sandbox file/shell tools, the Base44 MCP server exposes two tools for managing a
 third-party OAuth connector (Google Calendar, Gmail, Slack, …) on an app. They don't touch the
 sandbox filesystem — they operate on the app's connector state directly. Both take `appId`.
