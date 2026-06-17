@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.0.50
+    version: 0.0.56
 ---
 
 # Base44 CLI
@@ -370,6 +370,8 @@ Manage your app's authentication settings (e.g., username & password login). Aut
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 auth password-login <enable\|disable>` | Enable or disable username & password authentication | [auth-password-login.md](references/auth-password-login.md) |
+| `base44 auth social-login <provider> <enable\|disable>` | Enable or disable social login (google, microsoft, facebook, apple) | [auth-social-login.md](references/auth-social-login.md) |
+| `base44 auth sso <enable\|disable>` | Configure SSO identity provider (google, microsoft, github, okta, custom) | [auth-sso.md](references/auth-sso.md) |
 | `base44 auth pull` | Pull auth config from Base44 to local files | [auth-pull.md](references/auth-pull.md) |
 | `base44 auth push` | Push local auth config to Base44 | [auth-push.md](references/auth-push.md) |
 

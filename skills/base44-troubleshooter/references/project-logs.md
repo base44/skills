@@ -50,8 +50,10 @@ npx base44 logs --function myFunction --level error --limit 10
 ## Notes
 
 - **Authentication required.** You must be logged in before fetching logs.
-- **Project context required.** Must be run from the project directory (where `base44/.app.jsonc` exists).
+- **Project context optional.** Can be run from any directory:
+  - If run from a project directory (where `base44/.app.jsonc` exists), function names are read from the local `base44/config.jsonc`.
+  - If run outside a project directory, the CLI fetches function names from the remote app instead.
 - When multiple functions are specified, logs are merged and sorted by timestamp.
-- If `--function` is omitted, logs are fetched for **all functions** defined in `base44/config.jsonc`.
+- If `--function` is omitted, logs are fetched for **all functions** (local project functions if in a project dir, otherwise all remote functions).
 - The `--limit` applies after merging logs from all specified functions.
 - The `--since` and `--until` values are normalized to UTC if no timezone is provided (appends `Z`).

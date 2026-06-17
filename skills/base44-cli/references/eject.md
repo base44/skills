@@ -13,7 +13,7 @@ npx base44 eject [options]
 | Option | Description | Required |
 |--------|-------------|----------|
 | `-p, --path <path>` | Path where to write the project | No |
-| `--project-id <id>` | Project ID to eject (skips interactive selection) | No |
+| `--app-id <id>` | App ID to eject (skips interactive selection) — global flag, also accepted via `BASE44_APP_ID` env var | No |
 | `-y, --yes` | Skip confirmation prompts | No |
 
 ## What It Does
@@ -21,7 +21,7 @@ npx base44 eject [options]
 The `eject` command allows you to download the source code of a Base44 project that was created or managed through the platform:
 
 1. Lists all ejectable projects (projects with managed source code)
-2. Lets you select a project interactively (or specify via `--project-id`)
+2. Lets you select a project interactively (or specify via `--app-id`)
 3. Downloads the project code to a local directory
 4. Creates a new project as a copy (named "{Original Name} Copy")
 5. Links the downloaded code to the new project
@@ -37,8 +37,8 @@ npx base44 eject
 # Specify the output path
 npx base44 eject -p ./my-project
 
-# Non-interactive - specify project ID and skip confirmations
-npx base44 eject --project-id abc123 -p ./my-project -y
+# Non-interactive - specify app ID and skip confirmations
+npx base44 eject --app-id abc123 -p ./my-project -y
 ```
 
 ## Workflow

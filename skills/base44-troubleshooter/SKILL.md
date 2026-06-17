@@ -15,11 +15,7 @@ npx base44 whoami
 
 If not authenticated or token expired, instruct user to run `npx base44 login`.
 
-Must be run from the project directory (where `base44/.app.jsonc` exists):
-
-```bash
-cat base44/.app.jsonc
-```
+`base44 logs` works from any directory. If run from a project directory (where `base44/.app.jsonc` exists), it reads function names from local config. Otherwise it fetches them from the remote app.
 
 ## Available Commands
 

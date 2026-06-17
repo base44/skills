@@ -77,6 +77,13 @@ $ npx base44 functions deploy --force
 └ 2 deployed
 ```
 
+## Exit Codes
+
+- **Exit code 0**: All functions deployed successfully (or unchanged)
+- **Exit code 1**: One or more functions failed to deploy
+
+When any function fails, the command prints the full deploy summary and exits with code 1. This makes it safe to use in CI pipelines where a partial failure should block the build.
+
 ## Error Handling
 
 If no functions are found in your project:
