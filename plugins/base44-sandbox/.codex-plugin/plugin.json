@@ -1,0 +1,24 @@
+{
+  "name": "base44-sandbox",
+  "version": "1.0.0-beta.1",
+  "description": "Develop a Base44 app remotely in Base44's cloud sandbox; conventions only, no deploy/push.",
+  "author": {
+    "name": "base44",
+    "url": "https://base44.com"
+  },
+  "homepage": "https://docs.base44.com",
+  "repository": "https://github.com/base44/skills",
+  "license": "MIT",
+  "keywords": ["base44", "sandbox", "remote-dev", "mcp", "entities", "backend-functions"],
+  "skills": ["./skills/base44-remote-dev/", "./skills/base44-sandbox/", "./skills/base44-sdk/", "./skills/base44-troubleshooter/"],
+  "interface": {
+    "displayName": "Base44 Sandbox",
+    "shortDescription": "Develop Base44 apps remotely in the cloud sandbox from Codex",
+    "longDescription": "Develop a Base44 app inside Base44's cloud sandbox where the platform auto-builds, auto-commits, and auto-syncs. Includes conventions for entities, functions, agents, and connectors, SDK development, and production troubleshooting — without deploy/push commands.",
+    "developerName": "base44",
+    "category": "Coding",
+    "capabilities": ["Interactive", "Read", "Write"],
+    "websiteURL": "https://base44.com",
+    "logo": "./assets/base44-logo.png"
+  }
+}

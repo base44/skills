@@ -1,0 +1,286 @@
+---
+name: base44-remote-dev
+description: >-
+  Develop a Base44 app remotely from your own coding agent (Claude Code,
+  claude.ai, or any MCP client) by connecting it to the Base44 sandbox. Cloud
+  agents connect over MCP; local/filesystem agents can instead use the HTTP
+  REST surface with a Base44 CLI token (Section 10). Covers connecting/
+  authenticating, the available sandbox tools (run_command, read_file,
+  write_file, edit_file, grep, list_directory, get_app_preview_url,
+  get_app_status, list_user_apps), the edit→preview→verify loop, how changes
+  persist, builder/external-agent concurrency, the in-editor "Send to Coding
+  Agent" button + onboarding README URLs, and tips like reading the Vite
+  dev-server logs. Triggers on "develop my Base44 app remotely", "connect
+  Claude Code to Base44", "bring my own agent", "edit a Base44 app over MCP",
+  "Base44 sandbox MCP", or "Send to Coding Agent".
+---
+
+<!--
+  Vendored from base44-dev/apper PR #11608
+  (docs/features/bring-your-own-model/base44-remote-dev/SKILL.md).
+  Keep in sync with the upstream source if it changes.
+-->
+
+# Remotely develop a Base44 app over MCP
+
+Connect your own coding agent to a Base44 app's sandbox and develop in it
+directly — run commands, read and edit files, grep, list directories — while
+Base44 supplies the sandbox and you supply the agent and the LLM.
+
+This works with any MCP-capable client. The examples use Claude Code.
+
+> **Easiest start:** in the Base44 app editor, click **Send to Coding Agent**. For a local agent
+> it gives you a ready-to-paste prompt (which fetches a README and uses the HTTP API in Section 10);
+> for the web it gives a prompt to paste into a **claude.ai** chat (with the Base44 MCP connector)
+> plus an **Open Claude** button. The button is the discovery surface — the rest of this skill is
+> the reference.
+
+> **Two transports:** web agents use **claude.ai** with the Base44 **MCP connector** (Sections
+> 1–9) — note this is the regular claude.ai chat, *not* Claude Code on the web (`claude.ai/code`),
+> which runs in its own repo-backed sandbox. A local agent with filesystem access can instead call
+> the **HTTP REST surface** with a Base44 CLI token (Section 10) — same tools, same behavior, same
+> error codes; only the transport and auth differ.
+
+---
+
+## 1. Connect the MCP server
+
+The Base44 MCP endpoint is:
+
+```
+https://app.base44.com/mcp
+```
+
+Register it with Claude Code (run from any folder):
+
+```bash
+claude mcp add --transport http base44 https://app.base44.com/mcp
+```
+
+Add `--scope user` if you want it available in every project rather than just
+the current folder.
+
+`claude mcp add` only writes the config — it does not authenticate yet.
+
+## 2. Authenticate
+
+Start Claude Code and open the MCP menu:
+
+```bash
+claude
+```
+
+then, inside Claude Code:
+
+```
+/mcp
+```
+
+Select **base44** → **Authenticate**. A browser opens for the Base44 OAuth
+flow (PKCE) — log in and approve. When it succeeds, `/mcp` shows **base44** as
+connected and lists its tools.
+
+**Pure-CLI / headless clients** that can't open a browser use the OAuth device
+flow (`/oauth/device/code`) instead — request a code, approve it in a browser
+on another device, and the client receives the token.
+
+### Scopes
+
+| Tools | Required scope |
+|---|---|
+| `read_file`, `grep`, `list_directory`, `get_app_preview_url`, `get_app_status`, `list_user_apps` | `apps:read` (granted by default) |
+| `write_file`, `edit_file`, `run_command` | `sandbox:write` |
+
+`sandbox:write` is **not** granted by default — shell and file mutation
+require it explicitly. If the read tools work but the mutating ones return
+`NOT_AUTHORIZED`, your token is missing `sandbox:write`; reconnect and grant
+sandbox access (the device flow can request it explicitly).
+
+---
+
+## 3. Pick the app and orient yourself
+
+Every tool takes a required `appId`. Find your apps with `list_user_apps`, then
+pin the id in your requests so the agent passes it on every call.
+
+Start **read-only** to build a mental model before changing anything:
+
+```
+Using the base44 tools on appId <APP_ID>:
+1. list_directory on the app root (recursive, depth 2)
+2. read_file src/App.jsx and src/pages.config.js
+3. grep for the component I want to change
+Summarize the structure before editing.
+```
+
+> **Cold start:** if the app has no running sandbox, the first tool call
+> transparently brings one up from your last commit — it just takes a bit
+> longer. Subsequent calls are fast.
+
+---
+
+## 4. Make changes
+
+- **`edit_file`** — preferred for changing existing files. Provide exact
+  `old_text`→`new_text` edits. Each `old_text` must be unique in the file
+  unless you set `replace_all`. All edits in a call apply atomically
+  (all-or-nothing) and you get a unified diff back. Pass `dry_run: true` to
+  preview the diff without writing.
+- **`write_file`** — for creating new files. To overwrite an existing file you
+  must pass `overwrite: true` (it never silently clobbers).
+- **`run_command`** — run any bash command in the sandbox (build, install,
+  scaffolding, codemods). The working directory defaults to the app root; `cd`
+  does not persist across calls, so use the `cwd` parameter or chain commands
+  (`cd sub && cmd`). Timeout defaults to 120s (max 600s); output is capped at
+  ~1 MB.
+
+Example:
+
+```
+On appId <APP_ID>, use edit_file to change the homepage heading in
+src/pages/Home.jsx from "Welcome" to "Welcome back". Show me the diff first
+with dry_run, then apply it.
+```
+
+---
+
+## 5. Preview and verify (the edit → check loop)
+
+There is no live log-streaming tool, but you can close the feedback loop:
+
+- **See it live:** `get_app_preview_url` brings up the dev server and returns
+  the preview URL. Vite HMR reflects your edits as you make them.
+- **Build status:** `get_app_status` returns `ready` / `processing` / `error`.
+- **Surface build/type/lint errors on demand** with `run_command`:
+  ```bash
+  npm run build       # bundler/compile errors
+  npx tsc --noEmit    # type errors
+  npm run lint        # lint errors
+  ```
+- **Read the dev-server (Vite) logs** — the managed dev server writes to
+  `/tmp/vite.log`. Tail it via `run_command` to see HMR/compile errors:
+  ```bash
+  tail -c 32000 /tmp/vite.log
+  ```
+  (This is outside the app tree, so it's only reachable through `run_command`,
+  not the file tools — and therefore needs `sandbox:write`.)
+
+A solid loop: `edit_file` → `npm run build` (or tail `/tmp/vite.log`) → fix any
+errors → `get_app_preview_url` to eyeball it.
+
+> **Browser-runtime errors** (a component that compiles but throws on render,
+> a failing client API call) appear in the browser console, not in
+> `/tmp/vite.log`. Open the preview URL to catch those.
+
+---
+
+## 6. How your changes persist
+
+You don't need to "save." Every mutating call schedules a **debounced
+auto-commit** (~5 seconds): the change is committed and pushed to Base44's code
+storage, so it:
+
+- survives sandbox death (the sandbox is recreated from the last commit),
+- appears in the builder's Library/Data tabs,
+- keeps backend-function deploys consistent, and
+- is included when you publish the app.
+
+Practical implications:
+
+- There's a small loss window (~5s) — don't kill the session immediately after
+  the last edit; give it a moment to commit.
+- Edits to entities, agents, workflows, backend functions, and page routing are
+  synced into Base44 automatically after the commit. Plain page/component/CSS
+  edits live in git and need nothing extra.
+
+---
+
+## 7. Concurrency: you vs. the Base44 builder
+
+You and the in-app Base44 builder can't mutate the same app at once:
+
+- **While you're actively using the sandbox tools**, the Base44 builder chat is
+  blocked ("An external agent is currently working on this app"). Your session
+  is implicit — recent tool calls *are* the session; it ends after a short idle
+  period (~10 min).
+- **If the Base44 builder is mid-build**, your mutating tools return
+  `BUILDER_BUSY`. Poll `get_app_status` and retry once it's `ready`. Read-only
+  tools still work during a build.
+
+---
+
+## 8. Guardrails & limits
+
+- **Paths are confined to the app.** File tools operate only within the app
+  directory; traversal/absolute paths are rejected (`PATH_OUTSIDE_SANDBOX`).
+- **`.agents/` is off-limits to file tools** (`PROTECTED_PATH`) — it holds
+  agent-managed config and secrets (`.agents/.env`). Don't try to read or edit
+  it through the file tools.
+- **Rate limits** apply per app: reads ~120/min, mutations ~60/min, commands
+  ~30/min. If you hit `RATE_LIMITED`, slow down.
+- **`delete_file` isn't a dedicated tool** — delete via `run_command rm`.
+
+### Error codes you may see
+
+`NOT_AUTHORIZED` (missing scope/flag) · `APP_NOT_FOUND` (wrong id or no access)
+· `PATH_OUTSIDE_SANDBOX` · `PROTECTED_PATH` · `NOT_FOUND` · `BINARY_FILE` ·
+`EDIT_TEXT_NOT_FOUND` · `EDIT_TEXT_NOT_UNIQUE` (make `old_text` unique or use
+`replace_all`) · `OVERWRITE_NOT_ALLOWED` (pass `overwrite: true`) · `TIMEOUT` ·
+`OUTPUT_TRUNCATED` · `BUILDER_BUSY` · `RATE_LIMITED` · `BACKEND_ERROR`.
+
+Messages are written so the agent can self-correct — read them and adjust.
+
+---
+
+## 9. Tips & tricks
+
+- **Read before you write.** A quick `list_directory` + `read_file` (or `grep`)
+  pass costs little and dramatically improves edit accuracy.
+- **Use `dry_run` on `edit_file`** to confirm the diff before committing to a
+  change, especially for multi-edit calls.
+- **Prefer `edit_file` over `write_file`** for existing files — surgical edits
+  avoid clobbering and produce a reviewable diff.
+- **Read line ranges** with `read_file`'s `offset`/`limit` on large files
+  instead of pulling the whole thing into context.
+- **When something "looks broken," tail `/tmp/vite.log`** before guessing —
+  it usually names the exact file and line.
+- **Let it commit.** Pause a few seconds after your final edit so the auto-commit
+  lands before you disconnect or publish.
+- **One agent at a time.** The feature is designed for a single external agent
+  per app; don't run parallel sessions against the same app.
+
+---
+
+## 10. Local agents over HTTP (no MCP)
+
+If your agent runs on your machine (filesystem access), you can skip MCP and call the sandbox
+bridge over plain HTTP, authenticating with the Base44 CLI instead of OAuth.
+
+**Auth.** Log in with the Base44 CLI (`base44 login`) — the same credential used for
+`base44 functions deploy` — and send it as a bearer header: `Authorization: Bearer <token>`.
+
+**Endpoints.** `POST https://app.base44.com/api/apps/<APP_ID>/sandbox-bridge/<tool>`, where
+`<tool>` is one of `read_file`, `grep`, `list_directory`, `write_file`, `edit_file`,
+`run_command`, `release`. The JSON body is the same as the matching MCP tool minus `appId` (it's
+in the path). Success returns the tool's structured result; errors return
+`{"message", "extra_data": {"code": <CODE>}}` with the same codes as Section 8.
+
+```bash
+curl -X POST https://app.base44.com/api/apps/<APP_ID>/sandbox-bridge/read_file \
+  -H "Authorization: Bearer $BASE44_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"paths": ["src/App.jsx"]}'
+```
+
+**Hand an agent the full reference** for a specific app (instructions + endpoints, public, no
+auth needed to fetch):
+
+```
+https://app.base44.com/api/sandbox/<APP_ID>/local-agent/readme.md
+```
+
+(The cloud/MCP equivalent is `.../api/sandbox/<APP_ID>/claude-web/readme.md`.)
+
+Everything else in this skill — the edit→preview→verify loop (Section 5), persistence
+(Section 6), concurrency (Section 7), and guardrails (Section 8) — applies identically; only the
+transport and auth differ.
