@@ -29,7 +29,7 @@ Logged in as: user@example.com
 - Verify you're logged in before running other commands
 - Check which account you're currently using
 - Confirm authentication is working properly
-- Useful in scripts or automation to verify credentials
+- Useful in scripts or CI checks to verify credentials
 
 ## Notes
 

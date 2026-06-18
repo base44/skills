@@ -34,7 +34,7 @@ For CI/CD or agent use:
 npx base44 link --create --name my-app
 ```
 
-**Link to an existing project:**
+**Link to an existing app:**
 ```bash
 npx base44 link --app-id <app-id>
 ```
@@ -66,7 +66,7 @@ npx base44 link --app-id abc123
 2. Verifies no `.app.jsonc` exists (project not already linked)
 3. Either:
    - Creates a new Base44 app in the cloud (with `--create`), OR
-   - Links to an existing project (with `--app-id` or interactive selection)
+   - Links to an existing app (with `--app-id` or interactive selection)
 4. Writes the app ID to `base44/.app.jsonc`
 
 ## Requirements

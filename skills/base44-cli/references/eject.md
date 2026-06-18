@@ -59,6 +59,7 @@ When you run `eject`:
 
 - Must be authenticated (run `npx base44 login` first)
 - The project must be ejectable (have managed source code)
+- In non-interactive mode, both `--app-id` and `--path` are required
 
 ## Use Cases
 
