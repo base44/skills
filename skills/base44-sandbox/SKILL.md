@@ -39,15 +39,15 @@ Backend functions live in `base44/functions/`, one directory per function (kebab
 base44/functions/
   process-order/
     function.jsonc
-    index.ts
+    entry.ts
 ```
 
 `function.jsonc`:
 ```jsonc
-{ "name": "process-order", "entry": "index.ts" }
+{ "name": "process-order", "entry": "entry.ts" }
 ```
 - `name` — required, must match `/^[^.]+$/` (no dots). Match the directory name.
-- `entry` — required, the entry file relative to the function directory (e.g. `index.ts`).
+- `entry` — required, the entry file relative to the function directory (e.g. `entry.ts`).
 
 Entry file — functions run on **Deno** (not Node.js), export with `Deno.serve()`, and use the `npm:` prefix for npm packages:
 ```typescript
@@ -61,7 +61,7 @@ Deno.serve(async (req) => {
 });
 ```
 Conventions:
-- **Kebab-case** directory and function name; entry typically `index.ts`.
+- **Kebab-case** directory and function name; entry typically `entry.ts`.
 - `createClientFromRequest(req)` for a client in the caller's auth context; `base44.asServiceRole.…` for admin-level operations.
 - Read secrets with `Deno.env.get("KEY")` (configured in app settings).
 - Return with `Response.json(body, { status })`; handle errors and set appropriate status codes.
