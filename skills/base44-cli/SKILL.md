@@ -192,6 +192,29 @@ npx base44 <command>
 
 **Note:** All commands in this documentation use `npx base44`. You can also use `yarn base44`, or `pnpm base44` if preferred.
 
+## Global `--app-id` Option
+
+The CLI has a global `--app-id <id>` option for commands that only need an app context, not local project files.
+
+**Resolution order:** `--app-id` flag → `BASE44_APP_ID` environment variable → local `base44/.app.jsonc`
+
+This is useful when you want to inspect or operate on an app without switching into a linked project directory. Common examples:
+
+```bash
+# Run a one-off script against a specific app
+cat ./script.ts | npx base44 exec --app-id app_123
+
+# Fetch logs for a deployed app without a local checkout
+npx base44 logs --app-id app_123 --level error
+```
+
+Use `--app-id` for app-scoped commands like `exec` and `logs`.
+
+Do **not** use `--app-id` for commands that need local project files:
+- `base44 create` creates a new app, so it rejects `--app-id`
+- `base44 dev` runs from a linked local project, so it rejects `--app-id`
+- `base44 deploy` still requires a local project directory because it reads local resources
+
 ## Available Commands
 
 ### Authentication
@@ -211,6 +234,12 @@ npx base44 <command>
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
 | `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
+
+### Development
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 dev` | Start local development for your Base44 backend, and your frontend too when `site.serveCommand` is configured | [dev.md](references/dev.md) |
 
 ### Deployment
 
@@ -408,10 +437,15 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 3. Create a new project (ALWAYS provide name and `--path` flag):
    ```bash
-   npx base44 create my-app -p .
+   npx base44 create my-app --path .
    ```
 
-4. Build and deploy everything:
+4. Run local development:
+   ```bash
+   npx base44 dev
+   ```
+
+5. Build and deploy everything:
    ```bash
    npm run build
    npx base44 deploy -y
@@ -446,6 +480,14 @@ Failure to follow the create.md instructions will result in broken project scaff
 # If you have base44/config.jsonc but no .app.jsonc
 npx base44 link --create --name my-app
 ```
+
+### Running Local Development
+```bash
+# Starts the Base44 backend locally
+npx base44 dev
+```
+
+If you want `base44 dev` to run your frontend too, verify `base44/config.jsonc` has `site.serveCommand` set correctly (for example, `"serveCommand": "npm run dev"`). When that field is present, `base44 dev` runs both the backend and the frontend together.
 
 ### Deploying All Changes
 ```bash

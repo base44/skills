@@ -32,16 +32,26 @@ cat ./script.ts | npx base44 exec
 
 # Inline script
 echo "const users = await base44.entities.User.list(); console.log(users)" | npx base44 exec
+
+# Run against a specific app without a local project checkout
+cat ./script.ts | npx base44 exec --app-id app_123
+
+# Or resolve the app from the environment
+BASE44_APP_ID=app_123 npx base44 exec < ./script.ts
 ```
 
 ## Requirements
 
 - Must be authenticated (`npx base44 login`)
-- Must be run from a linked Base44 project directory
+- Must run in one of these contexts:
+  - from a linked Base44 project directory, or
+  - with `--app-id <id>`, or
+  - with `BASE44_APP_ID` set
 - Script must be piped via stdin (non-interactive mode)
 
 ## Notes
 
 - The script runs with the Base44 SDK pre-authenticated — you can use `base44.entities`, `base44.functions`, etc. directly
+- `--app-id` is useful when you want to inspect app data without switching into a linked local project
 - Exit code from the script is forwarded as the CLI process exit code
 - This command requires stdin to be piped (it does not accept input in interactive TTY mode)
