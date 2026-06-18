@@ -5,14 +5,14 @@
   },
   "metadata": {
     "description": "Official Base44 skills for Claude Code",
-    "version": "1.0.0-beta.1"
+    "version": "1.0.0-beta.2"
   },
   "plugins": [
     {
       "name": "base44",
       "source": "./",
       "description": "Build and deploy Base44 full-stack apps with CLI project management and JavaScript/TypeScript SDK development skills",
-      "version": "1.0.0-beta.1",
+      "version": "1.0.0-beta.2",
       "author": { "name": "base44" },
       "homepage": "https://docs.base44.com",
       "repository": "https://github.com/base44/skills",
