@@ -114,10 +114,9 @@ my-app/
 │   ├── entities/                # Entity schema definitions
 │   │   ├── task.jsonc
 │   │   └── board.jsonc
-│   ├── functions/               # Backend functions (optional); automations live in function.jsonc
+│   ├── functions/               # Backend functions (optional)
 │   │   └── my-function/
-│   │       ├── function.jsonc
-│   │       └── index.ts
+│   │       └── entry.ts
 │   ├── agents/                  # Agent configurations (optional)
 │   │   └── support_agent.jsonc
 │   └── connectors/              # OAuth connector configurations (optional)
@@ -136,7 +135,7 @@ my-app/
 **Key files:**
 - `base44/config.jsonc` - Project name, description, site build settings
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
-- `base44/functions/*/function.jsonc` - Function config and optional `automations` (CRON, simple triggers, entity hooks)
+- `base44/functions/*/entry.ts` - Backend function entry point
 - `base44/agents/*.jsonc` - Agent configurations (optional)
 - `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44 types generate`)
 - `base44/connectors/*.jsonc` - OAuth connector configurations (optional)
@@ -259,9 +258,8 @@ For complete documentation, see [entities-create.md](references/entities-create.
 
 | Action / Command          | Description                                   | Reference                                               |
 | ------------------------- | --------------------------------------------- | ------------------------------------------------------- |
-| Create Functions          | Define functions in `base44/functions` folder | [functions-create.md](references/functions-create.md)   |
-| Configure Automations     | CRON, simple triggers, entity hooks in `function.jsonc` | [automations.md](references/automations.md)   |
-| `base44 functions deploy [names...] [--force]` | Deploy local functions (and automations) to Base44; optionally target specific functions or prune removed ones | [functions-deploy.md](references/functions-deploy.md)   |
+| Create Functions          | Define functions in `base44/functions` | [functions-create.md](references/functions-create.md)   |
+| `base44 functions deploy [names...] [--force]` | Deploy local functions to Base44; optionally target specific functions or prune removed ones | [functions-deploy.md](references/functions-deploy.md)   |
 | `base44 functions delete <names...>` | Delete one or more deployed functions from Base44 | [functions-delete.md](references/functions-delete.md) |
 | `base44 functions list`   | List all deployed functions on Base44 remote  | [functions-list.md](references/functions-list.md)       |
 | `base44 functions pull [name]` | Pull deployed functions from Base44 to local files | [functions-pull.md](references/functions-pull.md)  |
@@ -347,22 +345,6 @@ Connectors let your app connect to external services (Google Calendar, Slack, St
 
 For complete documentation, see [connectors-create.md](references/connectors-create.md).
 
-#### Automation Quick Reference
-
-Automations are triggers defined in the `automations` array inside `function.jsonc`. They deploy with the function via `base44 functions deploy`. Four types:
-
-**Common fields (all types):** `name` (required), `description`, `function_args`, `is_active` (default: true)
-
-**Scheduled One-Time:** `type: "scheduled"`, `schedule_mode: "one-time"`, `one_time_date` (ISO string)
-
-**Scheduled CRON:** `type: "scheduled"`, `schedule_mode: "recurring"`, `schedule_type: "cron"`, `cron_expression`, optional `ends_type` / `ends_on_date` / `ends_after_count`
-
-**Scheduled Simple:** `type: "scheduled"`, `schedule_mode: "recurring"`, `schedule_type: "simple"`, `repeat_unit` (`"minutes"` \| `"hours"` \| `"days"` \| `"weeks"` \| `"months"`), optional `repeat_interval`, `start_time`, `repeat_on_days` (0–6), `repeat_on_day_of_month` (1–31), `ends_type` / `ends_on_date` / `ends_after_count`
-
-**Entity Hook:** `type: "entity"`, `entity_name` (matches entity schema name), `event_types`: array of `"create"` \| `"update"` \| `"delete"` (at least one)
-
-For full schemas and examples, see [automations.md](references/automations.md).
-
 ### Auth Configuration
 
 Manage your app's authentication settings (e.g., username & password login). Auth config is stored in `base44/auth/` and synced with Base44 via `auth push`/`auth pull`.
@@ -387,7 +369,7 @@ Manage project secrets (environment variables stored securely in Base44). These 
 
 ### Script Execution
 
-Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use it to perform CRUD operations on entities (`base44.entities.MyEntity.list/create/update/delete`), call backend functions (`base44.functions.invoke("myFunction", args)`), invoke agents, or access any other resource exposed by the SDK — without deploying a full function. Useful for data migrations, bulk operations, debugging, and automation scripts.
+Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use it to perform CRUD operations on entities (`base44.entities.MyEntity.list/create/update/delete`), call backend functions (`base44.functions.invoke("myFunction", args)`), invoke agents, or access any other resource exposed by the SDK — without deploying a full function. Useful for data migrations, bulk operations, debugging, and scripted workflows.
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
@@ -527,7 +509,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | Not authenticated           | Run `npx base44 login` first                                                        |
 | No entities found           | Ensure entities exist in `base44/entities/` directory                               |
 | Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
-| No functions found          | Ensure functions exist in `base44/functions/` with valid `function.jsonc` configs   |
+| No functions found          | Ensure functions exist in `base44/functions/` with `entry.ts` or `entry.js`   |
 | No agents found             | Ensure agents exist in `base44/agents/` directory with valid `.jsonc` configs       |
 | Invalid agent name          | Agent names must be lowercase alphanumeric with underscores only                    |
 | No connectors found         | Ensure connectors exist in `base44/connectors/` directory with valid `.jsonc` configs |

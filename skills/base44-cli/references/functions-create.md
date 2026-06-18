@@ -4,7 +4,7 @@ Base44 functions are serverless backend functions that run on Deno. They are def
 
 ## Function Directory
 
-All function definitions must be placed in the `base44/functions/` folder in your project. Each function lives in its own subdirectory with a configuration file and entry point.
+All function definitions must be placed in the `base44/functions/` folder in your project. The simplest function is a folder with an `entry.ts` or `entry.js` file inside it.
 
 Example structure:
 ```
@@ -12,52 +12,39 @@ my-app/
   base44/
     functions/
       process-order/
-        function.jsonc
-        index.ts
+        entry.ts
       send-notification/
-        function.jsonc
-        index.ts
+        entry.ts
 ```
 
 ## How to Create a Function
 
 1. Create a new directory in `base44/functions/` with your function name (use kebab-case)
-2. Create a `function.jsonc` configuration file in the directory
-3. Create the entry point file (e.g., `index.ts`)
-4. Deploy the function using the CLI
+2. Create `entry.ts` (or `entry.js`) in that directory
+3. Deploy the function using the CLI
 
-## Function Configuration
+## Function Discovery
 
-Each function requires a `function.jsonc` configuration file:
+The CLI discovers functions from `entry.ts` or `entry.js` files. A folder that contains one of those files is a function:
 
-```jsonc
-{
-  "name": "my-function",
-  "entry": "index.ts",
-  // Optionally add automations
-  "automations": [
-    {
-      "name": "Daily run",
-      "type": "scheduled",
-      "schedule_mode": "recurring",
-      "schedule_type": "cron",
-      "cron_expression": "0 9 * * *"
-    }
-  ]
-}
+```
+base44/
+  functions/
+    process-order/
+      entry.ts
 ```
 
-### Configuration Properties
+The function name is the path from the functions root to that folder. For example:
 
-| Property | Description | Required |
-|----------|-------------|----------|
-| `name` | Function name (must match `/^[^.]+$/` - no dots allowed) | Yes |
-| `entry` | Entry point file path relative to the function directory (min 1 char) | Yes |
-| `automations` | Array of triggers (CRON, simple schedule, one-time, entity hooks); deployed with the function | No |
+| File | Function name |
+|------|---------------|
+| `base44/functions/process-order/entry.ts` | `process-order` |
+| `base44/functions/orders/process/entry.ts` | `orders/process` |
 
-## Automations
-
-Functions can define automations (triggers) so they run on a schedule or when entity data changes. Add an optional `automations` array to `function.jsonc`. Supported types: **scheduled** (one-time, CRON, or simple interval) and **entity hooks** (on entity create/update/delete). Automations are deployed with the function via `npx base44 functions deploy`. For full schemas and examples, see [automations.md](automations.md).
+Rules:
+- `entry.ts` or `entry.js` must be inside a named subfolder, not directly in `base44/functions/`
+- all `*.js`, `*.ts`, and `*.json` files under the function folder are included when deploying
+- function paths with a dot in any path segment are ignored
 
 ## Entry Point File
 
@@ -114,19 +101,10 @@ return Response.json({ error: "Order not found" }, { status: 404 });
 base44/
   functions/
     process-order/
-      function.jsonc
-      index.ts
+      entry.ts
 ```
 
-### function.jsonc
-```jsonc
-{
-  "name": "process-order",
-  "entry": "index.ts"
-}
-```
-
-### index.ts
+### entry.ts
 ```typescript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
@@ -212,10 +190,10 @@ Deno.serve(async (req) => {
 ## Naming Conventions
 
 - **Directory name**: Use kebab-case (e.g., `process-order`, `send-notification`)
-- **Function name**: Match the directory name, must match pattern `/^[^.]+$/` (no dots allowed)
-  - Valid: `process-order`, `send_notification`, `myFunction`
+- **Function name**: Comes from the directory path under `base44/functions/`
+  - Valid: `process-order`, `orders/process`, `send_notification`, `myFunction`
   - Invalid: `process.order`, `send.notification.v2`
-- **Entry file**: Typically `index.ts` or `index.js`
+- **Entry file**: Use `entry.ts` or `entry.js`
 
 ## Deploying Functions
 
@@ -239,6 +217,7 @@ For more details on deploying, see [functions-deploy.md](functions-deploy.md).
 
 | Wrong | Correct | Why |
 |-------|---------|-----|
-| `functions/myFunction.js` (single file) | `functions/my-function/index.ts` + `function.jsonc` | Functions require subdirectory with config |
+| `base44/functions/myFunction.js` (single file) | `base44/functions/my-function/entry.ts` | Functions must live in a named subdirectory |
+| `base44/functions/entry.ts` | `base44/functions/my-function/entry.ts` | The function name comes from the subdirectory path |
 | `import { ... } from "@base44/sdk"` | `import { ... } from "npm:@base44/sdk"` | Deno requires `npm:` prefix for npm packages |
 | `MyFunction` or `myFunction` directory | `my-function` directory | Use kebab-case for directory names |

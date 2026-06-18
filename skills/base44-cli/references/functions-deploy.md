@@ -22,9 +22,9 @@ npx base44 functions deploy [names...] [options]
 ## What It Does
 
 1. Scans the `base44/functions/` directory for function definitions
-2. Validates that functions exist and have valid configurations
+2. Discovers functions from `entry.ts`/`entry.js` files
 3. Displays the count of functions to be deployed
-4. Uploads function code and configuration to Base44 sequentially
+4. Uploads function code to Base44 sequentially
 5. Reports the results: deployed, unchanged, and failed counts
 6. If `--force` is used: also deletes remote functions that no longer exist locally
 
@@ -32,7 +32,7 @@ npx base44 functions deploy [names...] [options]
 
 - Must be run from a Base44 project directory
 - Project must have function definitions in the `base44/functions/` folder
-- Each function subdirectory should contain a `function.jsonc` config and an entry point file, or just an `entry.ts` for zero-config functions
+- Each function should be a folder with `entry.ts` or `entry.js`
 
 ## Examples
 
@@ -100,17 +100,18 @@ error: Function not found in project: nonexistent
 ## Use Cases
 
 - After creating new functions in your project
-- When modifying existing function code or configuration
+- When modifying existing function code
 - To sync function changes before testing
 - As part of your development workflow when backend logic changes
 - Use `--force` to clean up remote functions that have been removed locally
 
 ## Notes
 
-- This command deploys the function code and configuration
+- This command deploys function code
 - Changes are applied to your Base44 project immediately
 - Deploy results per function: `deployed`, `unchanged`, or `error`
 - `--force` cannot be combined with specific function names
 - Make sure to test functions in a development environment first
 - Function definitions are located in the `base44/functions/` directory
+- Use `entry.ts` or `entry.js` for functions
 - For how to create functions, see [functions-create.md](functions-create.md)
