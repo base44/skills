@@ -50,7 +50,7 @@ subscribe(callback) → () => void                               // returns unsu
 ## Functions (`base44.functions.*`)
 
 ```
-invoke(functionName, data?) → Promise<any>
+invoke(functionName, data?) → Promise<AxiosResponse>  // your JSON is on .data; throws on non-2xx (err.response.data)
 fetch(path, init?) → Promise<Response>   // low-level, for streaming/custom methods
 ```
 
