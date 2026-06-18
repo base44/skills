@@ -23,7 +23,7 @@ npx base44 link [options]
 | `-c, --create` | Create a new project (skip selection prompt) | No |
 | `-n, --name <name>` | Project name (required when `--create` is used) | With `--create` |
 | `-d, --description <description>` | Project description | No |
-| `-p, --projectId <id>` | Project ID to link to an existing project (skip selection prompt) | No |
+| `--app-id <id>` | App ID to link to an existing Base44 app (skip selection prompt) | No |
 
 ## Non-Interactive Mode
 
@@ -34,15 +34,15 @@ For CI/CD or agent use:
 npx base44 link --create --name my-app
 ```
 
-**Link to an existing project:**
+**Link to an existing app:**
 ```bash
-npx base44 link --projectId <project-id>
+npx base44 link --app-id <app-id>
 ```
 
 WRONG: `npx base44 link --create` (missing --name)
-WRONG: `npx base44 link --create --projectId <id>` (cannot use both)
+WRONG: `npx base44 link --create --app-id <id>` (cannot use both)
 RIGHT: `npx base44 link --create --name my-app`
-RIGHT: `npx base44 link --projectId <id>`
+RIGHT: `npx base44 link --app-id <id>`
 
 ## Examples
 
@@ -56,8 +56,8 @@ npx base44 link --create --name my-app
 # With description
 npx base44 link --create --name my-app --description "My awesome app"
 
-# Link to a specific existing project by ID
-npx base44 link --projectId abc123
+# Link to a specific existing app by ID
+npx base44 link --app-id app_123
 ```
 
 ## What It Does
@@ -66,7 +66,7 @@ npx base44 link --projectId abc123
 2. Verifies no `.app.jsonc` exists (project not already linked)
 3. Either:
    - Creates a new Base44 app in the cloud (with `--create`), OR
-   - Links to an existing project (with `--projectId` or interactive selection)
+   - Links to an existing app (with `--app-id` or interactive selection)
 4. Writes the app ID to `base44/.app.jsonc`
 
 ## Requirements
