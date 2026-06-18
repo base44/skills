@@ -23,7 +23,7 @@ npx base44 link [options]
 | `-c, --create` | Create a new project (skip selection prompt) | No |
 | `-n, --name <name>` | Project name (required when `--create` is used) | With `--create` |
 | `-d, --description <description>` | Project description | No |
-| `--app-id <id>` | App ID to link to an existing Base44 app (skip selection prompt) | No |
+| `--app-id <id>` | App ID to link to an existing project (global flag, skips selection prompt) | No |
 
 ## Non-Interactive Mode
 
@@ -56,8 +56,8 @@ npx base44 link --create --name my-app
 # With description
 npx base44 link --create --name my-app --description "My awesome app"
 
-# Link to a specific existing app by ID
-npx base44 link --app-id app_123
+# Link to a specific existing project by ID
+npx base44 link --app-id abc123
 ```
 
 ## What It Does

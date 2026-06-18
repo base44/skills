@@ -13,7 +13,7 @@ npx base44 eject [options]
 | Option | Description | Required |
 |--------|-------------|----------|
 | `-p, --path <path>` | Path where to write the project | No |
-| `--app-id <id>` | App ID to eject (skips interactive selection) | No |
+| `--app-id <id>` | App ID to eject (skips interactive selection) — global flag, also accepted via `BASE44_APP_ID` env var | No |
 | `-y, --yes` | Skip confirmation prompts | No |
 
 ## What It Does
@@ -38,7 +38,7 @@ npx base44 eject
 npx base44 eject -p ./my-project
 
 # Non-interactive - specify app ID and skip confirmations
-npx base44 eject --app-id app_123 -p ./my-project -y
+npx base44 eject --app-id abc123 -p ./my-project -y
 ```
 
 ## Workflow
