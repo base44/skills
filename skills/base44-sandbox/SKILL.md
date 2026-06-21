@@ -116,7 +116,7 @@ One `.jsonc` file per agent in `base44/agents/`. Just write the file — it auto
 }
 ```
 
-Required: `name`, `description`, `instructions`. Optional: `tool_configs` (default `[]`), `whatsapp_greeting`. Tool configs are either an **entity tool** (`entity_name` + `allowed_operations`: any of `read`/`create`/`update`/`delete`) or a **backend-function tool** (`function_name` + `description`). See the `base44-cli` skill's Agent Schema for full detail.
+Required: `name`, `description`, `instructions`. Optional: `tool_configs` (default `[]`), `whatsapp_greeting`. Tool configs are either an **entity tool** (`entity_name` + `allowed_operations`: any of `read`/`create`/`update`/`delete`) or a **backend-function tool** (`function_name` + `description`). For the full agent schema, see the **Agent Schema** section of the `base44-cli` skill's [`SKILL.md`](../base44-cli/SKILL.md) — but **ignore its `agents push` / `agents pull` / deploy commands**, which assume a local project; in the sandbox the file auto-syncs.
 
 ## Connectors (OAuth integrations)
 
