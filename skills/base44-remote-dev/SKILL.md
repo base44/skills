@@ -3,8 +3,10 @@ name: base44-remote-dev
 description: >-
   Develop a Base44 app remotely from your own coding agent (Claude Code,
   claude.ai, or any MCP client) by connecting it to the Base44 sandbox. Cloud
-  agents connect over MCP; local/filesystem agents can instead use the HTTP
-  REST surface with a Base44 CLI token (Section 10). Covers connecting/
+  agents connect over MCP; local agents can connect over MCP or drive the same
+  sandbox with the `base44 sandbox` CLI subcommands (the CLI uses shorter
+  names — e.g. read_file is `sandbox read`, list_directory is `sandbox ls`,
+  run_command is `sandbox run`). Covers connecting/
   authenticating, the available sandbox tools (run_command, read_file,
   write_file, edit_file, grep, list_directory, get_app_preview_url,
   get_app_status, list_user_apps, and the connector tools list_connectors /
@@ -31,16 +33,18 @@ Base44 supplies the sandbox and you supply the agent and the LLM.
 This works with any MCP-capable client. The examples use Claude Code.
 
 > **Easiest start:** in the Base44 app editor, click **Send to Coding Agent**. For a local agent
-> it gives you a ready-to-paste prompt (which fetches a README and uses the HTTP API in Section 10);
+> it gives you a ready-to-paste prompt (which fetches a README and drives the sandbox over MCP or
+> the `base44 sandbox` CLI — Section 10);
 > for the web it gives a prompt to paste into a **claude.ai** chat (with the Base44 MCP connector)
 > plus an **Open Claude** button. The button is the discovery surface — the rest of this skill is
 > the reference.
 
 > **Two transports:** web agents use **claude.ai** with the Base44 **MCP connector** (Sections
 > 1–9) — note this is the regular claude.ai chat, *not* Claude Code on the web (`claude.ai/code`),
-> which runs in its own repo-backed sandbox. A local agent with filesystem access can instead call
-> the **HTTP REST surface** with a Base44 CLI token (Section 10) — same tools, same behavior, same
-> error codes; only the transport and auth differ.
+> which runs in its own repo-backed sandbox. A local agent can connect that same MCP server, or
+> drive the sandbox with the **`base44 sandbox` CLI** (a Base44 CLI token, Section 10) — same tools,
+> same behavior, same error codes; the CLI just exposes them under shorter command names
+> (`sandbox read`, `sandbox ls`, …).
 
 ---
 
@@ -118,18 +122,22 @@ Summarize the structure before editing.
 > transparently brings one up from your last commit — it just takes a bit
 > longer. Subsequent calls are fast.
 
+> **CLI names:** over the `base44 sandbox` CLI (Section 10) these read tools are
+> `list_directory` → `sandbox ls`, `read_file` → `sandbox read`, and
+> `grep` → `sandbox grep`.
+
 ---
 
 ## 4. Make changes
 
-- **`edit_file`** — preferred for changing existing files. Provide exact
+- **`edit_file`** (`sandbox edit` in the CLI) — preferred for changing existing files. Provide exact
   `old_text`→`new_text` edits. Each `old_text` must be unique in the file
   unless you set `replace_all`. All edits in a call apply atomically
   (all-or-nothing) and you get a unified diff back. Pass `dry_run: true` to
   preview the diff without writing.
-- **`write_file`** — for creating new files. To overwrite an existing file you
+- **`write_file`** (`sandbox write` in the CLI) — for creating new files. To overwrite an existing file you
   must pass `overwrite: true` (it never silently clobbers).
-- **`run_command`** — run any bash command in the sandbox (build, install,
+- **`run_command`** (`sandbox run` in the CLI) — run any bash command in the sandbox (build, install,
   scaffolding, codemods). The working directory defaults to the app root; `cd`
   does not persist across calls, so use the `cwd` parameter or chain commands
   (`cd sub && cmd`). Timeout defaults to 120s (max 600s); output is capped at
@@ -252,28 +260,34 @@ Messages are written so the agent can self-correct — read them and adjust.
 
 ---
 
-## 10. Local agents over HTTP (no MCP)
+## 10. Local agents via the `base44 sandbox` CLI
 
-If your agent runs on your machine (filesystem access), you can skip MCP and call the sandbox
-bridge over plain HTTP, authenticating with the Base44 CLI instead of OAuth.
+If your agent runs on your machine, it can drive the same sandbox through the Base44 CLI instead of
+MCP, authenticating with the Base44 CLI instead of OAuth. Same tools, same behavior, same error
+codes (Section 8) — only the surface and auth differ.
 
 **Auth.** Log in with the Base44 CLI (`base44 login`) — the same credential used for
-`base44 functions deploy` — and send it as a bearer header: `Authorization: Bearer <token>`.
+`base44 functions deploy`. Like the projectless `base44 connectors` commands, the sandbox
+subcommands resolve the app id from `--app-id`, then `BASE44_APP_ID`, then a local `.app.jsonc`;
+no `config.jsonc` is required.
 
-**Endpoints.** `POST https://app.base44.com/api/apps/<APP_ID>/sandbox-bridge/<tool>`, where
-`<tool>` is one of `read_file`, `grep`, `list_directory`, `write_file`, `edit_file`,
-`run_command`, `release`. The JSON body is the same as the matching MCP tool minus `appId` (it's
-in the path). Success returns the tool's structured result; errors return
-`{"message", "extra_data": {"code": <CODE>}}` with the same codes as Section 8.
+**Command names.** The CLI exposes each sandbox tool under a shorter name:
+
+| MCP tool | CLI command |
+|---|---|
+| `list_directory` | `base44 sandbox ls` |
+| `read_file` | `base44 sandbox read` |
+| `write_file` | `base44 sandbox write` |
+| `edit_file` | `base44 sandbox edit` |
+| `run_command` | `base44 sandbox run` |
+| `grep` | `base44 sandbox grep` |
+| `release` | `base44 sandbox release` |
 
 ```bash
-curl -X POST https://app.base44.com/api/apps/<APP_ID>/sandbox-bridge/read_file \
-  -H "Authorization: Bearer $BASE44_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{"paths": ["src/App.jsx"]}'
+npx base44 sandbox read --app-id <APP_ID> src/App.jsx
 ```
 
-**Hand an agent the full reference** for a specific app (instructions + endpoints, public, no
+**Hand an agent the full reference** for a specific app (instructions, public, no
 auth needed to fetch):
 
 ```
@@ -284,7 +298,7 @@ https://app.base44.com/api/sandbox/<APP_ID>/local-agent/readme.md
 
 Everything else in this skill — the edit→preview→verify loop (Section 5), persistence
 (Section 6), concurrency (Section 7), and guardrails (Section 8) — applies identically; only the
-transport and auth differ.
+surface and auth differ.
 
 ---
 
@@ -310,7 +324,7 @@ Two semantics to get right:
   yourself. After they finish, call `list_connectors` again to verify and read the **granted**
   scopes (a provider may grant fewer than requested).
 
-These need only `apps:read` / `apps:write` — **not** `sandbox:write`. Over the HTTP/CLI surface
+These need only `apps:read` / `apps:write` — **not** `sandbox:write`. Over the CLI surface
 (Section 10), the equivalent is the projectless `base44 connectors` commands
 (`list-available`, `initiate --integration-type <t> --scopes <s...> --app-id <id>`, `pull`), which
 print the same authorization URL.

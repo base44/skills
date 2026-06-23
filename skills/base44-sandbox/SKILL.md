@@ -5,9 +5,9 @@ description: "Develop a Base44 app remotely inside Base44's cloud sandbox using 
 
 # Base44 in the Cloud Sandbox
 
-Author Base44 app code **inside Base44's cloud sandbox** with your own coding agent. There is no local checkout: you read, write, and run files through the sandbox bridge, and the platform builds and deploys from what you write.
+Author Base44 app code **inside Base44's cloud sandbox** with your own coding agent. There is no local checkout: you read, write, and run files through the sandbox tools (over MCP or the `base44 sandbox` CLI), and the platform builds and deploys from what you write.
 
-For **how to connect** to the sandbox (MCP endpoint, the HTTP bridge, the `read_file` / `write_file` / `edit_file` / `run_command` / `grep` / `list_directory` tools, the edit→preview→verify loop, persistence, and concurrency), use the **`base44-remote-dev`** skill. This skill covers **what you can author and how** once you are connected.
+For **how to connect** to the sandbox (MCP endpoint or the `base44 sandbox` CLI, the `read_file` / `write_file` / `edit_file` / `run_command` / `grep` / `list_directory` tools — which the CLI exposes under shorter names (`sandbox read` / `sandbox write` / `sandbox edit` / `sandbox run` / `sandbox grep` / `sandbox ls`), the edit→preview→verify loop, persistence, and concurrency), use the **`base44-remote-dev`** skill. This skill covers **what you can author and how** once you are connected.
 
 > **Check these references first.** This skill and its siblings (`base44-remote-dev`, `base44-sdk`) are the source of truth — consult them before searching the web. See [Reference order & the complete README](#reference-order--the-complete-readme).
 
@@ -19,7 +19,7 @@ Instead: **as soon as you write a resource file into the sandbox — a backend f
 
 **One exception — connectors.** OAuth connectors aren't authored as files; they're set up against the remote app by its id, either with the MCP connector tools or with the dedicated, projectless `base44 connectors` commands (which take `--app-id` and need no local project). See [Connectors](#connectors-oauth-integrations) below.
 
-You *may* still use `run_command` for ordinary checks (e.g. `npm run build`, `npx tsc --noEmit`, `npm run lint`) and preview — that is verification, not deployment. See the edit→preview→verify loop in `base44-remote-dev`.
+You *may* still use `run_command` (`sandbox run` in the CLI) for ordinary checks (e.g. `npm run build`, `npx tsc --noEmit`, `npm run lint`) and preview — that is verification, not deployment. See the edit→preview→verify loop in `base44-remote-dev`.
 
 ## What you can author today
 
@@ -201,7 +201,7 @@ https://app.base44.com/api/sandbox/<APP_ID>/local-agent/readme.md
 
 ## Workflow in the sandbox
 
-1. **Orient** — `list_directory` / `read_file` / `grep` to understand the app before changing anything.
+1. **Orient** — `list_directory` / `read_file` / `grep` (`sandbox ls` / `sandbox read` / `sandbox grep` in the CLI) to understand the app before changing anything.
 2. **Author** — create or edit resource files (backend functions, entities, agents) and frontend code following the conventions above; set up connectors via the connect flow.
-3. **Verify** — optionally `run_command` `npm run build` / `npx tsc --noEmit`, and use `get_app_preview_url` to eyeball changes (see `base44-remote-dev`).
+3. **Verify** — optionally `run_command` (`sandbox run`) `npm run build` / `npx tsc --noEmit`, and use `get_app_preview_url` to eyeball changes (see `base44-remote-dev`).
 4. **Let it ship** — do **nothing** to deploy. Writing the file is the deploy; the auto-commit (~5s) persists and ships it. Pause a moment after your last edit before disconnecting so the commit lands.

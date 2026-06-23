@@ -67,7 +67,7 @@ npx skills add base44/skills --skill base44-remote-dev --skill base44-sandbox --
 | [`base44-cli`](skills/base44-cli/SKILL.md) | Create and manage Base44 projects using the CLI. Handles resource configuration (entities, backend functions, AI agents), initialization, and deployment. |
 | [`base44-sdk`](skills/base44-sdk/SKILL.md) | Build apps using the Base44 JavaScript SDK. Communicate with remote resources like entities, backend functions, and AI agents. |
 | [`base44-troubleshooter`](skills/base44-troubleshooter/SKILL.md) | Troubleshoot production issues using backend function logs. Use when investigating app errors or diagnosing production problems. |
-| [`base44-remote-dev`](skills/base44-remote-dev/SKILL.md) | Develop a Base44 app remotely from your own coding agent by connecting it to the Base44 sandbox over MCP or the HTTP bridge. |
+| [`base44-remote-dev`](skills/base44-remote-dev/SKILL.md) | Develop a Base44 app remotely from your own coding agent by connecting it to the Base44 sandbox over MCP or the `base44 sandbox` CLI. |
 | [`base44-sandbox`](skills/base44-sandbox/SKILL.md) | Author Base44 app code inside the cloud sandbox — no deploy/push; writing a resource file (function, entity, agent) into the sandbox is what ships it. |
 
 ## About Agent Skills
