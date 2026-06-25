@@ -33,21 +33,13 @@ You *may* still use `run_command` (`sandbox run` in the CLI) for ordinary checks
 
 ## Backend functions
 
-Backend functions live in `base44/functions/`, one directory per function (kebab-case name), each with a `function.jsonc` config and an entry file:
+Backend functions live in `base44/functions/`, one directory per function (kebab-case name). In the sandbox you only need to create the **`entry.ts`** file directly under `base44/functions/<name>/` — **no `function.jsonc` is required** (the sandbox infers the function from the directory; the config file is ignored in this mode):
 
 ```
 base44/functions/
   process-order/
-    function.jsonc
     entry.ts
 ```
-
-`function.jsonc`:
-```jsonc
-{ "name": "process-order", "entry": "entry.ts" }
-```
-- `name` — required, must match `/^[^.]+$/` (no dots). Match the directory name.
-- `entry` — required, the entry file relative to the function directory (e.g. `entry.ts`).
 
 Entry file — functions run on **Deno** (not Node.js), export with `Deno.serve()`, and use the `npm:` prefix for npm packages:
 ```typescript
