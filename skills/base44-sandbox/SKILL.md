@@ -58,7 +58,7 @@ Conventions:
 - Read secrets with `Deno.env.get("KEY")` (configured in app settings).
 - Return with `Response.json(body, { status })`; handle errors and set appropriate status codes.
 
-That's enough to author functions correctly. For deeper detail and more examples (service role, secrets, common mistakes), see the `base44-cli` skill's reference: [`functions-create.md`](../base44-cli/references/functions-create.md) — but **ignore its "Deploying Functions" / CLI sections**, which assume a local project and do not apply in the sandbox.
+That's enough to author functions correctly. For deeper detail and more examples (service role, secrets, common mistakes), see the `base44-cli` skill's reference: [`functions-create.md`](../base44-cli/references/functions-create.md) — but **ignore its "Deploying Functions" / CLI sections** and its **`function.jsonc`** guidance, which assume a local project and do not apply in the sandbox (here you only write `entry.ts`).
 
 > **Calling the function from the frontend:** `base44.functions.invoke(name, data)` returns the **raw axios response** — your function's JSON is on **`.data`** (`const result = res.data`), not the top-level object, and it **throws on non-2xx** (error body at `err.response.data`). See the `base44-sdk` skill's [`functions.md`](../base44-sdk/references/functions.md) for details.
 
