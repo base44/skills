@@ -7,7 +7,7 @@ description: "Develop a Base44 app remotely inside Base44's cloud sandbox using 
 
 Author Base44 app code **inside Base44's cloud sandbox** with your own coding agent. There is no local checkout: you read, write, and run files through the sandbox tools (over MCP or the `base44 sandbox` CLI), and the platform builds and deploys from what you write.
 
-For **how to connect** to the sandbox (MCP endpoint or the `base44 sandbox` CLI, the `read_file` / `write_file` / `edit_file` / `run_command` / `grep` / `list_directory` tools — which the CLI exposes under shorter names (`sandbox read` / `sandbox write` / `sandbox edit` / `sandbox run` / `sandbox grep` / `sandbox ls`), the edit→preview→verify loop, persistence, and concurrency), use the **`base44-remote-dev`** skill. This skill covers **what you can author and how** once you are connected.
+For **how to connect** to the sandbox (MCP endpoint or the `base44 sandbox` CLI, the `read_file` / `write_file` / `edit_file` / `run_command` / `grep` / `list_directory` / `create_checkpoint` tools — which the CLI exposes under shorter names (`sandbox read` / `sandbox write` / `sandbox edit` / `sandbox run` / `sandbox grep` / `sandbox ls` / `sandbox checkpoint`), the edit→preview→verify loop, persistence, and concurrency), use the **`base44-remote-dev`** skill. This skill covers **what you can author and how** once you are connected.
 
 > **Check these references first.** This skill and its siblings (`base44-remote-dev`, `base44-sdk`) are the source of truth — consult them before searching the web. See [Reference order & the complete README](#reference-order--the-complete-readme).
 
@@ -205,3 +205,4 @@ https://app.base44.com/api/sandbox/<APP_ID>/local-agent/readme.md
 2. **Author** — create or edit resource files (backend functions, entities, agents) and frontend code following the conventions above; set up connectors via the connect flow.
 3. **Verify** — optionally `run_command` (`sandbox run`) `npm run build` / `npx tsc --noEmit`, and use `get_app_preview_url` to eyeball changes (see `base44-remote-dev`).
 4. **Let it ship** — do **nothing** to deploy. Writing the file is the deploy; the auto-commit (~5s) persists and ships it. Pause a moment after your last edit before disconnecting so the commit lands.
+5. **(Optional) Checkpoint** — mark a known-good restore point the user can roll back to with `create_checkpoint` (`base44 sandbox checkpoint --name "..."` in the CLI). It flushes pending changes first, so the checkpoint captures your latest code. See `base44-remote-dev` for details.

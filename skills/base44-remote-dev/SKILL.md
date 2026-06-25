@@ -8,9 +8,9 @@ description: >-
   names — e.g. read_file is `sandbox read`, list_directory is `sandbox ls`,
   run_command is `sandbox run`). Covers connecting/
   authenticating, the available sandbox tools (run_command, read_file,
-  write_file, edit_file, grep, list_directory, get_app_preview_url,
-  get_app_status, list_user_apps, and the connector tools list_connectors /
-  initiate_connector_connection), the edit→preview→verify loop, how changes
+  write_file, edit_file, grep, list_directory, create_checkpoint,
+  get_app_preview_url, get_app_status, list_user_apps, and the connector tools
+  list_connectors / initiate_connector_connection), the edit→preview→verify loop, how changes
   persist, builder/external-agent concurrency, the in-editor "Send to Coding
   Agent" button + onboarding README URLs, and tips like reading the Vite
   dev-server logs. Triggers on "develop my Base44 app remotely", "connect
@@ -94,7 +94,7 @@ on another device, and the client receives the token.
 | Tools | Required scope |
 |---|---|
 | `read_file`, `grep`, `list_directory`, `get_app_preview_url`, `get_app_status`, `list_user_apps` | `apps:read` (granted by default) |
-| `write_file`, `edit_file`, `run_command` | `sandbox:write` |
+| `write_file`, `edit_file`, `run_command`, `create_checkpoint` | `sandbox:write` |
 
 `sandbox:write` is **not** granted by default — shell and file mutation
 require it explicitly. If the read tools work but the mutating ones return
@@ -142,6 +142,14 @@ Summarize the structure before editing.
   does not persist across calls, so use the `cwd` parameter or chain commands
   (`cd sub && cmd`). Timeout defaults to 120s (max 600s); output is capped at
   ~1 MB.
+- **`create_checkpoint`** (`sandbox checkpoint` in the CLI) — save a named
+  restore point the user can later roll back to. Takes an optional `name`
+  (message/title; auto-generated if omitted). Any pending changes are **flushed
+  and committed first** so the checkpoint anchors to your latest code; it then
+  returns the checkpoint id, name, and git commit hash. Use it to mark a
+  known-good state before or after a chunk of edits. (If a recent auto-commit
+  can't be confirmed durable yet, it refuses with the retryable
+  `COMMIT_FLUSH_PENDING` rather than checkpoint stale state — retry shortly.)
 
 Example:
 
@@ -235,7 +243,9 @@ You and the in-app Base44 builder can't mutate the same app at once:
 · `PATH_OUTSIDE_SANDBOX` · `PROTECTED_PATH` · `NOT_FOUND` · `BINARY_FILE` ·
 `EDIT_TEXT_NOT_FOUND` · `EDIT_TEXT_NOT_UNIQUE` (make `old_text` unique or use
 `replace_all`) · `OVERWRITE_NOT_ALLOWED` (pass `overwrite: true`) · `TIMEOUT` ·
-`OUTPUT_TRUNCATED` · `BUILDER_BUSY` · `RATE_LIMITED` · `BACKEND_ERROR`.
+`OUTPUT_TRUNCATED` · `BUILDER_BUSY` ·
+`COMMIT_FLUSH_PENDING` (a pending auto-commit isn't durable yet; retry shortly —
+e.g. on `create_checkpoint`) · `RATE_LIMITED` · `BACKEND_ERROR`.
 
 Messages are written so the agent can self-correct — read them and adjust.
 
@@ -255,6 +265,9 @@ Messages are written so the agent can self-correct — read them and adjust.
   it usually names the exact file and line.
 - **Let it commit.** Pause a few seconds after your final edit so the auto-commit
   lands before you disconnect or publish.
+- **Checkpoint known-good states.** Use `create_checkpoint` (`sandbox checkpoint`)
+  to mark a restore point before or after a risky chunk of edits — it flushes
+  pending changes first, so the user can always roll back to that point.
 - **One agent at a time.** The feature is designed for a single external agent
   per app; don't run parallel sessions against the same app.
 
@@ -281,9 +294,16 @@ no `config.jsonc` is required.
 | `edit_file` | `base44 sandbox edit` |
 | `run_command` | `base44 sandbox run` |
 | `grep` | `base44 sandbox grep` |
+| `create_checkpoint` | `base44 sandbox checkpoint` |
 
 ```bash
 npx base44 sandbox read --app-id <APP_ID> src/App.jsx
+```
+
+`base44 sandbox checkpoint` takes an optional `--name` (message/title) and saves a restore point:
+
+```bash
+npx base44 sandbox checkpoint --app-id <APP_ID> --name "before refactor"
 ```
 
 **Hand an agent the full reference** for a specific app (instructions, public, no
