@@ -281,7 +281,6 @@ no `config.jsonc` is required.
 | `edit_file` | `base44 sandbox edit` |
 | `run_command` | `base44 sandbox run` |
 | `grep` | `base44 sandbox grep` |
-| `release` | `base44 sandbox release` |
 
 ```bash
 npx base44 sandbox read --app-id <APP_ID> src/App.jsx
