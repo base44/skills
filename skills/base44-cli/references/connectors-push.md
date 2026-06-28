@@ -5,12 +5,18 @@ Push local connector configurations to Base44, synchronizing scopes and handling
 ## Usage
 
 ```bash
-npx base44 connectors push
+npx base44 connectors push [options]
 ```
+
+## Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `--dir <path>` | Directory to read connector files from (default: `./connectors` when using `--app-id`) | No |
 
 ## What It Does
 
-1. **Reads local connectors** from your `base44/connectors/` directory
+1. **Reads local connectors** from your `base44/connectors/` directory (or `--dir` when using `--app-id`)
 2. **Syncs with Base44** - updates scopes for existing connectors
 3. **Adds new connectors** - new OAuth connector types trigger authorization; Stripe is provisioned automatically
 4. **Removes unlisted connectors** - connectors not in your local files are removed from Base44
