@@ -5,24 +5,30 @@ Pull connector configurations from Base44 to local files. Replaces all local con
 ## Syntax
 
 ```bash
-npx base44 connectors pull
+npx base44 connectors pull [options]
 ```
 
 ## Authentication
 
 **Required**: Yes. If not authenticated, you'll be prompted to login first.
 
+## Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `--dir <path>` | Directory to write connector files to (default: `./connectors` when using `--app-id`) | No |
+
 ## What It Does
 
 1. Fetches all connectors from Base44
-2. Writes connector files to the `base44/connectors/` directory
+2. Writes connector files to the connectors directory
 3. Deletes local connector files that don't exist remotely
 4. Reports written and deleted connectors
 
 ## Prerequisites
 
-- Must be run from a Base44 project directory
-- Project must be linked to a Base44 app
+- Must be run from a linked Base44 project, OR pass `--app-id` / set `BASE44_APP_ID`
+- When using `--app-id`, connector files are written to `./connectors/` by default (override with `--dir`)
 
 ## Output
 
@@ -68,8 +74,9 @@ All connectors are already up to date
 
 ## Notes
 
-- Connector files are stored as `.jsonc` in the `base44/connectors/` directory
-- The directory location is configurable via `connectorsDir` in `config.jsonc`
+- Connector files are stored as `.jsonc`
+- For linked projects, the directory is `base44/connectors/` (configurable via `connectorsDir` in `config.jsonc`)
+- For projectless use (`--app-id`), defaults to `./connectors/` (override with `--dir`)
 - Use `base44 connectors push` to upload local changes to Base44
 
 ## Related Commands

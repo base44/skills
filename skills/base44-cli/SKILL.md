@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.0.56
+    version: 0.1.0
 ---
 
 # Base44 CLI
@@ -345,6 +345,7 @@ Connectors let your app connect to external services (Google Calendar, Slack, St
 | ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------- |
 | Create Connectors                  | Define connectors in `base44/connectors` folder      | [connectors-create.md](references/connectors-create.md)             |
 | `base44 connectors list-available` | List all available integration types from Base44     | [connectors-list-available.md](references/connectors-list-available.md) |
+| `base44 connectors initiate --integration-type <type>` | Initialize a single connector and start its OAuth flow (works with `--app-id`) | [connectors-initiate.md](references/connectors-initiate.md) |
 | `base44 connectors pull`           | Pull remote connectors to local files                | [connectors-pull.md](references/connectors-pull.md)                 |
 | `base44 connectors push`           | Push local connectors to Base44                      | [connectors-push.md](references/connectors-push.md)                 |
 
@@ -397,6 +398,20 @@ Manage project secrets (environment variables stored securely in Base44). These 
 | `base44 secrets list` | List the names of all secrets | [secrets-list.md](references/secrets-list.md) |
 | `base44 secrets set` | Set one or more secrets (KEY=VALUE or --env-file) | [secrets-set.md](references/secrets-set.md) |
 | `base44 secrets delete <key>` | Delete a secret by name | [secrets-delete.md](references/secrets-delete.md) |
+
+### Remote Development (Sandbox)
+
+Develop an app remotely via its server-side sandbox. All sandbox commands require an app context (`--app-id`, `BASE44_APP_ID`, or a linked project) and output JSON.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 sandbox ls [path]` | List directory entries in the remote sandbox | [sandbox-ls.md](references/sandbox-ls.md) |
+| `base44 sandbox read <paths...>` | Read file contents from the remote sandbox | [sandbox-read.md](references/sandbox-read.md) |
+| `base44 sandbox write <path>` | Create or overwrite a file in the remote sandbox | [sandbox-write.md](references/sandbox-write.md) |
+| `base44 sandbox edit <path>` | Apply exact old→new string edits to a file | [sandbox-edit.md](references/sandbox-edit.md) |
+| `base44 sandbox grep <pattern>` | Search files by pattern in the remote sandbox | [sandbox-grep.md](references/sandbox-grep.md) |
+| `base44 sandbox run <command...>` | Run a shell command in the remote sandbox | [sandbox-run.md](references/sandbox-run.md) |
+| `base44 sandbox checkpoint` | Create a restore-point checkpoint of the sandbox | [sandbox-checkpoint.md](references/sandbox-checkpoint.md) |
 
 ### Script Execution
 

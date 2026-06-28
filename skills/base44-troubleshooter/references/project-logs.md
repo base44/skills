@@ -15,11 +15,12 @@ This command can run from a linked project, or outside a project when you pass `
 | Option | Description | Required |
 |--------|-------------|----------|
 | `--function <names>` | Filter by function name(s), comma-separated. If omitted, fetches logs for all functions in the current app | No |
-| `--since <datetime>` | Show logs from this time (ISO format) | No |
-| `--until <datetime>` | Show logs until this time (ISO format) | No |
+| `--since <datetime>` | Show logs from this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`) | No |
+| `--until <datetime>` | Show logs until this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`) | No |
 | `--level <level>` | Filter by log level: `log`, `info`, `warn`, `error`, `debug` | No |
 | `-n, --limit <n>` | Number of results to return (1-1000, default: 50) | No |
 | `--order <order>` | Sort order: `asc` or `desc` (default: `desc`) | No |
+| `--json` | Output as JSON (clean stdout, safe to pipe to `jq`) | No |
 
 ## Examples
 
@@ -39,7 +40,13 @@ npx base44 logs --function my-function
 # Fetch logs for multiple functions
 npx base44 logs --function send-email,process-payment
 
-# Fetch logs since a specific time
+# Fetch logs from the last hour (relative shorthand)
+npx base44 logs --since 1h
+
+# Fetch logs from the last 30 minutes
+npx base44 logs --since 30m
+
+# Fetch logs since a specific time (ISO format)
 npx base44 logs --since 2024-01-15T10:00:00
 
 # Fetch logs within a time range
@@ -50,6 +57,9 @@ npx base44 logs -n 100 --order asc
 
 # Last 10 errors for a specific function
 npx base44 logs --function myFunction --level error --limit 10
+
+# Output as JSON (pipe to jq)
+npx base44 logs --json | jq '.[].message'
 ```
 
 ## Notes
@@ -59,4 +69,5 @@ npx base44 logs --function myFunction --level error --limit 10
 - When multiple functions are specified, logs are merged and sorted by timestamp.
 - If `--function` is omitted, logs are fetched for **all functions** in the current app.
 - The `--limit` applies after merging logs from all specified functions.
-- The `--since` and `--until` values are normalized to UTC if no timezone is provided (appends `Z`).
+- The `--since` and `--until` values accept ISO datetime strings or relative shorthands (`1h`, `30m`, `2d`). ISO values without a timezone are normalized to UTC (appends `Z`).
+- Use `--json` to get machine-readable output safe to pipe to `jq` or other tools.
