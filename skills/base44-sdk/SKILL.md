@@ -255,10 +255,13 @@ if (!user) {
 
 ```javascript
 // Frontend
-const result = await base44.functions.invoke("processOrder", {
+// ⚠️ invoke() returns the RAW axios response — your function's JSON is on `.data`,
+//    NOT the top-level object. It also THROWS on non-2xx (error body at err.response.data).
+const res = await base44.functions.invoke("processOrder", {
   orderId: "123",
   action: "ship"
 });
+const result = res.data; // ✅ e.g. res.data.success  (res itself is { data, status, headers, … })
 
 // Backend function (Deno)
 import { createClientFromRequest } from "npm:@base44/sdk";

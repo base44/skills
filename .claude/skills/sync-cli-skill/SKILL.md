@@ -314,6 +314,10 @@ After processing all changed commands, update the SKILL.md of each affected skil
 - Keep the existing structure and formatting of each skill
 - Do NOT change the frontmatter description unless explicitly asked
 
+### Step 6b: Flag base44-sandbox for review
+
+The `skills/base44-sandbox/` skill (the cloud-sandbox flavor) is **hand-authored** and self-contained — it carries its own concise guidelines and links out to `base44-cli`'s references rather than copying them, so this sync does not edit it automatically. If this sync changed the backend-function authoring conventions in `skills/base44-cli/references/functions-create.md` (directory layout, `function.jsonc` shape, Deno entry-point conventions, naming rules), **flag `skills/base44-sandbox/SKILL.md` for manual review** in the summary so its inline guidance can be updated to match.
+
 ### Step 7: Update CLI_VERSION and Skill Frontmatter
 
 After successfully updating all changed commands:

@@ -14,12 +14,26 @@ Invoke custom backend functions via `base44.functions`.
 ### `invoke`
 
 ```javascript
-base44.functions.invoke(functionName, data?): Promise<any>
+base44.functions.invoke(functionName, data?): Promise<AxiosResponse>
 ```
 
 - `functionName`: Name of the backend function
 - `data`: Optional object of parameters (sent as JSON, or multipart if contains File objects)
-- Returns: Whatever the function returns
+- **Returns the RAW axios response** — the JSON your function returned lives on **`.data`**, not on the top-level object. The resolved value is `{ data, status, headers, … }`.
+- **Throws on a non-2xx response.** The error body is at `err.response.data`.
+
+```javascript
+try {
+  // ⚠️ invoke() returns the RAW axios response, so the JSON your function
+  //    returned lives on `.data` — NOT on the top-level object.
+  const res = await base44.functions.invoke("process-order", { orderId });
+  const result = res.data;        // ✅  e.g. res.data.success
+  // const result = res;          // ❌  this is { data, status, headers, … }
+} catch (err) {
+  // invoke() THROWS on a non-2xx response; the error body is at err.response.data.
+  console.error(err.response?.data);
+}
+```
 
 ### `fetch`
 
@@ -38,11 +52,13 @@ Low-level method that performs a direct HTTP request to a backend function path 
 ### From Frontend
 
 ```javascript
-const result = await base44.functions.invoke("processOrder", {
+const res = await base44.functions.invoke("processOrder", {
   orderId: "order-123",
   action: "ship"
 });
 
+// invoke() resolves to the raw axios response — read your function's JSON off .data
+const result = res.data;
 console.log(result);
 ```
 
@@ -83,19 +99,21 @@ const fileInput = document.querySelector('input[type="file"]');
 const file = fileInput.files[0];
 
 // Automatically uses multipart/form-data when File objects present
-const result = await base44.functions.invoke("uploadDocument", {
+const res = await base44.functions.invoke("uploadDocument", {
   file: file,
   category: "invoices"
 });
+const result = res.data; // function's JSON is on .data
 ```
 
 ### With Service Role (Backend)
 
 ```javascript
 // Inside another backend function
-const result = await base44.asServiceRole.functions.invoke("adminTask", {
+const res = await base44.asServiceRole.functions.invoke("adminTask", {
   userId: "user-123"
 });
+const result = res.data; // function's JSON is on .data
 ```
 
 ### Via REST API (curl)

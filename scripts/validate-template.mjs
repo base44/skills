@@ -217,12 +217,35 @@ async function validateComponentFrontmatter(pluginDir, pluginName) {
   }
 }
 
-async function main() {
-  const pluginDir = repoRoot;
+async function discoverPluginDirs() {
+  // Every directory containing a .cursor-plugin/plugin.json is a plugin to validate:
+  // the repo root plus any bundle under plugins/*/.
+  const dirs = [];
+  if (await pathExists(path.join(repoRoot, ".cursor-plugin", "plugin.json"))) {
+    dirs.push(repoRoot);
+  }
+
+  const pluginsRoot = path.join(repoRoot, "plugins");
+  if (await pathExists(pluginsRoot)) {
+    const entries = await fs.readdir(pluginsRoot, { withFileTypes: true });
+    for (const entry of entries) {
+      if (!entry.isDirectory()) {
+        continue;
+      }
+      const candidate = path.join(pluginsRoot, entry.name);
+      if (await pathExists(path.join(candidate, ".cursor-plugin", "plugin.json"))) {
+        dirs.push(candidate);
+      }
+    }
+  }
+
+  return dirs;
+}
+
+async function validatePlugin(pluginDir) {
   const manifestPath = path.join(pluginDir, ".cursor-plugin", "plugin.json");
   const pluginManifest = await readJsonFile(manifestPath, "Plugin manifest");
   if (!pluginManifest) {
-    summarizeAndExit();
     return;
   }
 
@@ -230,7 +253,7 @@ async function main() {
 
   if (typeof pluginManifest.name !== "string" || !pluginNamePattern.test(pluginManifest.name)) {
     addError(
-      '"name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.'
+      `${pluginName}: "name" in plugin.json must be lowercase and use only alphanumerics, hyphens, and periods.`
     );
   }
 
@@ -243,15 +266,29 @@ async function main() {
   }
 
   await validateComponentFrontmatter(pluginDir, pluginName);
+}
 
-  const hooksPath = path.join(pluginDir, "hooks", "hooks.json");
-  if (!(await pathExists(hooksPath))) {
-    addWarning(`${pluginName}: no hooks/hooks.json file found (only needed when using hooks).`);
+async function main() {
+  const pluginDirs = await discoverPluginDirs();
+  if (pluginDirs.length === 0) {
+    addError("No .cursor-plugin/plugin.json manifest found at the repo root or under plugins/*/.");
+    summarizeAndExit();
+    return;
   }
 
-  const mcpPath = path.join(pluginDir, "mcp.json");
+  for (const pluginDir of pluginDirs) {
+    await validatePlugin(pluginDir);
+  }
+
+  // hooks/mcp checks apply to the repo root only (shared plugin assets).
+  const hooksPath = path.join(repoRoot, "hooks", "hooks.json");
+  if (!(await pathExists(hooksPath))) {
+    addWarning("no hooks/hooks.json file found (only needed when using hooks).");
+  }
+
+  const mcpPath = path.join(repoRoot, "mcp.json");
   if (!(await pathExists(mcpPath))) {
-    addWarning(`${pluginName}: no mcp.json file found (only needed when using MCP servers).`);
+    addWarning("no mcp.json file found (only needed when using MCP servers).");
   }
 
   summarizeAndExit();
