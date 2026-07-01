@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.0.56
+    version: 0.1.1
 ---
 
 # Base44 CLI
@@ -192,6 +192,29 @@ npx base44 <command>
 
 **Note:** All commands in this documentation use `npx base44`. You can also use `yarn base44`, or `pnpm base44` if preferred.
 
+## Global `--json` Option
+
+The CLI has a global `--json` flag that switches all commands to machine-readable mode:
+
+- **stdout** contains a single JSON document (the command's data output)
+- **Human-oriented status messages, spinners, and logs** go to stderr (stdout stays clean)
+- **Forces non-interactive mode**: prompts and OAuth browser flows are skipped
+
+Use `--json` when you need to parse or pipe command output programmatically:
+
+```bash
+# Get connector list as JSON
+npx base44 connectors list-available --json | jq '.integrations[].integrationType'
+
+# Get logs as JSON
+npx base44 logs --json | jq '.[] | select(.level == "error")'
+
+# Initiate a connector and extract the redirect URL
+npx base44 connectors initiate --app-id app_123 --integration-type googlecalendar --json | jq -r '.redirectUrl'
+```
+
+Commands that do not produce data output (e.g. `deploy`) still return `{ "output": "<status>" }` so stdout is always valid JSON.
+
 ## Global `--app-id` Option
 
 The CLI has a global `--app-id <id>` option for commands that only need an app context, not local project files.
@@ -345,6 +368,7 @@ Connectors let your app connect to external services (Google Calendar, Slack, St
 | ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------- |
 | Create Connectors                  | Define connectors in `base44/connectors` folder      | [connectors-create.md](references/connectors-create.md)             |
 | `base44 connectors list-available` | List all available integration types from Base44     | [connectors-list-available.md](references/connectors-list-available.md) |
+| `base44 connectors initiate`       | Initialize a connector and start its OAuth flow (works without a local project) | [connectors-initiate.md](references/connectors-initiate.md) |
 | `base44 connectors pull`           | Pull remote connectors to local files                | [connectors-pull.md](references/connectors-pull.md)                 |
 | `base44 connectors push`           | Push local connectors to Base44                      | [connectors-push.md](references/connectors-push.md)                 |
 
@@ -415,6 +439,20 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 **Output:** `base44/.types/types.d.ts` — augments `@base44/sdk` module with typed registries (`EntityTypeRegistry`, `FunctionNameRegistry`, `AgentNameRegistry`, `ConnectorTypeRegistry`).
 
 **No authentication required.** Runs entirely locally. Automatically updates `tsconfig.json` to include the generated types.
+
+### Remote Sandbox Development
+
+Interact with an app's server-side sandbox — read, write, edit, search, and run commands remotely. All sandbox commands work from a linked project directory or with `--app-id` / `BASE44_APP_ID`.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 sandbox ls [path]` | List directory entries in an app's remote sandbox | [sandbox-list-directory.md](references/sandbox-list-directory.md) |
+| `base44 sandbox read <paths...>` | Read file contents from an app's remote sandbox | [sandbox-read-file.md](references/sandbox-read-file.md) |
+| `base44 sandbox write <path>` | Create or overwrite a file in an app's remote sandbox | [sandbox-write-file.md](references/sandbox-write-file.md) |
+| `base44 sandbox edit <path>` | Apply exact old→new string edits to a file in the sandbox | [sandbox-edit-file.md](references/sandbox-edit-file.md) |
+| `base44 sandbox grep <pattern>` | Search files for a pattern in an app's remote sandbox | [sandbox-grep.md](references/sandbox-grep.md) |
+| `base44 sandbox run <command...>` | Run a shell command in an app's remote sandbox | [sandbox-run-command.md](references/sandbox-run-command.md) |
+| `base44 sandbox checkpoint` | Create a restore-point checkpoint of an app's remote sandbox | [sandbox-checkpoint.md](references/sandbox-checkpoint.md) |
 
 ### Site Management
 

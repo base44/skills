@@ -5,8 +5,20 @@ Push local connector configurations to Base44, synchronizing scopes and handling
 ## Usage
 
 ```bash
-npx base44 connectors push
+npx base44 connectors push [options]
 ```
+
+## Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `--dir <path>` | Directory to read connector files from (default: `./connectors` when using `--app-id`) | No |
+
+## App Context
+
+Works in two modes:
+- **Linked project** (default): reads connectors from the project's connectors directory (configured via `connectorsDir` in `config.jsonc`)
+- **App ID mode** (`--app-id` or `BASE44_APP_ID`): no local project required; reads from `./connectors` by default (override with `--dir`)
 
 ## What It Does
 

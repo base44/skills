@@ -57,10 +57,20 @@ npx base44 logs --app-id app_123 --function <function_name> --level error
 
 ### 3. Inspect a Time Range
 
-Correlate with user-reported issue timestamps:
+Correlate with user-reported issue timestamps. `--since` and `--until` accept ISO datetimes or relative shorthands (`1h`, `30m`, `2d`):
 
 ```bash
 npx base44 logs --function <function_name> --since <start_time> --until <end_time>
+
+# Relative shorthand examples
+npx base44 logs --since 1h
+npx base44 logs --function <function_name> --since 2h --until 1h
+```
+
+To fetch production logs (published app) instead of preview (draft):
+
+```bash
+npx base44 logs --env prod --level error
 ```
 
 ### 4. Analyze the Logs
