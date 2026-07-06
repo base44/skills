@@ -466,6 +466,32 @@ npx base44 domains list
 npx base44 domains remove app.example.com -y
 ```
 
+### App Slug
+
+Every app has a **slug** — its public subdomain on Base44 (`https://<slug>.base44.app`). For full-stack apps the production URL follows the slug, so changing it moves where the app is served. Slugs are auto-generated from the app name + id; set a custom one for a cleaner URL.
+
+| Command | Description |
+|---------|-------------|
+| `base44 slug` | Show the app's current slug and its public URL. |
+| `base44 slug set <slug>` | Set a custom slug. Prints old → new slug and the resulting production URL. |
+| `base44 slug reset` | Reset to the auto-generated slug (derived from the app name + id). Prints the new slug. |
+
+**Notes:**
+- Slug format: 3–50 characters — lowercase letters, numbers, and hyphens. Reserved words (`api`, `admin`, `login`, …) are rejected.
+- If the slug is already taken, the error includes available alternative suggestions to pick from.
+- Changing the slug takes effect immediately: previously shared links to the old subdomain stop working. Custom domains are unaffected.
+
+```bash
+# Show the current slug and public URL
+npx base44 slug
+
+# Change the slug (app now serves at https://my-cool-app.base44.app)
+npx base44 slug set my-cool-app
+
+# Reset to the auto-generated slug
+npx base44 slug reset
+```
+
 ## Quick Start
 
 1. Install the CLI in your project:
