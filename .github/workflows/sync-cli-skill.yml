@@ -20,6 +20,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      issues: write # Required to create/apply the auto-skill-update label
       id-token: write
 
     steps:
@@ -40,7 +41,7 @@ jobs:
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           allowed_bots: 'base44-github-actions[bot]'
-          claude_args: '--allowedTools "Edit,Write,MultiEdit,Bash(git:*),Bash(gh pr:*),Bash(mkdir:*)"'
+          claude_args: '--allowedTools "Edit,Write,MultiEdit,Bash(git:*),Bash(gh pr:*),Bash(gh label:*),Bash(mkdir:*)"'
           prompt: |
             read the skill in '.claude/skills/sync-cli-skill/SKILL.md' and follow the steps to sync the CLI skill.
 
@@ -48,6 +49,11 @@ jobs:
             CLI version: ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }}
 
             After syncing, create a pull request with the changes.
+            Before creating the PR, make sure the `auto-skill-update` label exists in the repo:
+            `gh label create auto-skill-update --color 1D76DB --description "Automated skill-sync PR" --force`
+            Then create the PR WITH that label in the same command: `gh pr create --label auto-skill-update ...`.
+            The label is the discriminator that downstream automation (e.g. the Slack notifier) uses to
+            recognize skill-sync PRs, so it must be attached at creation time.
             PR title: "Update base44-cli skill to ${{ github.event.client_payload.version || inputs.cli_version || 'latest' }} {human-readable-time}"
 
             ${{ inputs.additional_instructions && format('Additional instructions: {0}', inputs.additional_instructions) || '' }}

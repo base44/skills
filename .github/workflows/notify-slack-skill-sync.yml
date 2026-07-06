@@ -1,0 +1,45 @@
+name: Notify Slack on skill-sync PRs
+
+# When an auto-generated base44-cli / base44-sdk skill-sync PR opens, post a
+# message to the team Slack channel so someone remembers to review it. Fires
+# only for skill-update PRs; anything else is ignored.
+#
+# Discriminator: the `auto-skill-update` label. The sync workflows
+# (sync-cli-skill.yml / sync-sdk-skill.yml) create their PRs with this label,
+# so it is present in the `opened` event payload. This is a stable, explicit
+# contract — independent of the PR title wording or which bot authored it.
+#
+# Requires a repo secret SLACK_WEBHOOK_URL: a Slack incoming-webhook URL
+# pointed at the #baas44-agent-skills channel. If the secret is absent the job
+# logs a warning and exits cleanly, so it never fails a PR.
+
+on:
+  pull_request:
+    types: [opened, reopened, ready_for_review, labeled]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: >-
+      (github.event.action != 'labeled' &&
+       contains(github.event.pull_request.labels.*.name, 'auto-skill-update')) ||
+      (github.event.action == 'labeled' &&
+       github.event.label.name == 'auto-skill-update')
+    steps:
+      - name: Notify Slack
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          if [ -z "${SLACK_WEBHOOK_URL}" ]; then
+            echo "::warning::SLACK_WEBHOOK_URL secret is not set — skipping Slack notification."
+            exit 0
+          fi
+          text=$(printf ':package: Skill-update PR needs a review: <%s|#%s — %s>' "${PR_URL}" "${PR_NUMBER}" "${PR_TITLE}")
+          jq -n --arg text "${text}" '{text: $text}' \
+            | curl -sS --fail -X POST -H 'Content-type: application/json' --data @- "${SLACK_WEBHOOK_URL}"
