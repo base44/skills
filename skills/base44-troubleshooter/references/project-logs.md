@@ -17,7 +17,7 @@ This command can run from a linked project, or outside a project when you pass `
 | `--function <names>` | Filter by function name(s), comma-separated. If omitted, fetches logs for all functions in the current app | No |
 | `--since <datetime>` | Show logs from this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`) | No |
 | `--until <datetime>` | Show logs until this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`). Cannot be combined with `--follow` | No |
-| `--level <level>` | Filter by log level: `log`, `info`, `warn`, `error`, `debug` | No |
+| `--level <level>` | Filter by log level: `info`, `warning`, `error`, `debug` | No |
 | `-n, --limit <n>` | Number of results to return (1-1000, default: 50) | No |
 | `--order <order>` | Sort order: `asc` or `desc` (default: `desc`). Cannot be combined with `--follow` | No |
 | `--env <env>` | Which deployment to read logs from: `preview` (current draft) or `prod` (published). Default: `preview` | No |

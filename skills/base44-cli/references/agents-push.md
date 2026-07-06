@@ -110,7 +110,7 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 
 ### Memory Configuration
 
-`memory_config` lets an agent remember facts across conversations. Omit the field entirely to disable memory.
+`memory_config` lets an agent remember facts across conversations. To disable memory, set `"enabled": false` explicitly — if you omit `memory_config` entirely, the backend applies its default and memory is **enabled**.
 
 | Field | Type | Default | Description |
 |-------|------|---------|-------------|
