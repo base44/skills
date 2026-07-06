@@ -425,6 +425,47 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
 
+### Custom Domains
+
+Connect your own domain (e.g. `app.example.com`) to a deployed full-stack app. Custom domains use Cloudflare-for-SaaS custom hostnames: the CLI registers the hostname, and you point your domain at Base44 with a single **CNAME** record. TLS certificates are then **issued and renewed automatically** — you never manage a certificate.
+
+| Command | Description |
+|---------|-------------|
+| `base44 domains add <hostname> [--wait]` | Connect a custom domain. Prints the exact CNAME record to add and the current status. |
+| `base44 domains list` | List connected domains with their live hostname + certificate status. |
+| `base44 domains remove <hostname> [-y]` | Disconnect a custom domain (removes the hostname, route, and record). |
+
+**The one manual step — add the CNAME record.** After `domains add`, the CLI prints a DNS record like:
+
+```
+Add this DNS record:
+  CNAME  app.example.com  →  <cname-target>
+Status: pending (SSL: pending_validation)
+```
+
+Create that `CNAME` record with your DNS provider, pointing your hostname at the printed target. Once it resolves, Cloudflare validates ownership and issues the TLS certificate automatically; the domain then serves your app's current production deployment.
+
+**`--wait`.** `base44 domains add <hostname> --wait` polls until both the hostname and its TLS certificate are active (2s interval), showing a spinner with the live status. Add the CNAME record first (or during the wait) so it can complete; otherwise it times out waiting for the DNS record.
+
+**Notes:**
+- If the app has no production deployment yet, the domain is still connected but won't serve until you `npx base44 deploy` and promote a deployment to production (`base44 promote`).
+- `npx base44 domains list` re-fetches live status from Cloudflare, so re-run it to watch a pending domain flip to active.
+- Custom domains attach to the app's **production** deployment; they follow promote/rollback automatically.
+
+```bash
+# Connect a domain and print the CNAME to add
+npx base44 domains add app.example.com
+
+# ...or connect and wait until the certificate is active
+npx base44 domains add app.example.com --wait
+
+# Check status of all connected domains
+npx base44 domains list
+
+# Disconnect a domain (skip the confirmation prompt with -y)
+npx base44 domains remove app.example.com -y
+```
+
 ## Quick Start
 
 1. Install the CLI in your project:
