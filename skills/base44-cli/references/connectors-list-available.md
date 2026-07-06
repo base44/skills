@@ -43,6 +43,12 @@ Found 14 available integrations.
 
 Each integration is displayed in YAML format showing the integration type, description, and any connection configuration fields required for setup.
 
+Pass the global `--json` flag to get the catalog as a JSON document (`{ "integrations": [...] }`) instead:
+
+```bash
+npx base44 connectors list-available --json
+```
+
 ## Use Cases
 
 - Discover all supported connector types before creating connector files

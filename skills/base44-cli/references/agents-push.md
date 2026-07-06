@@ -79,6 +79,12 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
     // Backend function tool - gives agent access to a function
     { "function_name": "send_email", "description": "Send an email notification" }
   ],
+  "memory_config": {                 // Optional: lets the agent remember facts across conversations
+    "enabled": true,                 // Optional: defaults to true
+    "scope": "both",                 // Optional: "global" | "user" | "both", defaults to "both"
+    "include_other_conversation_context": false,  // Optional: defaults to false
+    "instructions": null             // Optional: string or null, custom guidance on what to remember
+  },
   "whatsapp_greeting": "Hello! How can I help you today?"  // Optional
 }
 ```
@@ -99,7 +105,28 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 - `description`: Required, minimum 1 character
 - `instructions`: Required, minimum 1 character
 - `tool_configs`: Optional, defaults to empty array
+- `memory_config`: Optional, see [Memory Configuration](#memory-configuration) below
 - `whatsapp_greeting`: Optional
+
+### Memory Configuration
+
+`memory_config` lets an agent remember facts across conversations. To disable memory, set `"enabled": false` explicitly — if you omit `memory_config` entirely, the backend applies its default and memory is **enabled**.
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `enabled` | boolean | `true` | Whether the agent retains memory across conversations |
+| `scope` | `"global"` \| `"user"` \| `"both"` | `"both"` | `"global"` shares memory across all end users, `"user"` scopes memory to each individual end user, `"both"` does both |
+| `include_other_conversation_context` | boolean | `false` | Whether the agent can also draw on context from the user's other conversations |
+| `instructions` | string \| `null` | `null` | Optional custom instructions guiding what the agent should remember |
+
+```jsonc
+"memory_config": {
+  "enabled": true,
+  "scope": "user",
+  "include_other_conversation_context": false,
+  "instructions": "Remember the user's preferred name and timezone."
+}
+```
 
 ### Common Mistake: Wrong tool_configs Format
 

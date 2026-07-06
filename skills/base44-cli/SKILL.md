@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.0.56
+    version: 0.1.1
 ---
 
 # Base44 CLI
@@ -215,6 +215,15 @@ Do **not** use `--app-id` for commands that need local project files:
 - `base44 dev` runs from a linked local project, so it rejects `--app-id`
 - `base44 deploy` still requires a local project directory because it reads local resources
 
+## Global `--json` Option
+
+The CLI has a global `--json` option that makes commands emit a machine-readable JSON document on stdout instead of human-oriented output. It also forces non-interactive mode (spinners/status messages/logs move to stderr), so stdout stays pure JSON — safe to pipe into `jq` or another program.
+
+```bash
+npx base44 connectors list-available --json
+npx base44 logs --app-id app_123 --json
+```
+
 ## Available Commands
 
 ### Authentication
@@ -321,6 +330,12 @@ Agents are conversational AI assistants that can interact with users, access you
     // Backend function tool - gives agent access to a function
     { "function_name": "send_email", "description": "Send an email notification" }
   ],
+  "memory_config": {                 // Optional: lets the agent remember facts across conversations
+    "enabled": true,
+    "scope": "both",                 // "global" | "user" | "both"
+    "include_other_conversation_context": false,
+    "instructions": null
+  },
   "whatsapp_greeting": "Hello! How can I help you today?"
 }
 ```
@@ -331,11 +346,13 @@ Agents are conversational AI assistants that can interact with users, access you
 - Invalid: `Support-Agent`, `OrderBot`
 
 **Required fields:** `name`, `description`, `instructions`
-**Optional fields:** `tool_configs` (defaults to `[]`), `whatsapp_greeting`
+**Optional fields:** `tool_configs` (defaults to `[]`), `memory_config`, `whatsapp_greeting`
 
 **Tool config types:**
 - **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
 - **Backend function tools**: `function_name` + `description`
+
+**Memory config fields** (all optional, see [agents-push.md](references/agents-push.md#memory-configuration) for details): `enabled` (bool, default `true`), `scope` (`global`\|`user`\|`both`, default `both`), `include_other_conversation_context` (bool, default `false`), `instructions` (string\|null, default `null`)
 
 ### Connector Management
 
@@ -345,6 +362,7 @@ Connectors let your app connect to external services (Google Calendar, Slack, St
 | ---------------------------------- | ---------------------------------------------------- | ------------------------------------------------------------------- |
 | Create Connectors                  | Define connectors in `base44/connectors` folder      | [connectors-create.md](references/connectors-create.md)             |
 | `base44 connectors list-available` | List all available integration types from Base44     | [connectors-list-available.md](references/connectors-list-available.md) |
+| `base44 connectors initiate --integration-type <t> [--scopes <s...>]` | Initialize a connector and start its OAuth flow; works projectless with `--app-id` | [connectors-initiate.md](references/connectors-initiate.md) |
 | `base44 connectors pull`           | Pull remote connectors to local files                | [connectors-pull.md](references/connectors-pull.md)                 |
 | `base44 connectors push`           | Push local connectors to Base44                      | [connectors-push.md](references/connectors-push.md)                 |
 

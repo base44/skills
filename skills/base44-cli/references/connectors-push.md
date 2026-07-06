@@ -5,7 +5,25 @@ Push local connector configurations to Base44, synchronizing scopes and handling
 ## Usage
 
 ```bash
-npx base44 connectors push
+npx base44 connectors push [--dir <path>]
+```
+
+## Options
+
+| Option | Description | Required |
+|--------|--------------|----------|
+| `--dir <path>` | Directory to read connector files from. Only used with `--app-id` (no local project); defaults to `./connectors` | No |
+
+## Projectless Mode
+
+`connectors push` can run without a local project by passing `--app-id` (or setting `BASE44_APP_ID`). In that mode there's no `config.jsonc` to read connectors from, so files are read from `./connectors` by default — override with `--dir`.
+
+## JSON Output
+
+Pass the global `--json` flag to get a machine-readable result instead of human-oriented log lines and prompts (OAuth authorization is skipped automatically in `--json` mode, same as any non-interactive run):
+
+```bash
+npx base44 connectors push --json
 ```
 
 ## What It Does
