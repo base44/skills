@@ -2,7 +2,12 @@ name: Notify Slack on skill-sync PRs
 
 # When an auto-generated base44-cli / base44-sdk skill-sync PR opens, post a
 # message to the team Slack channel so someone remembers to review it. Fires
-# only for the sync bot's skill-update PRs; anything else is ignored.
+# only for skill-update PRs; anything else is ignored.
+#
+# Discriminator: the `auto-skill-update` label. The sync workflows
+# (sync-cli-skill.yml / sync-sdk-skill.yml) create their PRs with this label,
+# so it is present in the `opened` event payload. This is a stable, explicit
+# contract — independent of the PR title wording or which bot authored it.
 #
 # Requires a repo secret SLACK_WEBHOOK_URL: a Slack incoming-webhook URL
 # pointed at the #baas44-agent-skills channel. If the secret is absent the job
@@ -10,7 +15,7 @@ name: Notify Slack on skill-sync PRs
 
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review]
+    types: [opened, reopened, ready_for_review, labeled]
 
 permissions:
   contents: read
@@ -19,9 +24,10 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     if: >-
-      github.event.pull_request.user.login == 'claude[bot]' &&
-      (startsWith(github.event.pull_request.title, 'Update base44-cli skill to ') ||
-       startsWith(github.event.pull_request.title, 'Update base44-sdk skill to '))
+      (github.event.action != 'labeled' &&
+       contains(github.event.pull_request.labels.*.name, 'auto-skill-update')) ||
+      (github.event.action == 'labeled' &&
+       github.event.label.name == 'auto-skill-update')
     steps:
       - name: Notify Slack
         env:
