@@ -1,0 +1,100 @@
+name: Auto-merge skill sync PRs
+
+# The auto-generated base44-cli / base44-sdk skill-sync PRs were piling up
+# because no one remembered to review them. This squash-merges each one once
+# its checks are green, so they stop getting stuck. A sync PR whose AI review
+# or CI is failing still waits for a human — nothing broken gets merged.
+#
+# Eligible PR = authored by the sync bot (claude[bot]) AND titled
+# "Update base44-(cli|sdk) skill to ...". Nothing else is touched.
+#
+# Triggers: a workflow_run fast-path right after the review workflows finish,
+# a scheduled backstop so nothing gets stuck if an event is ever missed, and
+# manual dispatch. Squash is the only merge method enabled on this repo.
+
+on:
+  workflow_run:
+    workflows: ["Claude Code Review", "README Check"]
+    types: [completed]
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+
+concurrency:
+  group: auto-merge-skill-sync
+  cancel-in-progress: false
+
+jobs:
+  auto-merge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+
+            const TITLE_RE = /^Update base44-(cli|sdk) skill to /;
+            const SYNC_AUTHORS = new Set(["claude[bot]"]);
+            const REQUIRED_REVIEW_CHECK = "claude-review";
+            const OK = new Set(["success", "neutral", "skipped"]);
+
+            const { data: openPrs } = await github.rest.pulls.list({
+              owner, repo, state: "open", per_page: 100,
+            });
+
+            for (const summary of openPrs) {
+              const tag = `PR #${summary.number}`;
+
+              if (summary.draft) { core.info(`${tag}: draft, skipping.`); continue; }
+              if (!SYNC_AUTHORS.has(summary.user?.login)) continue;
+              if (!TITLE_RE.test(summary.title)) continue;
+
+              // Full PR object for an up-to-date head sha + mergeability.
+              const { data: pr } = await github.rest.pulls.get({
+                owner, repo, pull_number: summary.number,
+              });
+              if (pr.state !== "open") continue;
+              if (pr.mergeable_state === "dirty") {
+                core.info(`${tag}: has conflicts; leaving for a human.`);
+                continue;
+              }
+
+              // Re-evaluate the full check state on the PR head, so we only
+              // merge once every check has finished and nothing failed.
+              const { data: checks } = await github.rest.checks.listForRef({
+                owner, repo, ref: pr.head.sha, per_page: 100,
+              });
+              const runs = checks.check_runs;
+
+              const pending = runs.filter(r => r.status !== "completed");
+              if (pending.length) {
+                core.info(`${tag}: waiting on ${pending.map(r => r.name).join(", ")}.`);
+                continue;
+              }
+
+              const failed = runs.filter(r => !OK.has(r.conclusion));
+              if (failed.length) {
+                core.info(`${tag}: not merging — failing checks: ${failed.map(r => `${r.name}=${r.conclusion}`).join(", ")}.`);
+                continue;
+              }
+
+              const review = runs.find(r => r.name === REQUIRED_REVIEW_CHECK);
+              if (!review || review.conclusion !== "success") {
+                core.info(`${tag}: ${REQUIRED_REVIEW_CHECK} has not passed; skipping.`);
+                continue;
+              }
+
+              try {
+                await github.rest.pulls.merge({
+                  owner, repo, pull_number: pr.number, merge_method: "squash",
+                });
+                core.notice(`${tag}: squash-merged (${pr.title}).`);
+              } catch (err) {
+                core.warning(`${tag}: merge failed — ${err.status} ${err.message}`);
+              }
+            }
