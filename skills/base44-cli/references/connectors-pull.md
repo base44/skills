@@ -5,8 +5,14 @@ Pull connector configurations from Base44 to local files. Replaces all local con
 ## Syntax
 
 ```bash
-npx base44 connectors pull
+npx base44 connectors pull [--dir <path>]
 ```
+
+## Options
+
+| Option | Description | Required |
+|--------|--------------|----------|
+| `--dir <path>` | Directory to write connector files to. Only used with `--app-id` (no local project); defaults to `./connectors` | No |
 
 ## Authentication
 
@@ -15,14 +21,29 @@ npx base44 connectors pull
 ## What It Does
 
 1. Fetches all connectors from Base44
-2. Writes connector files to the `base44/connectors/` directory
+2. Writes connector files to the `base44/connectors/` directory (or `--dir`/`./connectors` when run with `--app-id` and no local project)
 3. Deletes local connector files that don't exist remotely
 4. Reports written and deleted connectors
 
 ## Prerequisites
 
-- Must be run from a Base44 project directory
-- Project must be linked to a Base44 app
+- Either run from a Base44 project directory linked to an app, or pass `--app-id`/`BASE44_APP_ID` (projectless mode)
+
+## Projectless Mode
+
+`connectors pull` can run without a local project by passing `--app-id` (or setting `BASE44_APP_ID`). In that mode there's no `config.jsonc` to read `connectorsDir` from, so files are written to `./connectors` by default — override with `--dir`:
+
+```bash
+npx base44 connectors pull --app-id app_123 --dir ./my-connectors
+```
+
+## JSON Output
+
+Pass the global `--json` flag to get a machine-readable result instead of human-oriented log lines:
+
+```bash
+npx base44 connectors pull --json
+```
 
 ## Output
 
