@@ -50,6 +50,11 @@ Available in user mode (`base44.aiGateway`) and with the service-role token
   use more credits: only when needed, and tell the user.
 - **No streaming.**
 - **Don't chain `InvokeLLM`** to fake a tool loop — use a real agent loop.
+- **Scope service-role tools to trusted context, not agent-chosen inputs.** The agent
+  runs with full `asServiceRole` access, so a tool that takes e.g. a caller-controllable
+  `customer_email` lets the model (or an injected input) reach any record. Fix such
+  values from the request context (as in the example below) and let the agent control
+  only safe parameters.
 
 Example with the Vercel AI SDK — a background reviewer the app invokes when a return
 request is created:
@@ -72,13 +77,17 @@ Deno.serve(async (req) => {
     model: base44Models("automatic"),
     instructions:
       "Decide whether this return request looks fine or needs the owner's attention. " +
-      "Search the customer's history as many times as you need, then give a short verdict with your reasons.",
+      "Look into this customer's past orders as many times as you need, then give a short verdict with your reasons.",
     tools: {
       searchOrders: tool({
-        description: "Search this customer's past orders",
-        inputSchema: z.object({ customer_email: z.string() }),
-        execute: ({ customer_email }) =>
-          base44.asServiceRole.entities.Order.filter({ customer_email }),
+        description: "This customer's past orders, optionally filtered by status",
+        inputSchema: z.object({ status: z.string().optional() }),
+        execute: ({ status }) => {
+          // Customer is fixed from the trusted request context — NOT an agent input.
+          const query = { customer_email: request.customer_email };
+          if (status) query.status = status;
+          return base44.asServiceRole.entities.Order.filter(query, "-created_date", 50);
+        },
       }),
     },
     stopWhen: isStepCount(8),
@@ -88,6 +97,15 @@ Deno.serve(async (req) => {
   await base44.asServiceRole.entities.ReturnRequest.update(return_id, { review_note: text });
   return Response.json({ review: text });
 });
+```
+
+**Images:** when the agent needs to see an image, pass it as an image part in `messages`:
+
+```javascript
+const { text } = await agent.generate({ messages: [{ role: "user", content: [
+  { type: "text", text: `Review this receipt: ${JSON.stringify(receipt)}` },
+  { type: "image", image: receipt.image_url },
+]}]});
 ```
 
 Any OpenAI-compatible agent SDK works the same way — construct its provider/client with
