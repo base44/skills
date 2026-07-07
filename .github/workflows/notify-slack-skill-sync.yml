@@ -40,6 +40,6 @@ jobs:
             echo "::warning::SLACK_WEBHOOK_URL secret is not set — skipping Slack notification."
             exit 0
           fi
-          text=$(printf ':package: Skill-update PR needs a review: <%s|#%s — %s>' "${PR_URL}" "${PR_NUMBER}" "${PR_TITLE}")
+          text=$(printf ':package: Skill-update PR needs a review: <%s|#%s — %s> @ef-app-infra' "${PR_URL}" "${PR_NUMBER}" "${PR_TITLE}")
           jq -n --arg text "${text}" '{text: $text}' \
             | curl -sS --fail -X POST -H 'Content-type: application/json' --data @- "${SLACK_WEBHOOK_URL}"
