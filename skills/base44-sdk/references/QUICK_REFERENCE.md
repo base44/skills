@@ -70,6 +70,17 @@ CreateFileSignedUrl({file_uri, expires_in?}) → Promise<{signed_url}>
 ExtractDataFromUploadedFile({file_url, json_schema}) → Promise<object>
 ```
 
+**AI surface:** single call, no tools → `InvokeLLM`; chat product for users → `base44.agents`; task-with-tools agent (code) → `aiGateway` (see below).
+
+### AI Gateway (`base44.aiGateway.*`)
+
+```
+connection() → { baseURL, token }   // feed to any OpenAI-compatible SDK (Vercel AI SDK, Mastra, OpenAI); backend only
+asServiceRole.aiGateway.connection() → { baseURL, token }
+```
+
+Build **code agents** (agent loops with tools) on Base44's managed models. Model `automatic` by default; no streaming. See [code-agents.md](code-agents.md) and [ai-gateway.md](ai-gateway.md).
+
 ### Custom Integrations (`base44.integrations.custom.*`)
 
 ```
