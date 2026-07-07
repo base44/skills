@@ -32,8 +32,8 @@ Available in user mode (`base44.aiGateway`) and with the service-role token
 ## Usage
 
 ```javascript
-import { createClientFromRequest } from "npm:@base44/sdk";
-import OpenAI from "npm:openai";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.36";
+import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@3.0.5";
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -41,13 +41,11 @@ Deno.serve(async (req) => {
   // Service-role connection (backend function)
   const { baseURL, token } = base44.asServiceRole.aiGateway.connection();
 
-  // Point any OpenAI-compatible client at it
-  const client = new OpenAI({ baseURL, apiKey: token });
-  const res = await client.chat.completions.create({
-    model: "automatic",
-    messages: [{ role: "user", content: "Hello!" }],
-  });
-  return Response.json({ text: res.choices[0].message.content });
+  // Point any OpenAI-compatible SDK at the gateway, then use it with your agent SDK.
+  const base44Models = createOpenAICompatible({ name: "base44", baseURL, apiKey: token });
+  // e.g. base44Models("automatic") — see code-agents.md for a full agent example.
+
+  return Response.json({ ok: true });
 });
 ```
 

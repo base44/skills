@@ -40,10 +40,10 @@ multi-agent, runtime-computed instructions).
 A background reviewer the app invokes when a return request is created:
 
 ```javascript
-import { createClientFromRequest } from "npm:@base44/sdk";
-import { ToolLoopAgent, tool, isStepCount } from "npm:ai";
-import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
-import { z } from "npm:zod";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.36";
+import { ToolLoopAgent, tool, isStepCount } from "npm:ai@7.0.16";
+import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@3.0.5";
+import { z } from "npm:zod@4.4.3";
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -75,54 +75,10 @@ Deno.serve(async (req) => {
 });
 ```
 
-## Example — Mastra
-
-```javascript
-import { createClientFromRequest } from "npm:@base44/sdk";
-import { Agent } from "npm:@mastra/core/agent";
-import { createTool } from "npm:@mastra/core/tools";
-import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible";
-import { z } from "npm:zod";
-
-Deno.serve(async (req) => {
-  const base44 = createClientFromRequest(req);
-  const { baseURL, token } = base44.asServiceRole.aiGateway.connection();
-  const base44Models = createOpenAICompatible({ name: "base44", baseURL, apiKey: token });
-
-  const agent = new Agent({
-    id: "order-helper",
-    name: "order-helper",
-    instructions: "Help resolve questions about orders using the lookup tool.",
-    model: base44Models("automatic"),
-    tools: {
-      lookupOrder: createTool({
-        id: "lookup-order",
-        description: "Fetch an order by id",
-        inputSchema: z.object({ orderId: z.string() }),
-        execute: async ({ context }) =>
-          base44.asServiceRole.entities.Order.get(context.orderId),
-      }),
-    },
-  });
-
-  const { text } = await agent.generate("Where is order 123?");
-  return Response.json({ text });
-});
-```
-
-## Any OpenAI-compatible SDK
-
-Because the gateway is OpenAI Chat Completions compatible, any client works — construct
-it with the gateway's `baseURL` and `token`:
-
-```javascript
-import OpenAI from "npm:openai";
-const { baseURL, token } = base44.asServiceRole.aiGateway.connection();
-const client = new OpenAI({ baseURL, apiKey: token });
-```
-
-Drive the tool loop with the SDK's tool-calling. For a **single** call with no tools,
-use `integrations.Core.InvokeLLM` instead (see [integrations.md](integrations.md)).
+The gateway is OpenAI Chat Completions compatible, so any OpenAI-compatible agent SDK
+works — construct the provider/client with the gateway's `baseURL` and `token` the same
+way. For a **single** call with no tools, use `integrations.Core.InvokeLLM` instead (see
+[integrations.md](integrations.md)).
 
 ## Anti-patterns
 
