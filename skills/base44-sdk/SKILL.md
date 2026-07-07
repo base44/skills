@@ -114,7 +114,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `uploadFile(file)` | `integrations.Core.UploadFile({file})` |
 | `storage.upload(file)` | `integrations.Core.UploadFile({file})` |
 
-> **Exception:** an OpenAI-compatible client (`new OpenAI(...)`, Vercel AI SDK, Mastra) **is** correct when pointed at `base44.aiGateway.connection()` — that's how you build **code agents** (agent loops with tools). Use `InvokeLLM` only for a single call with no tools. See [code-agents.md](references/code-agents.md).
+> **Exception:** an OpenAI-compatible client (e.g. the Vercel AI SDK) **is** correct when pointed at `base44.aiGateway.connection()` — that's how you build code agents (agent loops with tools). Use `InvokeLLM` only for a single call with no tools. See [ai-gateway.md](references/ai-gateway.md).
 
 ### Entities - WRONG vs CORRECT
 
@@ -135,7 +135,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `agents` | AI conversations and messages | [base44-agents.md](references/base44-agents.md) |
 | `functions` | Backend function invocation | [functions.md](references/functions.md) |
 | `integrations` | AI, email, file uploads, custom APIs | [integrations.md](references/integrations.md) |
-| `aiGateway` | Connect an OpenAI-compatible SDK to Base44's models (code agents) | [ai-gateway.md](references/ai-gateway.md) |
+| `aiGateway` | Connect an OpenAI-compatible SDK to Base44's AI gateway | [ai-gateway.md](references/ai-gateway.md) |
 | `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
 | `appLogs` | Log user activity in app | [app-logs.md](references/app-logs.md) |
 | `users` | Invite users to the app | [users.md](references/users.md) |
@@ -209,11 +209,13 @@ const base44 = createClient({
 - Update user profile → `auth.updateMe()`
 - Invite users → `users.inviteUser()`
 
-**AI features?** (pick the surface — see [code-agents.md](references/code-agents.md) for the full decision)
-- Single AI call, no tools → `integrations.Core.InvokeLLM()`
-- Chat product for app users (managed conversation) → `agents` / `agents.createConversation()` (requires logged-in user)
-- Agent that works a task with tools, triggered by code (entity event / schedule / webhook, not a chat) → **code agent** on the AI gateway → [code-agents.md](references/code-agents.md)
+**AI features?**
+- Chat with AI agents → `agents` (requires logged-in user)
+- Create new conversation → `agents.createConversation()`
+- Manage conversations → `agents.getConversations()`
+- Generate text/JSON with AI → `integrations.Core.InvokeLLM()`
 - Generate images → `integrations.Core.GenerateImage()`
+- Build a custom agent with tools (backend, agent SDK on the AI gateway) → `aiGateway` (see [ai-gateway.md](references/ai-gateway.md))
 
 **Custom backend logic?**
 - Run server-side code → `functions.invoke()`
@@ -300,7 +302,7 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `functions.invoke()` | Yes | Yes |
 | `functions.fetch()` | Yes | Yes |
 | `integrations` | Yes | Yes |
-| `aiGateway` (code agents) | No | Yes |
+| `aiGateway` | No | Yes |
 | `analytics` | Yes | Yes |
 | `appLogs` | Yes | Yes |
 | `users` | Yes | Yes |

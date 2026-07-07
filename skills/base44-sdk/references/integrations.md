@@ -63,7 +63,7 @@ const response = await base44.integrations.Core.InvokeLLM({
 - `response_json_schema` (object, optional): JSON schema for structured output
 - `file_urls` (string[], optional): URLs of uploaded files for context
 
-> `InvokeLLM` is a **single call with no tools**. Don't chain it to simulate an agent loop — for a tool-using agent, build a **code agent** on the AI gateway. See [code-agents.md](code-agents.md).
+> `InvokeLLM` is a **single call with no tools**. Don't chain it to simulate an agent loop — for a tool-using agent, build a **code agent** on the AI gateway. See [ai-gateway.md](ai-gateway.md).
 
 ### GenerateImage
 

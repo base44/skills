@@ -79,7 +79,7 @@ connection() → { baseURL, token }   // feed to any OpenAI-compatible SDK (Verc
 asServiceRole.aiGateway.connection() → { baseURL, token }
 ```
 
-Build **code agents** (agent loops with tools) on Base44's managed models. Model `automatic` by default; no streaming. See [code-agents.md](code-agents.md) and [ai-gateway.md](ai-gateway.md).
+Build **code agents** (agent loops with tools) on Base44's AI gateway. Model `automatic` by default; no streaming. See [ai-gateway.md](ai-gateway.md).
 
 ### Custom Integrations (`base44.integrations.custom.*`)
 
