@@ -321,6 +321,8 @@ Agents are conversational AI assistants that can interact with users, access you
     // Backend function tool - gives agent access to a function
     { "function_name": "send_email", "description": "Send an email notification" }
   ],
+  // Optional: pin an LLM model. Omit to use the platform default (recommended). See "Agent models" below.
+  "model": "claude_sonnet_4_6",
   "whatsapp_greeting": "Hello! How can I help you today?"
 }
 ```
@@ -331,11 +333,17 @@ Agents are conversational AI assistants that can interact with users, access you
 - Invalid: `Support-Agent`, `OrderBot`
 
 **Required fields:** `name`, `description`, `instructions`
-**Optional fields:** `tool_configs` (defaults to `[]`), `whatsapp_greeting`
+**Optional fields:** `tool_configs` (defaults to `[]`), `model`, `whatsapp_greeting`
 
 **Tool config types:**
 - **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
 - **Backend function tools**: `function_name` + `description`
+
+#### Agent models
+
+- **Omit `model` to use the platform default (recommended).** Empty or absent `model` is always valid.
+- To pin a model, use one of the supported ids: `automatic`, `gpt_5_mini`, `gemini_3_flash`, `gpt_5_4`, `gpt_5_5`, `gemini_3_1_pro`, `claude_sonnet_4_6`, `claude_opus_4_6`, `claude_opus_4_7`, `claude_opus_4_8`. Full provider strings (e.g. `anthropic/claude-opus-4-7`) are accepted only for models the platform currently serves.
+- **Deploy validates model ids.** `base44 deploy` / `base44 agents push` fail with a 400 listing the currently supported ids when `model` is unknown or stale — e.g. a dated vendor id like `anthropic/claude-sonnet-4-20250514`. Never guess or copy model ids from memory; if a push is rejected, use an id from the error message or omit `model`.
 
 ### Connector Management
 

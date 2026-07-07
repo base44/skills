@@ -79,6 +79,7 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
     // Backend function tool - gives agent access to a function
     { "function_name": "send_email", "description": "Send an email notification" }
   ],
+  "model": "claude_sonnet_4_6",      // Optional: omit to use the platform default (recommended)
   "whatsapp_greeting": "Hello! How can I help you today?"  // Optional
 }
 ```
@@ -99,6 +100,7 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 - `description`: Required, minimum 1 character
 - `instructions`: Required, minimum 1 character
 - `tool_configs`: Optional, defaults to empty array
+- `model`: Optional, omit to use the platform default (recommended). If pinning, use a supported id (e.g. `claude_sonnet_4_6`, `gpt_5_5`, `gemini_3_1_pro`) — the push fails with a 400 listing the currently supported ids when the model is unknown or stale (e.g. `anthropic/claude-sonnet-4-20250514`); never guess model ids
 - `whatsapp_greeting`: Optional
 
 ### Common Mistake: Wrong tool_configs Format
