@@ -57,6 +57,9 @@ genuine cross-user or system work.
   use more credits: only when needed, and tell the user.
 - **No streaming.**
 - **Don't chain `InvokeLLM`** to fake a tool loop — use a real agent loop.
+- **Always bound the loop.** `stopWhen` is an OR-list — the first condition to fire wins
+  (mix a step cap like `stepCountIs`, a finish tool like `hasToolCall`, or a custom check).
+  Give it room to finish but stop a runaway: **every step is another metered model call.**
 
 Example with the Vercel AI SDK — a background reviewer the app runs on a return request:
 
@@ -99,6 +102,8 @@ Deno.serve(async (req) => {
           base44.entities.ReturnRequest.update(return_id, { status: decision, review_note: reason }),
       }),
     },
+    // stops at the first to trigger — submitVerdict was called, or 8 steps elapsed;
+    // mix whatever conditions fit the task (a step cap, a finish tool, a custom condition)
     stopWhen: [stepCountIs(8), hasToolCall("submitVerdict")],
   });
 
