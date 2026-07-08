@@ -4,7 +4,7 @@ AI agent conversations and messages via `base44.agents`.
 
 > **Note:** This module requires a logged-in user. All agent methods work in the context of the authenticated user.
 
-> **This module is for in-app agents** — a managed chat product where app users talk to an agent and the platform owns the conversation and loop. For AI that works a task with tools, triggered by code (an entity event, schedule, or webhook) rather than a chat, build a **code agent** on the AI gateway instead. See [ai-gateway.md](ai-gateway.md).
+> **This module is for in-app agents** — **managed and conversational**: app users talk to the agent and the platform runs the loop. For **non-conversational task work where your code owns the loop** (triggered by an entity event, schedule, or webhook — not a chat), build a **code agent** on the AI gateway instead. See [ai-gateway.md](ai-gateway.md).
 
 ## Contents
 - [Concepts](#concepts)

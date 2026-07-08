@@ -21,8 +21,8 @@ multiple steps) the app owns. Compared to the other AI surfaces:
 | Use | When |
 |-----|------|
 | **`integrations.Core.InvokeLLM`** | A **single** call, no tools. Don't chain it to simulate an agent loop. See [integrations.md](integrations.md). |
-| **In-app agents** (`base44.agents`) | A **managed chat product**: app users talk to it, the platform owns the conversation, the loop, and the model. See [base44-agents.md](base44-agents.md). |
-| **Code agents** (the gateway) | AI as the app's **machinery, not a conversation**. Your code decides what triggers it (an entity event, a schedule, a webhook — not a chat), what tools it has, how it runs (steps, model), and what happens with the result. |
+| **In-app agents** (`base44.agents`) | **Managed and conversational** — app users talk to it and the platform runs the agent loop for you. See [base44-agents.md](base44-agents.md). |
+| **Code agents** (the gateway) | **Programmable, not a conversation** — a backend function where **your** code owns the loop, tools, model, and result; triggered by an entity event / schedule / webhook, not a chat. |
 
 ## Methods
 
