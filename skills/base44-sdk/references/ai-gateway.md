@@ -30,72 +30,80 @@ multiple steps) the app owns. Compared to the other AI surfaces:
 |--------|-----------|-------------|
 | `connection()` | `AiGatewayConnection` | Returns `{ baseURL, token }` for an OpenAI-compatible client |
 
-Available in user mode (`base44.aiGateway`) and with the service-role token
-(`base44.asServiceRole.aiGateway`) — use the service role inside backend functions.
+Available in user mode (`base44.aiGateway`, the default — runs with the caller's
+permissions) and with the service-role token (`base44.asServiceRole.aiGateway`) for
+genuine cross-user or system work.
 
 ## Build a code agent
 
-1. Get the gateway connection with `base44.asServiceRole.aiGateway.connection()` →
-   `{ baseURL, token }`.
+1. Guard the function with `await base44.auth.me()`, then get the connection with
+   `base44.aiGateway.connection()` → `{ baseURL, token }`.
 2. Point an agent SDK's OpenAI-compatible provider at it (`baseURL` + `apiKey: token`).
-3. Give the agent tools that call your app (entities, other functions), run the loop,
-   and do something with the result.
+3. Give the agent tools that read/act on your app via `base44.*`, and let it finish by
+   recording its result through a tool.
 
 **Rules:**
-- **Backend function only** (`createClientFromRequest(req)`, `asServiceRole`). All other
-  backend-function rules (deployment, secrets, error handling) apply — see the functions guide.
+- **Backend function only** (`createClientFromRequest(req)`). All other backend-function
+  rules (deployment, secrets, error handling) apply — see the functions guide.
+- **Run in the caller's scope by default.** Use `base44.aiGateway.connection()` and
+  `base44.entities.*` so the agent runs with the calling user's permissions (RLS applies)
+  and can't exceed them; guard the function with `await base44.auth.me()`. Reach for
+  `asServiceRole` only for genuine cross-user/system work — and then **scope tools to
+  trusted context, not agent-chosen inputs** (e.g. fix `customer_email` from the request,
+  not an agent parameter), since `asServiceRole` runs with full access.
 - **Stateless between invocations.** Persistent memory means storing and replaying state
   (e.g. in an entity).
 - Use model **`automatic`** unless the task needs a specific model — non-default models
   use more credits: only when needed, and tell the user.
 - **No streaming.**
 - **Don't chain `InvokeLLM`** to fake a tool loop — use a real agent loop.
-- **Scope service-role tools to trusted context, not agent-chosen inputs.** The agent
-  runs with full `asServiceRole` access, so a tool that takes e.g. a caller-controllable
-  `customer_email` lets the model (or an injected input) reach any record. Fix such
-  values from the request context (as in the example below) and let the agent control
-  only safe parameters.
 
-Example with the Vercel AI SDK — a background reviewer the app invokes when a return
-request is created:
+Example with the Vercel AI SDK — a background reviewer the app runs on a return request:
 
 ```javascript
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.36";
-import { ToolLoopAgent, tool, isStepCount } from "npm:ai@7.0.16";
+import { ToolLoopAgent, tool, stepCountIs, hasToolCall } from "npm:ai@7.0.16";
 import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@3.0.5";
 import { z } from "npm:zod@4.4.3";
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
-  const { return_id } = await req.json();
-  const request = await base44.asServiceRole.entities.ReturnRequest.get(return_id);
+  const user = await base44.auth.me();
+  if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { baseURL, token } = base44.asServiceRole.aiGateway.connection();
+  const { return_id } = await req.json();
+  const request = await base44.entities.ReturnRequest.get(return_id);
+
+  const { baseURL, token } = base44.aiGateway.connection();
   const base44Models = createOpenAICompatible({ name: "base44", baseURL, apiKey: token });
 
   const agent = new ToolLoopAgent({
     model: base44Models("automatic"),
     instructions:
-      "Decide whether this return request looks fine or needs the owner's attention. " +
-      "Look into this customer's past orders as many times as you need, then give a short verdict with your reasons.",
+      "Decide whether this return looks fine or needs the owner's attention. " +
+      "Check the customer's past orders as many times as you need, then submit your verdict.",
     tools: {
       searchOrders: tool({
         description: "This customer's past orders, optionally filtered by status",
         inputSchema: z.object({ status: z.string().optional() }),
         execute: ({ status }) => {
-          // Customer is fixed from the trusted request context — NOT an agent input.
           const query = { customer_email: request.customer_email };
           if (status) query.status = status;
-          return base44.asServiceRole.entities.Order.filter(query, "-created_date", 50);
+          return base44.entities.Order.filter(query, "-created_date", 50);
         },
       }),
+      submitVerdict: tool({
+        description: "Record the final verdict. Call this once, when you've decided.",
+        inputSchema: z.object({ decision: z.enum(["approved", "flagged"]), reason: z.string() }),
+        execute: ({ decision, reason }) =>
+          base44.entities.ReturnRequest.update(return_id, { status: decision, review_note: reason }),
+      }),
     },
-    stopWhen: isStepCount(8),
+    stopWhen: [stepCountIs(8), hasToolCall("submitVerdict")],
   });
 
-  const { text } = await agent.generate({ prompt: `Review this return request: ${JSON.stringify(request)}` });
-  await base44.asServiceRole.entities.ReturnRequest.update(return_id, { review_note: text });
-  return Response.json({ review: text });
+  await agent.generate({ prompt: `Review this return request: ${JSON.stringify(request)}` });
+  return Response.json({ ok: true });
 });
 ```
 
