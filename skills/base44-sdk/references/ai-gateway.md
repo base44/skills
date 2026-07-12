@@ -64,7 +64,7 @@ genuine cross-user or system work.
 Example with the Vercel AI SDK — a background reviewer the app runs on a return request:
 
 ```javascript
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.36";
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.38";
 import { ToolLoopAgent, tool, stepCountIs, hasToolCall } from "npm:ai@7.0.16";
 import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@3.0.5";
 import { z } from "npm:zod@4.4.3";
