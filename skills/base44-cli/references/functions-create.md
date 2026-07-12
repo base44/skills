@@ -213,6 +213,26 @@ For more details on deploying, see [functions-deploy.md](functions-deploy.md).
 - Configure secrets via app dashboard for API keys
 - Make sure to handle errors gracefully and return appropriate HTTP status codes
 
+## Sharing Code Between Functions
+
+Place shared utilities in `base44/shared/` — the only directory outside a function folder that the CLI will upload.
+
+```
+base44/
+  shared/
+    response.ts    ← shared helpers
+  functions/
+    greet/
+      entry.ts     ← import { ok } from "../../shared/response.ts";
+    farewell/
+      entry.ts     ← import { ok } from "../../shared/response.ts";
+```
+
+**Rules:**
+- Shared files **must** live inside `base44/shared/` (or any subdirectory of `base44/`, but `shared/` is the convention).
+- Imports that escape past `base44/` (e.g. `../../../src/utils.ts`) are **blocked at deploy time** with an error — the file can't be uploaded and would fail at runtime anyway.
+- For external packages use `npm:` or `jsr:` specifiers, not relative paths.
+
 ## Common Mistakes
 
 | Wrong | Correct | Why |
@@ -221,3 +241,4 @@ For more details on deploying, see [functions-deploy.md](functions-deploy.md).
 | `base44/functions/entry.ts` | `base44/functions/my-function/entry.ts` | The function name comes from the subdirectory path |
 | `import { ... } from "@base44/sdk"` | `import { ... } from "npm:@base44/sdk"` | Deno requires `npm:` prefix for npm packages |
 | `MyFunction` or `myFunction` directory | `my-function` directory | Use kebab-case for directory names |
+| `import { x } from "../../../src/utils.ts"` | `import { x } from "../../shared/utils.ts"` | Imports outside `base44/` are blocked — move shared code to `base44/shared/` |
