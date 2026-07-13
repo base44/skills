@@ -72,5 +72,6 @@ npx base44 logs --follow
 - The `--limit` applies after merging logs from all specified functions.
 - The `--since` and `--until` values accept an ISO datetime, or a relative shorthand (e.g. `1h`, `30m`, `2d`) measured back from now. ISO values without a timezone are normalized to UTC (appends `Z`).
 - `--env` defaults to `preview`. If `prod` returns no logs, the app may not have been published yet — try `--env preview` to see draft logs.
+- `--level` is enforced client-side as well as server-side, so filtering is reliable even for runtimes (e.g. per-app Cloudflare deployments) where the backend returns the unfiltered stream.
 - `--follow` streams logs indefinitely (oldest to newest) instead of a single fetch; it's incompatible with `--until` and `--order`.
 - Pass the global `--json` flag to emit each log entry (or, with `--follow`, each new line) as JSON instead of the human-readable format.

@@ -24,6 +24,13 @@ $ npx base44 whoami
 Logged in as: user@example.com
 ```
 
+If a workspace API key is active (see below), the output identifies the key instead of a user:
+
+```bash
+$ npx base44 whoami
+Using workspace API key: b44k_abcd12
+```
+
 ## Use Cases
 
 - Verify you're logged in before running other commands
@@ -35,3 +42,4 @@ Logged in as: user@example.com
 
 - If you're not logged in, the command will prompt you to authenticate first
 - The email displayed matches your Base44 account email
+- **Workspace API key**: If the `BASE44_API_KEY` environment variable is set to a key starting with `b44k_`, the CLI authenticates every request with that key (sent as the `api_key` header) instead of the normal login session, and `whoami` reports the key prefix rather than an email. This takes priority over any logged-in session.

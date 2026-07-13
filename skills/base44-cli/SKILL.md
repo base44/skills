@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.2
+    version: 0.1.3
 ---
 
 # Base44 CLI
@@ -63,6 +63,8 @@ RIGHT: `npx base44 login`
 **This check is mandatory and must happen before executing any other Base44 CLI commands.**
 
 **Provisioned via Stripe Projects / projects.dev?** When the app was provisioned through that flow, the CLI seeds authentication from the `BASE44_ACCESS_TOKEN` / `BASE44_REFRESH_TOKEN` environment variables it injects (the `BASE44_PROJECTS_*`-prefixed names are normalized automatically). In that case `npx base44 whoami` already succeeds and you do **not** need an interactive `npx base44 login`.
+
+**Workspace API key set?** If the `BASE44_API_KEY` environment variable holds a key starting with `b44k_`, the CLI authenticates all requests with that key instead of a login session — no `npx base44 login` needed, and `npx base44 whoami` reports the key prefix instead of an email. See [auth-whoami.md](references/auth-whoami.md).
 
 ## Overview
 
@@ -569,6 +571,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | Error                       | Solution                                                                            |
 | --------------------------- | ----------------------------------------------------------------------------------- |
 | Not authenticated           | Run `npx base44 login` first                                                        |
+| Workspace API key rejected  | Verify `BASE44_API_KEY` is valid and authorized for this app                        |
 | No entities found           | Ensure entities exist in `base44/entities/` directory                               |
 | Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
 | No functions found          | Ensure functions exist in `base44/functions/` with `entry.ts` or `entry.js`   |
