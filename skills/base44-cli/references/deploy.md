@@ -88,6 +88,7 @@ After successful deployment:
 - If no resources are found, the command exits with a message
 - Use individual commands (`entities push`, `functions deploy`, `connectors push`, `site deploy`) if you only want to deploy specific resources
 - The site must be built before deployment - this command does not run `npm run build` for you
+- Normally, pushing connectors reconciles the remote state with local config, removing remote connectors that no longer exist locally — even when there are zero local connectors. When authenticated with a [workspace API key](auth-whoami.md) (`BASE44_API_KEY`) and no local connectors are configured, this reconciliation is skipped instead, since that principal gets a 403 from the connectors-list endpoint. OAuth-authenticated deploys always reconcile removals.
 
 ## Related Commands
 
