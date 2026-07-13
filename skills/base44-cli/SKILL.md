@@ -119,8 +119,13 @@ my-app/
 │   │       └── entry.ts
 │   ├── agents/                  # Agent configurations (optional)
 │   │   └── support_agent.jsonc
-│   └── connectors/              # OAuth connector configurations (optional)
-│       └── googlecalendar.jsonc
+│   ├── connectors/              # OAuth connector configurations (optional)
+│   │   └── googlecalendar.jsonc
+│   ├── seed/                    # Local dev seed fixtures (optional)
+│   │   ├── users.jsonc          # Test users for `base44 dev`
+│   │   └── Task.jsonc           # Records for entity "Task"
+│   └── seed.ts                  # Programmatic seed script (optional, runs in Deno)
+├── .base44/                     # Local dev state: data + dev.json (gitignored, safe to delete)
 ├── src/                         # Frontend source code
 │   ├── api/
 │   │   └── base44Client.js      # Base44 SDK client
@@ -139,6 +144,9 @@ my-app/
 - `base44/agents/*.jsonc` - Agent configurations (optional)
 - `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44 types generate`)
 - `base44/connectors/*.jsonc` - OAuth connector configurations (optional)
+- `base44/seed/*.jsonc` - Local dev seed fixtures: `users.jsonc` + `<Entity>.jsonc` (see [local-data.md](references/local-data.md))
+- `base44/seed.ts` - Programmatic seed script, runs after fixtures (optional, requires Deno)
+- `.base44/` - Local dev state written by `base44 dev` (gitignored, safe to delete)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
 
 **config.jsonc example:**
@@ -150,6 +158,7 @@ my-app/
   "functionsDir": "./functions",       // Optional: default "functions"
   "agentsDir": "./agents",             // Optional: default "agents"
   "connectorsDir": "./connectors",     // Optional: default "connectors"
+  "seedDir": "./seed",                 // Optional: default "seed"
   "site": {                            // Optional: site deployment config
     "installCommand": "npm install",   // Optional: install dependencies
     "buildCommand": "npm run build",   // Optional: build command
@@ -169,6 +178,7 @@ my-app/
 | `functionsDir` | Directory for backend functions | `"functions"` |
 | `agentsDir` | Directory for agent configs | `"agents"` |
 | `connectorsDir` | Directory for connector configs | `"connectors"` |
+| `seedDir` | Directory for local dev seed fixtures | `"seed"` |
 | `site.installCommand` | Command to install dependencies | - |
 | `site.buildCommand` | Command to build the project | - |
 | `site.serveCommand` | Command to run dev server | - |
@@ -248,7 +258,19 @@ npx base44 logs --app-id app_123 --json
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 dev` | Start local development for your Base44 backend, and your frontend too when `site.serveCommand` is configured | [dev.md](references/dev.md) |
+| `base44 dev` | Start local development for your Base44 backend, and your frontend too when `site.serveCommand` is configured; `--fresh` wipes local data and re-seeds | [dev.md](references/dev.md) |
+| `base44 dev status` | Show the local dev instance descriptor (URL, port, pid, seed state) | [local-data.md](references/local-data.md) |
+| `base44 dev seed` | Apply seed fixtures and `seed.ts` to local data (idempotent upsert; `--replace` truncates first) | [local-data.md](references/local-data.md) |
+| `base44 dev reset` | Wipe local data and re-seed — the canonical clean-slate command | [local-data.md](references/local-data.md) |
+
+### Local Data
+
+Local dev data is persistent by default (gitignored `.base44/` directory) and seedable from `base44/seed/` fixtures. Full guide: [local-data.md](references/local-data.md).
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 data pull` | Pull records from the remote app into `base44/seed/` fixtures (read-only against remote) | [local-data.md](references/local-data.md) |
+| `base44 data dump` | Freeze local dev data as `base44/seed/` fixtures | [local-data.md](references/local-data.md) |
 
 ### Deployment
 
@@ -509,6 +531,8 @@ npx base44 dev
 
 If you want `base44 dev` to run your frontend too, verify `base44/config.jsonc` has `site.serveCommand` set correctly (for example, `"serveCommand": "npm run dev"`). When that field is present, `base44 dev` runs both the backend and the frontend together.
 
+Local entity data persists in a gitignored `.base44/` directory — it survives restarts and entity edits. Seed fixtures in `base44/seed/` are applied automatically on first boot; use `npx base44 dev seed` to re-apply and `npx base44 dev reset` for a clean slate. See [local-data.md](references/local-data.md).
+
 ### Deploying All Changes
 ```bash
 # Generate types (optional, for TypeScript projects)
@@ -579,5 +603,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | Duplicate connector type    | Each connector type can only be defined once per project                            |
 | Connector authorization timeout | Re-run `npx base44 connectors push` and complete the OAuth flow in your browser  |
 | No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
+| Local dev data is stale or broken | Run `npx base44 dev reset` (or start with `npx base44 dev --fresh`); `.base44/` is safe to delete |
+| `dev` refuses to start (app id mismatch) | The folder was relinked to a different app — start with `npx base44 dev --fresh` to wipe the old local data |
 | Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded                        |
 | Update available message    | If prompted to update, run `npm install -g base44@latest` (or use npx for local installs) |
