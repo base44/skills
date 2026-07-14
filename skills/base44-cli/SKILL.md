@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.2
+    version: 0.1.4
 ---
 
 # Base44 CLI
@@ -63,6 +63,8 @@ RIGHT: `npx base44 login`
 **This check is mandatory and must happen before executing any other Base44 CLI commands.**
 
 **Provisioned via Stripe Projects / projects.dev?** When the app was provisioned through that flow, the CLI seeds authentication from the `BASE44_ACCESS_TOKEN` / `BASE44_REFRESH_TOKEN` environment variables it injects (the `BASE44_PROJECTS_*`-prefixed names are normalized automatically). In that case `npx base44 whoami` already succeeds and you do **not** need an interactive `npx base44 login`.
+
+**Workspace API key set?** If the `BASE44_API_KEY` environment variable is set to a workspace API key (prefixed `b44k_`), the CLI authenticates with it directly — `npx base44 whoami` and other commands succeed without an interactive login.
 
 ## Overview
 
@@ -146,6 +148,7 @@ my-app/
 {
   "name": "My App",                    // Required: project name
   "description": "App description",    // Optional: project description
+  "visibility": "public",              // Optional: "public" | "private" | "workspace"
   "entitiesDir": "./entities",         // Optional: default "entities"
   "functionsDir": "./functions",       // Optional: default "functions"
   "agentsDir": "./agents",             // Optional: default "agents"
@@ -165,6 +168,7 @@ my-app/
 |----------|-------------|---------|
 | `name` | Project name (required) | - |
 | `description` | Project description | - |
+| `visibility` | App visibility: `public`, `private`, or `workspace` | - |
 | `entitiesDir` | Directory for entity schemas | `"entities"` |
 | `functionsDir` | Directory for backend functions | `"functions"` |
 | `agentsDir` | Directory for agent configs | `"agents"` |
@@ -243,6 +247,7 @@ npx base44 logs --app-id app_123 --json
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
 | `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
+| `base44 visibility <level>` | Set the app's visibility on the server (`public`, `private`, or `workspace`) | [visibility.md](references/visibility.md) |
 
 ### Development
 
