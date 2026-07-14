@@ -10,6 +10,18 @@ Your personal workspace is listed first.
 npx base44 workspace list
 ```
 
+## Flags
+
+| Flag             | Description                                                                     |
+|------------------|---------------------------------------------------------------------------------|
+| `--can-create`   | Only workspaces you can create or move apps into (owner, admin, or editor)      |
+| `--role <role>`  | Only workspaces where your role matches (`owner`, `admin`, `editor`, `viewer`)  |
+
+```bash
+# Only workspaces you can put apps in
+npx base44 workspace list --can-create
+```
+
 ## Output
 
 Each workspace shows its name, ID, and your role (e.g. `personal, owner` or `admin`).
@@ -34,5 +46,6 @@ npx base44 workspace list --json
 
 ## Related
 
+- [workspace-get.md](workspace-get.md) — show a single workspace by ID
 - [create.md](create.md) — create an app in a workspace with `--workspace`
 - [workspace-move.md](workspace-move.md) — move an app between workspaces
