@@ -249,6 +249,16 @@ npx base44 logs --app-id app_123 --json
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 | `base44 visibility <level>` | Set the app's visibility on the server (`public`, `private`, or `workspace`) | [visibility.md](references/visibility.md) |
 
+### Workspace Management
+
+Apps are created in your **personal workspace** by default. Use `--workspace <id>` on `create`/`link --create` to target another workspace, or move an existing app between workspaces.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 workspace list [--role <role>]` | List the workspaces you belong to (and your role in each); optionally filter with `--role` | [workspace-list.md](references/workspace-list.md) |
+| `base44 workspace get <workspace-id>` | Show a single workspace's details (name, role, tier) by ID | [workspace-get.md](references/workspace-get.md) |
+| `base44 workspace move [workspace-id]` | Move the current app to another workspace | [workspace-move.md](references/workspace-move.md) |
+
 ### Development
 
 | Command | Description | Reference |
