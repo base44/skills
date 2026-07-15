@@ -23,8 +23,14 @@ npx base44 link [options]
 | `-c, --create` | Create a new project (skip selection prompt) | No |
 | `-n, --name <name>` | Project name (required when `--create` is used) | With `--create` |
 | `-d, --description <description>` | Project description | No |
-| `-w, --workspace <id>` | Workspace (organization) ID to create the app in when using `--create`. Defaults to your personal workspace | No |
+| `-w, --workspace <id>` | Workspace (organization) ID. Scopes the existing-app picker to that workspace, or (with `--create`) the workspace to create the app in. Defaults to your personal workspace | No |
 | `--app-id <id>` | App ID to link to an existing project (global flag, skips selection prompt) | No |
+
+## Workspaces
+
+When linking an **existing** app interactively, if you belong to more than one workspace the CLI first asks which workspace, then lists apps scoped to it (apps are listed per workspace). Pass `--workspace <id>` to skip the workspace prompt.
+
+`--app-id` links any app you can access regardless of its workspace — no workspace selection needed. Managed-source apps can't be linked.
 
 ## Non-Interactive Mode
 
