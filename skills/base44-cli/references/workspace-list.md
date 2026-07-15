@@ -41,7 +41,7 @@ npx base44 workspace list --json
 ## Notes
 
 - Requires authentication (`npx base44 whoami` should succeed).
-- Only workspaces where your role is `owner`, `admin`, or `editor` can be used as a target for creating or moving apps.
+- The server authorizes creating/moving apps into a workspace and returns a clear error if your role doesn't allow it.
 
 ## Related
 
