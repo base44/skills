@@ -14,12 +14,11 @@ npx base44 workspace list
 
 | Flag             | Description                                                                     |
 |------------------|---------------------------------------------------------------------------------|
-| `--can-create`   | Only workspaces you can create or move apps into (owner, admin, or editor)      |
 | `--role <role>`  | Only workspaces where your role matches (`owner`, `admin`, `editor`, `viewer`)  |
 
 ```bash
-# Only workspaces you can put apps in
-npx base44 workspace list --can-create
+# Only workspaces where you're an admin
+npx base44 workspace list --role admin
 ```
 
 ## Output
