@@ -23,6 +23,7 @@ npx base44 link [options]
 | `-c, --create` | Create a new project (skip selection prompt) | No |
 | `-n, --name <name>` | Project name (required when `--create` is used) | With `--create` |
 | `-d, --description <description>` | Project description | No |
+| `-w, --workspace <id>` | Workspace (organization) ID to create the app in when using `--create` (defaults to your personal workspace) | No |
 | `--app-id <id>` | App ID to link to an existing project (global flag, skips selection prompt) | No |
 
 ## Non-Interactive Mode
@@ -58,6 +59,9 @@ npx base44 link --create --name my-app --description "My awesome app"
 
 # Link to a specific existing project by ID
 npx base44 link --app-id abc123
+
+# Create and link into a specific workspace (organization)
+npx base44 link --create --name my-app --workspace 507f1f77bcf86cd799439011
 ```
 
 ## What It Does
