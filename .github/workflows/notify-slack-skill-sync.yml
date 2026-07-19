@@ -15,7 +15,7 @@ name: Notify Slack on skill-sync PRs
 
 on:
   pull_request:
-    types: [opened, reopened, ready_for_review, labeled]
+    types: [labeled]
 
 permissions:
   contents: read
@@ -24,10 +24,8 @@ jobs:
   notify:
     runs-on: ubuntu-latest
     if: >-
-      (github.event.action != 'labeled' &&
-       contains(github.event.pull_request.labels.*.name, 'auto-skill-update')) ||
-      (github.event.action == 'labeled' &&
-       github.event.label.name == 'auto-skill-update')
+      github.event.action == 'labeled' &&
+      github.event.label.name == 'auto-skill-update'
     steps:
       - name: Notify Slack
         env:
