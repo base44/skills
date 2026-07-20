@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.4
+    version: 0.1.5
 ---
 
 # Base44 CLI
@@ -248,6 +248,16 @@ npx base44 logs --app-id app_123 --json
 | `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 | `base44 visibility <level>` | Set the app's visibility on the server (`public`, `private`, or `workspace`) | [visibility.md](references/visibility.md) |
+
+### Workspace Management
+
+Workspaces (a.k.a. organizations) group apps under shared membership. By default `base44 create`/`base44 link --create` use your personal workspace; pass `-w, --workspace <id>` to target another one.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 workspace list` | List the workspaces you belong to | [workspace-list.md](references/workspace-list.md) |
+| `base44 workspace get <workspace-id>` | Show details for a single workspace by ID | [workspace-get.md](references/workspace-get.md) |
+| `base44 workspace move [workspace-id]` | Move the current app to another workspace | [workspace-move.md](references/workspace-move.md) |
 
 ### Development
 

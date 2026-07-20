@@ -25,6 +25,7 @@ npx base44 create [name] --path <path> [options]
 | `-t, --template <id>` | Template ID (see templates below) | No |
 | `--deploy` | Build and deploy the site (includes pushing entities) | No |
 | `--no-skills` | Skip AI agent skills installation (skills are added by default) | No |
+| `-w, --workspace <id>` | Workspace (organization) ID to create the app in (defaults to your personal workspace) | No |
 
 *Required for non-interactive mode. Both `name` and `--path` must be provided together.
 
@@ -97,7 +98,14 @@ npx base44 create my-app -p . --deploy
 
 # Create without adding AI agent skills
 npx base44 create my-app -p . --no-skills
+
+# Create in a specific workspace (organization)
+npx base44 create my-app -p . --workspace 507f1f77bcf86cd799439011
 ```
+
+## Workspaces
+
+By default the app is created in your personal workspace. Use `-w, --workspace <id>` to create it in a different workspace (organization) instead — find workspace IDs with `npx base44 workspace list` (see [workspace-list.md](workspace-list.md)). In interactive mode, if you belong to more than one workspace and don't pass `--workspace`, the CLI prompts you to pick one.
 
 ## What It Does
 
