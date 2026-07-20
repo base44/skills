@@ -1,6 +1,6 @@
 # Creating Functions
 
-Base44 functions are serverless backend functions that run on Deno. They are defined locally in your project and deployed to the Base44 backend.
+Base44 functions are serverless backend functions. They are defined locally in your project and deployed to the Base44 backend.
 
 ## Function Directory
 
@@ -43,12 +43,12 @@ The function name is the path from the functions root to that folder. For exampl
 
 Rules:
 - `entry.ts` or `entry.js` must be inside a named subfolder, not directly in `base44/functions/`
-- all `*.js`, `*.ts`, and `*.json` files under the function folder are included when deploying
+- all `*.js`, `*.ts`, `*.json`, and `*.jsonc` files under the function folder are included when deploying
 - function paths with a dot in any path segment are ignored
 
 ## Entry Point File
 
-Functions run on Deno and must export using `Deno.serve()`. Use `npm:` prefix for npm packages.
+Functions export a request handler using `Deno.serve()`. Use the `npm:` prefix to import npm packages.
 
 ```typescript
 import { createClientFromRequest } from "npm:@base44/sdk";
@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
 
 ### Request Object
 
-The function receives a standard Deno `Request` object:
+The function receives a standard `Request` object:
 - `req.json()` - Parse JSON body
 - `req.text()` - Get raw text body
 - `req.headers` - Access request headers
@@ -207,11 +207,48 @@ For more details on deploying, see [functions-deploy.md](functions-deploy.md).
 
 ## Notes
 
-- Functions run on Deno runtime, not Node.js
 - Use `npm:` prefix for npm packages (e.g., `npm:@base44/sdk`)
 - Use `createClientFromRequest(req)` to get a client that inherits the caller's auth context
 - Configure secrets via app dashboard for API keys
 - Make sure to handle errors gracefully and return appropriate HTTP status codes
+
+## Multi-File Functions
+
+A function is not limited to `entry.ts`. Any `.js`, `.ts`, `.json`, or `.jsonc` file in the function's folder is uploaded on deploy and can be imported from `entry.ts` with a relative path.
+
+```
+base44/
+  functions/
+    process-order/
+      entry.ts       ← import { validate } from "./validate.ts";
+      validate.ts    ←   import { Order } from "./types.ts";
+      types.ts
+      config.json
+```
+
+**Rules:**
+- Import files in the same folder with `./`, including the extension (e.g. `./validate.ts`).
+- The entire function folder ships on every deploy; anything the entry does not import is dropped from the bundle, so extra files are harmless.
+
+## Sharing Code Between Functions
+
+To share code across functions, put it in `base44/shared/` — the one directory outside a function folder that the CLI uploads. Its full contents are bundled with **every** function.
+
+```
+base44/
+  shared/
+    response.ts    ← shared helpers
+  functions/
+    greet/
+      entry.ts     ← import { ok } from "../../shared/response.ts";
+    farewell/
+      entry.ts     ← import { ok } from "../../shared/response.ts";
+```
+
+**Rules:**
+- Shared code **must** live in `base44/shared/`. Files elsewhere outside the function folder are not uploaded.
+- A relative import can reach a sibling (`./util.ts`) or `base44/shared/` (`../../shared/util.ts`) — but nothing further out. An import that escapes `base44/` (e.g. `../../../src/utils.ts`) fails at deploy time; move the file into `base44/shared/` instead.
+- For external packages use `npm:` or `jsr:` specifiers, not relative paths.
 
 ## Common Mistakes
 
@@ -219,5 +256,6 @@ For more details on deploying, see [functions-deploy.md](functions-deploy.md).
 |-------|---------|-----|
 | `base44/functions/myFunction.js` (single file) | `base44/functions/my-function/entry.ts` | Functions must live in a named subdirectory |
 | `base44/functions/entry.ts` | `base44/functions/my-function/entry.ts` | The function name comes from the subdirectory path |
-| `import { ... } from "@base44/sdk"` | `import { ... } from "npm:@base44/sdk"` | Deno requires `npm:` prefix for npm packages |
+| `import { ... } from "@base44/sdk"` | `import { ... } from "npm:@base44/sdk"` | npm packages must use the `npm:` prefix |
 | `MyFunction` or `myFunction` directory | `my-function` directory | Use kebab-case for directory names |
+| `import { x } from "../../../src/utils.ts"` | `import { x } from "../../shared/utils.ts"` | Imports outside `base44/` are blocked — move shared code to `base44/shared/` |
