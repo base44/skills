@@ -12,8 +12,8 @@ Log user activity in your app via `base44.appLogs`.
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `logUserInApp(pageName)` | `Promise<void>` | Log user activity on a page |
-| `fetchLogs(params?)` | `Promise<any>` | Fetch app logs with optional filter parameters |
-| `getStats(params?)` | `Promise<any>` | Get app usage statistics |
+
+**Note:** the SDK also implements `fetchLogs()` and `getStats()`, but both are marked `@internal` in source — not part of the supported public API, and may change or be removed without notice. View logged activity in the Analytics page of your app dashboard instead.
 
 ## Examples
 
@@ -59,32 +59,6 @@ function handleSettingsChange() {
 }
 ```
 
-### Fetch Logs
-
-```javascript
-// Fetch all logs
-const logs = await base44.appLogs.fetchLogs();
-
-// Fetch logs with filters
-const recentLogs = await base44.appLogs.fetchLogs({
-  limit: 50,
-  page: "/dashboard"
-});
-```
-
-### Get Stats
-
-```javascript
-// Get usage statistics for the app
-const stats = await base44.appLogs.getStats();
-
-// Get stats with date range params
-const weekStats = await base44.appLogs.getStats({
-  from: "2024-01-01",
-  to: "2024-01-07"
-});
-```
-
 ## Notes
 
 - Logs appear in the Analytics page of your app dashboard
@@ -102,19 +76,5 @@ interface AppLogsModule {
    * @returns Promise that resolves when the log is recorded.
    */
   logUserInApp(pageName: string): Promise<void>;
-
-  /**
-   * Fetch app logs with optional filter parameters.
-   * @param params - Optional filter parameters (e.g., limit, page name, date range).
-   * @returns Promise resolving to the logs data.
-   */
-  fetchLogs(params?: Record<string, any>): Promise<any>;
-
-  /**
-   * Get app usage statistics.
-   * @param params - Optional filter parameters (e.g., date range).
-   * @returns Promise resolving to the statistics data.
-   */
-  getStats(params?: Record<string, any>): Promise<any>;
 }
 ```

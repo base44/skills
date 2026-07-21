@@ -225,7 +225,8 @@ const base44 = createClient({
 - Send emails → `integrations.Core.SendEmail()`
 - Upload files → `integrations.Core.UploadFile()`
 - Custom APIs → `integrations.custom.call()`
-- App-scoped OAuth (app builder's account) → `asServiceRole.connectors.getConnection()` (backend only)
+- App-scoped OAuth (app builder's account, shared by all users) → `asServiceRole.connectors.getConnection()` (backend only)
+- Per-user OAuth (each app user connects their own account) → `connectors.connectAppUser()` (frontend) + `asServiceRole.connectors.getCurrentAppUserConnection()` (backend)
 
 **Tracking and analytics?**
 - Track custom events → `analytics.track()`

@@ -137,8 +137,12 @@ base44.functions     // Backend function invocation
 base44.integrations  // Third-party services
 base44.users         // User invitations
 
+// Backend only
+base44.aiGateway     // Connect an OpenAI-compatible SDK to Base44's AI gateway (see ai-gateway.md)
+
 // Service role only (backend)
 base44.asServiceRole.agents
+base44.asServiceRole.aiGateway
 base44.asServiceRole.appLogs
 base44.asServiceRole.connectors  // App-scoped OAuth tokens (ConnectorsModule)
 base44.asServiceRole.entities
@@ -185,6 +189,7 @@ useEffect(() => {
 createClient({
   appId: "your-app-id",      // Required: MUST use 'appId' (not 'clientId' or 'id')
   token: "jwt-token",        // Optional: pre-set auth token
+  serverUrl: "https://base44.app", // Optional: defaults to "https://base44.app"; point at a local dev server if needed
   options: {                 // Optional: configuration options
     onError: (error) => {}   // Optional: global error handler (must be in options)
   }
@@ -206,6 +211,8 @@ interface CreateClientConfig {
   appId: string;
   /** User authentication token. Used to authenticate as a specific user. */
   token?: string;
+  /** Base URL of the Base44 server to point the SDK at (e.g. for local development). @defaultValue "https://base44.app" */
+  serverUrl?: string;
   /** @internal Service role token; only set automatically in Base44-hosted backend functions. */
   serviceToken?: string;
   /** Additional client options. */
@@ -238,6 +245,8 @@ interface Base44Client {
   functions: FunctionsModule;
   /** Integrations module for calling pre-built integration methods. */
   integrations: IntegrationsModule;
+  /** Connect an OpenAI-compatible SDK to Base44's AI gateway (backend only). */
+  aiGateway: AiGatewayModule;
 
   /** Cleanup function to disconnect WebSocket connections. */
   cleanup(): void;
@@ -257,6 +266,7 @@ interface Base44Client {
     entities: EntitiesModule;
     functions: FunctionsModule;
     integrations: IntegrationsModule;
+    aiGateway: AiGatewayModule;
     /** SSO token generation for users. */
     sso: SsoModule;
     cleanup(): void;

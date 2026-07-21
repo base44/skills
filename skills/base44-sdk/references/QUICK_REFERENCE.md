@@ -8,7 +8,7 @@ Compact method signatures for all SDK modules. **Verify against this before writ
 
 ```
 loginViaEmailPassword(email, password, turnstileToken?) → Promise<{access_token, user}>
-loginWithProvider('google' | 'microsoft' | 'facebook', fromUrl?) → void
+loginWithProvider('google' | 'microsoft' | 'facebook' | 'apple' | 'sso', fromUrl?) → void
 me() → Promise<User | null>
 updateMe(data) → Promise<User>
 isAuthenticated() → Promise<boolean>
@@ -35,8 +35,8 @@ list(sort?, limit?, skip?, fields?) → Promise<Pick<T, K>[]>
 filter(query, sort?, limit?, skip?, fields?) → Promise<Pick<T, K>[]>
 get(id) → Promise<T>
 update(id, data) → Promise<T>
-updateMany(query, mongoUpdateOp) → Promise<UpdateManyResult>   // e.g. { $set: { field: val } }
-bulkUpdate(dataArray) → Promise<T[]>                           // each item must have id
+updateMany(query, mongoUpdateOp) → Promise<UpdateManyResult>   // e.g. { $set: { field: val } }; batched by 500, check result.has_more
+bulkUpdate(dataArray) → Promise<T[]>                           // each item must have id; max 500 per request
 delete(id) → Promise<DeleteResult>
 deleteMany(query) → Promise<DeleteManyResult>
 importEntities(file) → Promise<ImportResult<T>>                // frontend only
@@ -44,6 +44,8 @@ subscribe(callback) → () => void                               // returns unsu
 ```
 
 **Sort:** Use `SortField<T>`: `-fieldName` for descending (e.g., `-created_date`). Max 5,000 per request for list/filter.
+
+**Query operators** (`filter`, `updateMany`, `deleteMany`): `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$nin`, `$exists`, `$regex` (string), `$all`/`$size` (array), `$not`; root-level `$and`/`$or`/`$nor`.
 
 ---
 
@@ -58,10 +60,27 @@ fetch(path, init?) → Promise<Response>   // low-level, for streaming/custom me
 
 ---
 
+## Agents (`base44.agents.*`)
+
+Requires a logged-in user.
+
+```
+createConversation({agent_name, metadata?}) → Promise<Conversation>
+getConversations() → Promise<Conversation[]>
+getConversation(id) → Promise<Conversation>                        // full data, incl. untruncated tool calls
+listConversations({q?, sort?, limit?, skip?, fields?}) → Promise<Conversation[]>
+subscribeToConversation(id, onUpdate?) → () => void                 // realtime; tool call data truncated
+addMessage(conversation, message) → Promise<Message>
+getWhatsAppConnectURL(agentName) → string
+getTelegramConnectURL(agentName) → string
+```
+
+---
+
 ## Integrations (`base44.integrations.Core.*`)
 
 ```
-InvokeLLM({prompt, add_context_from_internet?, response_json_schema?, file_urls?}) → Promise<string | object>
+InvokeLLM({prompt, model?, add_context_from_internet?, response_json_schema?, file_urls?}) → Promise<string | object>  // file_urls and add_context_from_internet are mutually exclusive
 GenerateImage({prompt}) → Promise<{url}>
 SendEmail({to, subject, body, from_name?}) → Promise<any>
 UploadFile({file}) → Promise<{file_url}>
@@ -103,8 +122,6 @@ track({eventName, properties?}) → void
 
 ```
 logUserInApp(pageName) → Promise<void>
-fetchLogs(params?) → Promise<any>
-getStats(params?) → Promise<any>
 ```
 
 ---
@@ -119,14 +136,25 @@ inviteUser(userEmail, role) → Promise<any>    // role: 'user' | 'admin'
 
 ## Service Role Connectors (`base44.asServiceRole.connectors.*`)
 
-**Backend only, service role required.** App-scoped (shared account).
+**Backend only, service role required.**
 
 ```
-getConnection(integrationType) → Promise<{accessToken, connectionConfig}>   // recommended
-getAccessToken(integrationType) → Promise<string>                           // deprecated
+getConnection(integrationType) → Promise<{accessToken, connectionConfig}>            // shared, by integration type (recommended)
+getWorkspaceConnection(connectorId) → Promise<{accessToken, connectionConfig}>       // shared, by workspace connector ID
+getCurrentAppUserConnection(connectorId) → Promise<{accessToken, connectionConfig}>  // per-user; needs createClientFromRequest(req)
+getAccessToken(integrationType) → Promise<string>                                    // deprecated
 ```
 
 **Types:** Run `npx base44 connectors list-available` to see all available integration types.
+
+## App User Connectors (`base44.connectors.*`)
+
+**Frontend.** Per-user OAuth flow (each app user connects their own account).
+
+```
+connectAppUser(connectorId) → Promise<string>   // redirect URL; window.location.href = url
+disconnectAppUser(connectorId) → Promise<void>
+```
 
 ---
 
@@ -136,6 +164,7 @@ getAccessToken(integrationType) → Promise<string>                           //
 
 ```
 getAccessToken(userId) → Promise<{access_token}>
+getIdToken(userId) → Promise<string>   // stored ID token, not refreshed; needs on-behalf-of token for the same user
 ```
 
 ---

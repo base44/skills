@@ -80,7 +80,7 @@ interface ChangePasswordParams {
 
 ### Provider Type
 ```typescript
-type Provider = 'google' | 'microsoft' | 'facebook';
+type Provider = 'google' | 'microsoft' | 'facebook' | 'apple' | 'sso';
 ```
 
 ---
@@ -92,7 +92,7 @@ type Provider = 'google' | 'microsoft' | 'facebook';
 interface AuthModule {
   // User Info
   me(): Promise<User>;
-  updateMe(data: Partial<Omit<User, 'id' | 'created_date' | 'updated_date' | 'app_id' | 'is_service'>>): Promise<User>;
+  updateMe(data: Record<string, any>): Promise<User>;
   isAuthenticated(): Promise<boolean>;
 
   // Login/Logout
@@ -125,9 +125,9 @@ interface AuthModule {
 |--------|-----------|-------------|-------------|
 | `register()` | `params: RegisterParams` | `Promise<any>` | Create new user account |
 | `loginViaEmailPassword()` | `email: string, password: string, turnstileToken?: string` | `Promise<LoginResponse>` | Authenticate with email/password |
-| `loginWithProvider()` | `provider: Provider, fromUrl?: string` | `void` | Initiate OAuth login flow. Providers: `'google'` (default), `'microsoft'`, `'facebook'` (enable in app settings) |
+| `loginWithProvider()` | `provider: Provider, fromUrl?: string` | `void` | Initiate OAuth login flow. Providers: `'google'` (default), `'microsoft'`, `'facebook'`, `'apple'` (enable in app settings), `'sso'` (enterprise SSO, requires SSO setup) |
 | `me()` | None | `Promise<User>` | Get current authenticated user |
-| `updateMe()` | `data: Partial<User>` | `Promise<User>` | Update current user's profile |
+| `updateMe()` | `data: Record<string, any>` | `Promise<User>` | Update current user's profile |
 | `logout()` | `redirectUrl?: string` | `void` | Redirect to server-side logout (clears HTTP-only cookies and session), then to redirectUrl or current URL |
 | `redirectToLogin()` | `nextUrl: string` | `void` | ⚠️ **Avoid** - Prefer custom login UI with `loginViaEmailPassword()` or `loginWithProvider()` |
 | `isAuthenticated()` | None | `Promise<boolean>` | Check if user is logged in |
@@ -215,7 +215,7 @@ try {
 
 ### Login with OAuth Provider
 
-Supported providers: `'google'` (enabled by default), `'microsoft'`, and `'facebook'`. Enable Microsoft or Facebook in your app's authentication settings before using them.
+Supported providers: `'google'` (enabled by default), `'microsoft'`, `'facebook'`, `'apple'`, and `'sso'` (enterprise SSO). Enable Microsoft, Facebook, Apple, or SSO in your app's authentication settings before using them. Requires a browser environment.
 
 ```javascript
 // Redirect to Google OAuth
@@ -224,10 +224,16 @@ base44.auth.loginWithProvider('google');
 // Redirect to Google OAuth and return to current page after
 base44.auth.loginWithProvider('google', window.location.href);
 
-// Microsoft or Facebook (enable in app settings first)
+// Microsoft, Facebook, or Apple (enable in app settings first)
 base44.auth.loginWithProvider('microsoft');
 base44.auth.loginWithProvider('facebook', '/dashboard');
+base44.auth.loginWithProvider('apple', '/dashboard');
+
+// Enterprise SSO (set up an SSO provider in app settings first)
+base44.auth.loginWithProvider('sso', '/dashboard');
 ```
+
+**Inside an iframe:** if the app is embedded in an iframe, `loginWithProvider()` doesn't do a full-page redirect. It opens a centered popup instead, waits for the popup to `postMessage` back an `access_token` (and optionally `is_new_user`), then navigates the top-level window to `fromUrl` with those values appended as query params. Outside an iframe, it's a plain `window.location.href` redirect.
 
 ### Get Current User
 
@@ -589,17 +595,22 @@ Configure authentication providers in your app dashboard:
 - **Google** - OAuth authentication
 - **Microsoft** - OAuth authentication
 - **Facebook** - OAuth authentication
+- **Apple** - Sign in with Apple
 
 **SSO Providers (Elite Plan):**
 - **Okta**
 - **Azure AD**
 - **GitHub**
 
+Note: the SDK always passes the single provider value `'sso'` for `loginWithProvider()` regardless of which enterprise SSO provider is configured in your app's authentication settings — the specific provider (Okta, Azure AD, GitHub, etc.) is a dashboard configuration detail, not a separate SDK parameter.
+
 ### Using OAuth Providers
 
 - **Google** – enabled by default.
 - **Microsoft** – enable in your app's authentication settings before use.
 - **Facebook** – enable in your app's authentication settings before use.
+- **Apple** – enable in your app's authentication settings before use.
+- **SSO** – set up an SSO provider in your app's authentication settings before use.
 
 ```javascript
 // Initiate OAuth login flow
@@ -608,7 +619,7 @@ base44.auth.loginWithProvider('google');
 // Return to specific page after authentication
 base44.auth.loginWithProvider('microsoft', '/dashboard');
 
-// Supported values: 'google', 'microsoft', 'facebook'
+// Supported values: 'google', 'microsoft', 'facebook', 'apple', 'sso'
 ```
 
 ---

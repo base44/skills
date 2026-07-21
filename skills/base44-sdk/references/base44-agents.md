@@ -9,7 +9,7 @@ AI agent conversations and messages via `base44.agents`.
 ## Contents
 - [Concepts](#concepts)
 - [Methods](#methods)
-- [Examples](#examples) (Create, Get Conversations, List, Subscribe, Send Message, WhatsApp)
+- [Examples](#examples) (Create, Get Conversations, List, Subscribe, Send Message, WhatsApp, Telegram)
 - [Message Structure](#message-structure)
 - [Conversation Structure](#conversation-structure)
 - [Common Patterns](#common-patterns)
@@ -30,6 +30,7 @@ AI agent conversations and messages via `base44.agents`.
 | `subscribeToConversation(id, onUpdate?)` | `() => void` | Realtime updates via WebSocket; tool call data truncated (returns unsubscribe function) |
 | `addMessage(conversation, message)` | `Promise<Message>` | Send a message |
 | `getWhatsAppConnectURL(agentName)` | `string` | Get WhatsApp connection URL for agent |
+| `getTelegramConnectURL(agentName)` | `string` | Get Telegram connection URL for agent |
 
 ## Examples
 
@@ -125,6 +126,14 @@ const whatsappUrl = base44.agents.getWhatsAppConnectURL("support-agent");
 console.log(whatsappUrl);
 ```
 
+### Get Telegram Connection URL
+
+```javascript
+const telegramUrl = base44.agents.getTelegramConnectURL("support-agent");
+// Returns URL for users to connect with agent via Telegram
+console.log(telegramUrl);
+```
+
 ## Message Structure
 
 ```javascript
@@ -136,13 +145,14 @@ console.log(whatsappUrl);
   
   // Optional fields
   reasoning: {
-    content: "Agent's reasoning process",
-    timing: 1500
+    start_date: "2024-01-15T10:29:58Z",
+    end_date: "2024-01-15T10:30:00Z",
+    content: "Agent's reasoning process"
   },
   tool_calls: [{
     name: "search",
-    arguments: { query: "weather" },
-    result: { ... },
+    arguments_string: '{"query":"weather"}',
+    results: "...",
     status: "success"
   }],
   file_urls: ["https://..."],
@@ -295,7 +305,7 @@ interface AgentMessageToolCall {
   /** Arguments passed to the tool as JSON string. */
   arguments_string: string;
   /** Status of the tool call. */
-  status: "running" | "success" | "error" | "stopped";
+  status: "running" | "success" | "error" | "stopped" | "waiting_for_user_input";
   /** Results from the tool call. */
   results?: string;
 }
@@ -384,5 +394,8 @@ interface AgentsModule {
 
   /** Gets WhatsApp connection URL for an agent. */
   getWhatsAppConnectURL(agentName: AgentName): string;
+
+  /** Gets Telegram connection URL for an agent. */
+  getTelegramConnectURL(agentName: AgentName): string;
 }
 ```
