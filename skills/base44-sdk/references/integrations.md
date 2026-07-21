@@ -55,13 +55,20 @@ const response = await base44.integrations.Core.InvokeLLM({
   prompt: "Describe what's in this image",
   file_urls: ["https://...uploaded_image.png"]
 });
+
+// Override the app-level model for this call
+const response = await base44.integrations.Core.InvokeLLM({
+  prompt: "Explain quantum computing",
+  model: "gpt_5_5"
+});
 ```
 
 **Parameters:**
 - `prompt` (string, required): The prompt text to send to the model
-- `add_context_from_internet` (boolean, optional): If true, uses Google Search/Maps/News for real-time context
+- `model` (string, optional): Overrides the app-level model setting for this call. One of `'gpt_5_mini'`, `'gemini_3_flash'`, `'gpt_5_4'`, `'gpt_5_5'`, `'gemini_3_1_pro'`, `'claude_sonnet_4_6'`, `'claude_opus_4_6'`, `'claude_opus_4_7'`, `'claude_opus_4_8'`
+- `add_context_from_internet` (boolean, optional): If true, uses Google Search/Maps/News for real-time context. Don't combine with `file_urls`
 - `response_json_schema` (object, optional): JSON schema for structured output
-- `file_urls` (string[], optional): URLs of uploaded files for context
+- `file_urls` (string[], optional): URLs of uploaded files for context. Don't combine with `add_context_from_internet`
 
 > `InvokeLLM` is a **single call with no tools**. Don't chain it to simulate an agent loop — for a tool-using agent, build a **code agent** on the AI gateway. See [ai-gateway.md](ai-gateway.md).
 
@@ -92,7 +99,7 @@ await base44.integrations.Core.SendEmail({
 **Parameters:**
 - `to` (string, required): Recipient email address
 - `subject` (string, required): Email subject line
-- `body` (string, required): Plain text or HTML email body
+- `body` (string, required): Plain text email body content
 - `from_name` (string, optional): Sender name displayed to recipient
 
 **Limitations:**
@@ -219,10 +226,23 @@ const response = await base44.integrations.custom.call(
 }
 ```
 
+### Errors
+
+`custom.call()` throws:
+- `Error` if `slug` is not provided
+- `Error` if `operationId` is not provided
+- `Base44Error` if the integration or operation is not found (404)
+- `Base44Error` if the external API call fails (502)
+- `Base44Error` if the request times out (504)
+
 ## Requirements
 
 - **Core integrations**: Available on all plans
 - **Catalog/Custom integrations**: Require Builder plan or higher
+
+## Authentication Modes
+
+Available in all authentication modes. Use `base44.asServiceRole.integrations` for elevated/service-role calls (same `Core` and `custom` submodules).
 
 ## Type Definitions
 
@@ -233,11 +253,13 @@ const response = await base44.integrations.custom.call(
 interface InvokeLLMParams {
   /** The prompt text to send to the model. */
   prompt: string;
-  /** If true, uses Google Search/Maps/News for real-time context. */
+  /** Overrides the app-level model setting for this call. */
+  model?: 'gpt_5_mini' | 'gemini_3_flash' | 'gpt_5_4' | 'gpt_5_5' | 'gemini_3_1_pro' | 'claude_sonnet_4_6' | 'claude_opus_4_6' | 'claude_opus_4_7' | 'claude_opus_4_8';
+  /** If true, uses Google Search/Maps/News for real-time context. Don't combine with `file_urls`. */
   add_context_from_internet?: boolean;
   /** JSON schema for structured output. If provided, returns object instead of string. */
   response_json_schema?: object;
-  /** File URLs (from UploadFile) to provide as context. */
+  /** File URLs (from UploadFile) to provide as context. Don't combine with `add_context_from_internet`. */
   file_urls?: string[];
 }
 
@@ -271,7 +293,7 @@ interface SendEmailParams {
   to: string;
   /** Email subject line. */
   subject: string;
-  /** Plain text or HTML email body. */
+  /** Plain text email body content. */
   body: string;
   /** Sender name (defaults to app name). */
   from_name?: string;
@@ -372,6 +394,6 @@ type IntegrationsModule = {
   /** Custom integrations module. */
   custom: CustomIntegrationsModule;
   /** Additional integration packages (dynamic). */
-  [packageName: string]: any;
+  [packageName: string]: IntegrationPackage;
 };
 ```

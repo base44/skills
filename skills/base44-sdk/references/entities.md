@@ -91,7 +91,23 @@ const titles = await base44.entities.Task.filter(
   null,
   ["id", "title"]
 );
+
+// Query operators (MongoDB-style)
+const highValue = await base44.entities.Order.filter({
+  amount: { $gte: 100 },
+  status: { $in: ["pending", "processing"] }
+});
+
+// Combine with $and / $or / $nor at the root level
+const flagged = await base44.entities.Task.filter({
+  $or: [
+    { priority: "high" },
+    { count: { $gte: 100 } }
+  ]
+});
 ```
+
+**Supported query operators:** `$eq`, `$ne`, `$gt`, `$gte`, `$lt`, `$lte`, `$in`, `$nin`, `$exists` (all fields); `$regex` (string fields); `$all`, `$size` (array fields); `$not` (negates a field-level operator expression); `$and`, `$or`, `$nor` (root-level, combine nested filter queries).
 
 ### Get by ID
 
@@ -138,6 +154,24 @@ await base44.entities.Task.updateMany(
 );
 ```
 
+**Batching:** results are batched in groups of up to 500. When `result.has_more` is `true`, call `updateMany` again with the *same query* to process the next batch — make sure the query excludes already-updated records so you don't re-process the same entities:
+
+```javascript
+// Process all pending items in batches of 500.
+// The query filters by 'pending', so updated records (now 'processed')
+// are automatically excluded from the next batch.
+let hasMore = true;
+let totalUpdated = 0;
+while (hasMore) {
+  const result = await base44.entities.Job.updateMany(
+    { status: "pending" },
+    { $set: { status: "processed" } }
+  );
+  totalUpdated += result.updated;
+  hasMore = result.has_more;
+}
+```
+
 ### Bulk Update (by ID)
 
 ```javascript
@@ -147,6 +181,16 @@ const updated = await base44.entities.Task.bulkUpdate([
   { id: "task-2", status: "in-progress", assignedTo: userId },
   { id: "task-3", priority: 5 }
 ]);
+```
+
+**Limit:** up to 500 records per request. For more, chunk the array yourself:
+
+```javascript
+const allUpdates = reassignments.map(r => ({ id: r.taskId, owner: r.newOwner }));
+for (let i = 0; i < allUpdates.length; i += 500) {
+  const batch = allUpdates.slice(i, i + 500);
+  await base44.entities.Task.bulkUpdate(batch);
+}
 ```
 
 ### Import from File
@@ -183,6 +227,8 @@ unsubscribe();
   timestamp: "2024-01-15T10:30:00Z"
 }
 ```
+
+**Oversize payloads:** the realtime transport caps payload size. If a broadcast would exceed it, the server sets `data._oversize: true` and slims the payload (fields over 10 KB arrive as empty strings, or the whole record may collapse to a stub). The SDK logs a console warning when this happens. On `create`/`update` events, check for `data._oversize` and call `entities.EntityName.get(id)` to fetch the full record instead of rendering the slimmed payload.
 
 ## User Entity
 
@@ -222,7 +268,7 @@ Operations succeed or fail based on these rules - no partial results.
 
 RLS and FLS are configured in entity schema files (`base44/entities/*.jsonc`). See [entities-create.md](../../base44-cli/references/entities-create.md#row-level-security-rls) for configuration details.
 
-**Note:** `asServiceRole` sets the user's role to `"admin"` but does NOT bypass RLS. Your RLS rules must include admin access (e.g., `{ "user_condition": { "role": "admin" } }`) for service role operations to succeed.
+**Note:** `asServiceRole` operations bypass entity access rules and field-level security entirely — they can read and write any record in any entity, regardless of RLS/FLS rules.
 
 ## Type Definitions
 
@@ -257,6 +303,8 @@ interface UpdateManyResult {
   success: boolean;
   /** Number of entities that were updated. */
   updated: number;
+  /** Whether more records match the query and weren't updated in this batch. When `true`, call `updateMany` again with the same query to process the next batch. */
+  has_more: boolean;
 }
 
 /** Result returned when deleting a single entity. */
@@ -325,6 +373,37 @@ type EntityRecord = {
 };
 ```
 
+### EntityFilterQuery
+
+Query type accepted by `filter()`, `updateMany()`, and `deleteMany()`. Each field can use an exact value, `null`, an array shorthand (matches any listed value), or a field-level operator object. Root-level `$and`, `$or`, `$nor` combine nested filter queries.
+
+```typescript
+/** Query object accepted by entity filtering methods. */
+type EntityFilterQuery<T> = {
+  [K in keyof T]?: EntityFilterValue<T[K]>;
+} & {
+  $and?: EntityFilterQuery<T>[];
+  $or?: EntityFilterQuery<T>[];
+  $nor?: EntityFilterQuery<T>[];
+};
+
+/** Value accepted when filtering an entity field: exact match, array shorthand, or operator object. */
+type EntityFilterValue<T> =
+  | (Exclude<T, undefined> | null)
+  | (Exclude<T, undefined> | null)[]
+  | EntityFilterOperators<T>;
+
+/** MongoDB-style query operators accepted for a single entity field. */
+type EntityFilterOperators<T> = {
+  $eq?: T; $ne?: T; $gt?: T; $gte?: T; $lt?: T; $lte?: T;
+  $in?: T[]; $nin?: T[];
+  $exists?: boolean;
+  $regex?: string;   // string fields only
+  $all?: T; $size?: number; // array fields only
+  $not?: EntityFilterOperators<T>; // negates a field-level filter expression
+};
+```
+
 ### EntityHandler
 
 ```typescript
@@ -340,7 +419,7 @@ interface EntityHandler<T = any> {
 
   /** Filters records based on a query. Max 5,000 per request. */
   filter<K extends keyof T = keyof T>(
-    query: Partial<T>,
+    query: EntityFilterQuery<T>,
     sort?: SortField<T>,
     limit?: number,
     skip?: number,
@@ -360,19 +439,20 @@ interface EntityHandler<T = any> {
   delete(id: string): Promise<DeleteResult>;
 
   /** Deletes multiple records matching a query. */
-  deleteMany(query: Partial<T>): Promise<DeleteManyResult>;
+  deleteMany(query: EntityFilterQuery<T>): Promise<DeleteManyResult>;
 
   /** Creates multiple records in a single request. */
   bulkCreate(data: Partial<T>[]): Promise<T[]>;
 
   /**
    * Updates multiple records matching a query using MongoDB update operators.
+   * Results are batched in groups of up to 500 — see `has_more` on the result.
    * @param query - Filter to select which records to update.
    * @param data - MongoDB update operator object (e.g., `{ $set: { field: value } }`).
    */
-  updateMany(query: Partial<T>, data: Record<string, Record<string, any>>): Promise<UpdateManyResult>;
+  updateMany(query: EntityFilterQuery<T>, data: Record<string, Record<string, any>>): Promise<UpdateManyResult>;
 
-  /** Updates multiple records by ID, each with its own update data. */
+  /** Updates multiple records by ID, each with its own update data. Up to 500 records per request. */
   bulkUpdate(data: (Partial<T> & { id: string })[]): Promise<T[]>;
 
   /** Imports records from a file (frontend only). */

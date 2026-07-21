@@ -9,6 +9,7 @@ Single Sign-On (SSO) support for authenticating Base44 users with external syste
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `getAccessToken(userId)` | `Promise<SsoAccessTokenResponse>` | Get an SSO access token for a specific user |
+| `getIdToken(userId)` | `Promise<string>` | Get the stored SSO OIDC ID token for the current app user |
 
 ## Examples
 
@@ -48,6 +49,23 @@ Deno.serve(async (req) => {
 });
 ```
 
+### Get the Stored SSO ID Token
+
+Returns the stored SSO OIDC ID token as-is (does not refresh it). The service-role client must include an on-behalf-of token for the same user passed as `userid` — use `createClientFromRequest(req)` with the current user's request.
+
+```javascript
+import { createClientFromRequest } from "npm:@base44/sdk";
+
+Deno.serve(async (req) => {
+  const base44 = createClientFromRequest(req);
+  const user = await base44.auth.me();
+
+  const idToken = await base44.asServiceRole.sso.getIdToken(user.id);
+
+  return Response.json({ idToken });
+});
+```
+
 ## Use Cases
 
 - Authenticating Base44 users with external SaaS tools (e.g., Okta, Azure AD)
@@ -71,5 +89,13 @@ interface SsoModule {
    * @returns Promise resolving to the SSO access token response.
    */
   getAccessToken(userid: string): Promise<SsoAccessTokenResponse>;
+
+  /**
+   * Gets the stored SSO OIDC ID token for the current app user. Does not refresh the token.
+   * The service-role client must include an on-behalf-of token for the same user.
+   * @param userid - The current app user's ID.
+   * @returns Promise resolving to the raw ID-token string.
+   */
+  getIdToken(userid: string): Promise<string>;
 }
 ```
