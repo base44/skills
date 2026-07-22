@@ -136,7 +136,10 @@ getAccessToken(integrationType) → Promise<string>                           //
 
 ```
 getAccessToken(userId) → Promise<{access_token}>
+getIdToken(userId)     → Promise<string>             // use for identity claims, especially email
 ```
+
+`getIdToken` returns the current app user's stored OIDC ID token as-is; it does not refresh the token. The service-role client must act on behalf of the same user.
 
 ---
 
@@ -149,6 +152,7 @@ base44.asServiceRole.entities.Task.list()
 base44.asServiceRole.functions.invoke('name', data)
 base44.asServiceRole.connectors.getConnection('slack')
 base44.asServiceRole.sso.getAccessToken(userId)
+base44.asServiceRole.sso.getIdToken(user.id) // use when you need the email claim
 ```
 
 ---
