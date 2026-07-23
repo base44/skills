@@ -135,11 +135,11 @@ getAccessToken(integrationType) → Promise<string>                           //
 **Backend only, service role required.**
 
 ```
-getAccessToken(userId) → Promise<string>
+getAccessToken(userId) → Promise<{access_token}>
 getIdToken(userId)     → Promise<string>             // raw ID token; use for identity claims, especially email
 ```
 
-Both methods return raw token strings. `getIdToken` returns the current app user's OIDC ID token, and the service-role client must act on behalf of the same user.
+`getIdToken` returns the current app user's OIDC ID token as a raw string, and the service-role client must act on behalf of the same user.
 
 ---
 
