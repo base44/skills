@@ -8,12 +8,12 @@ Single Sign-On (SSO) support for authenticating Base44 users with external syste
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `getAccessToken(userId)` | `Promise<SsoAccessTokenResponse>` | Get an SSO access token for a specific user |
+| `getAccessToken(userId)` | `Promise<string>` | Get an SSO access token for a specific user |
 | `getIdToken(userId)` | `Promise<string>` | Get the stored SSO OIDC ID token for the current app user |
 
 Use `getIdToken(userId)` when you need identity claims, especially the user's `email` claim. Use `getAccessToken(userId)` when you need a token to authorize requests to an external system.
 
-The service-role client must include an on-behalf-of token for the same user passed to `getIdToken`. The method returns the stored ID token as-is and does not refresh it.
+Both methods return raw token strings. The service-role client must include an on-behalf-of token for the same user passed to `getIdToken`.
 
 ## Examples
 
@@ -32,10 +32,10 @@ Deno.serve(async (req) => {
   }
 
   // Get SSO access token for this user
-  const { access_token } = await base44.asServiceRole.sso.getAccessToken(user.id);
+  const accessToken = await base44.asServiceRole.sso.getAccessToken(user.id);
 
   // Use the token to authenticate with an external system
-  return Response.json({ ssoToken: access_token });
+  return Response.json({ ssoToken: accessToken });
 });
 ```
 
@@ -47,9 +47,9 @@ Deno.serve(async (req) => {
   const { userId } = await req.json();
 
   // Get SSO token for any user (service role has access to all users)
-  const { access_token } = await base44.asServiceRole.sso.getAccessToken(userId);
+  const accessToken = await base44.asServiceRole.sso.getAccessToken(userId);
 
-  return Response.json({ token: access_token });
+  return Response.json({ token: accessToken });
 });
 ```
 
@@ -84,26 +84,19 @@ Deno.serve(async (req) => {
 ## Type Definitions
 
 ```typescript
-/** Response from the SSO access token endpoint. */
-interface SsoAccessTokenResponse {
-  /** The SSO access token for the specified user. */
-  access_token: string;
-}
-
 /** SSO module for managing SSO authentication (service role only). */
 interface SsoModule {
   /**
    * Gets an SSO access token for a specific user.
    * @param userId - The Base44 user ID to get the SSO token for.
-   * @returns Promise resolving to the SSO access token response.
+   * @returns Promise resolving to the raw SSO access token string.
    */
-  getAccessToken(userId: string): Promise<SsoAccessTokenResponse>;
+  getAccessToken(userId: string): Promise<string>;
 
   /**
    * Gets the stored SSO OIDC ID token for the current app user.
    * Use this method when you need the user's email claim.
    * The service-role client must act on behalf of this same user.
-   * The stored token is returned as-is and is not refreshed.
    * @param userId - The current app user's Base44 user ID.
    * @returns Promise resolving to the raw ID token string.
    */
