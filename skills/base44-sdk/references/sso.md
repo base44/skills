@@ -9,6 +9,11 @@ Single Sign-On (SSO) support for authenticating Base44 users with external syste
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `getAccessToken(userId)` | `Promise<SsoAccessTokenResponse>` | Get an SSO access token for a specific user |
+| `getIdToken(userId)` | `Promise<string>` | Get the stored SSO OIDC ID token for the current app user |
+
+Use `getIdToken(userId)` when you need identity claims, especially the user's `email` claim. Use `getAccessToken(userId)` when you need a token to authorize requests to an external system.
+
+The service-role client must include an on-behalf-of token for the same user passed to `getIdToken`.
 
 ## Examples
 
@@ -48,6 +53,28 @@ Deno.serve(async (req) => {
 });
 ```
 
+### Get an ID Token for the User's Email Claim
+
+Use an ID token instead of an access token when you need the user's email claim. The ID token is a JWT containing identity claims from the SSO provider. Validate and decode the token according to your provider's requirements before using its claims.
+
+```javascript
+import { createClientFromRequest } from "npm:@base44/sdk";
+
+Deno.serve(async (req) => {
+  const base44 = createClientFromRequest(req);
+
+  const user = await base44.auth.me();
+  if (!user) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const idToken = await base44.asServiceRole.sso.getIdToken(user.id);
+
+  // Pass the ID token to code that validates it and reads the email claim.
+  return Response.json({ idToken });
+});
+```
+
 ## Use Cases
 
 - Authenticating Base44 users with external SaaS tools (e.g., Okta, Azure AD)
@@ -67,9 +94,18 @@ interface SsoAccessTokenResponse {
 interface SsoModule {
   /**
    * Gets an SSO access token for a specific user.
-   * @param userid - The Base44 user ID to get the SSO token for.
+   * @param userId - The Base44 user ID to get the SSO token for.
    * @returns Promise resolving to the SSO access token response.
    */
-  getAccessToken(userid: string): Promise<SsoAccessTokenResponse>;
+  getAccessToken(userId: string): Promise<SsoAccessTokenResponse>;
+
+  /**
+   * Gets the stored SSO OIDC ID token for the current app user.
+   * Use this method when you need the user's email claim.
+   * The service-role client must act on behalf of this same user.
+   * @param userId - The current app user's Base44 user ID.
+   * @returns Promise resolving to the raw ID token string.
+   */
+  getIdToken(userId: string): Promise<string>;
 }
 ```
