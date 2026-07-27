@@ -128,7 +128,7 @@ curl -X POST "https://<app-domain>/functions/<function-name>" \
 
 ## Writing Backend Functions
 
-Backend functions run on Deno. Must export using `Deno.serve()`.
+Backend functions are HTTP handlers. Each one must `export default` an async function that takes a `Request` and returns a `Response`.
 
 ### Function Directory Structure
 
@@ -151,22 +151,22 @@ For complete setup and deployment instructions, see [functions-create.md](../../
 // base44/functions/process-order/entry.ts
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   // Get authenticated client from request
   const base44 = createClientFromRequest(req);
-  
+
   // Parse input
   const { orderId, action } = await req.json();
-  
+
   // Your logic here
   const order = await base44.entities.Orders.get(orderId);
-  
+
   // Return response
   return Response.json({
     success: true,
     order: order
   });
-});
+}
 ```
 
 ### With Service Role Access
@@ -174,37 +174,54 @@ Deno.serve(async (req) => {
 ```javascript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
-  
+
   // Check user is authenticated
   const user = await base44.auth.me();
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  
+
   // Use service role for admin operations
   const allOrders = await base44.asServiceRole.entities.Orders.list();
-  
+
   return Response.json({ orders: allOrders });
-});
+}
 ```
 
 ### Using Secrets
 
+Read secrets with `secrets.get()` from the `base44:runtime` module. `BASE44_APP_ID` is pre-populated; configure the rest in app settings.
+
 ```javascript
-Deno.serve(async (req) => {
-  // Access environment variables (configured in app settings)
-  const apiKey = Deno.env.get("STRIPE_API_KEY");
-  
+import { secrets } from "base44:runtime";
+
+export default async function (req) {
+  // Read a secret (configured in app settings)
+  const apiKey = secrets.get("STRIPE_API_KEY");
+
   const response = await fetch("https://api.stripe.com/v1/charges", {
     headers: {
       "Authorization": `Bearer ${apiKey}`
     }
   });
-  
+
   return Response.json(await response.json());
-});
+}
+```
+
+### Post-Response Work
+
+To finish work after the response is sent, hand the promise to `waitUntil()` from `base44:runtime`:
+
+```javascript
+import { waitUntil } from "base44:runtime";
+
+export default async function (req) {
+  waitUntil(fetch("https://hooks.example.com/ping", { method: "POST" }));
+  return Response.json({ ok: true });
+}
 ```
 
 ### Error Handling
@@ -212,11 +229,11 @@ Deno.serve(async (req) => {
 ```javascript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
     const { orderId } = await req.json();
-    
+
     const order = await base44.entities.Orders.get(orderId);
     if (!order) {
       return Response.json(
@@ -224,16 +241,16 @@ Deno.serve(async (req) => {
         { status: 404 }
       );
     }
-    
+
     return Response.json({ order });
-    
+
   } catch (error) {
     return Response.json(
       { error: error.message },
       { status: 500 }
     );
   }
-});
+}
 ```
 
 ## Setup Requirements

@@ -41,21 +41,21 @@ base44/functions/
     entry.ts
 ```
 
-Entry file — functions run on **Deno** (not Node.js), export with `Deno.serve()`, and use the `npm:` prefix for npm packages:
+Entry file — `export default` an async request handler, and use the `npm:` prefix for npm packages:
 ```typescript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);   // inherits the caller's auth
   const { orderId } = await req.json();
   const order = await base44.entities.Orders.get(orderId);
   return Response.json({ success: true, order });
-});
+}
 ```
 Conventions:
 - **Kebab-case** directory and function name; entry typically `entry.ts`.
 - `createClientFromRequest(req)` for a client in the caller's auth context; `base44.asServiceRole.…` for admin-level operations.
-- Read secrets with `Deno.env.get("KEY")` (configured in app settings).
+- Read secrets with `secrets.get("KEY")` from `base44:runtime` (`import { secrets } from "base44:runtime"`; configured in app settings).
 - Return with `Response.json(body, { status })`; handle errors and set appropriate status codes.
 
 That's enough to author functions correctly. For deeper detail and more examples (service role, secrets, common mistakes), see the `base44-cli` skill's reference: [`functions-create.md`](../base44-cli/references/functions-create.md) — but **ignore its "Deploying Functions" / CLI sections** and its **`function.jsonc`** guidance, which assume a local project and do not apply in the sandbox (here you only write `entry.ts`).
@@ -161,7 +161,7 @@ Connecting only authorizes the connector. To actually call the third-party API, 
 ```typescript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
 
   // App-scoped OAuth token — backend / service role only.
@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
   ).then((r) => r.json());
 
   return Response.json({ events });
-});
+}
 ```
 
 Notes: the connector is **app-scoped** (one connected account shared by all users); Base44 refreshes the token for you; you make the API calls. `getConnection()` replaces the deprecated `getAccessToken()`. For the full module reference (signatures, `connectionConfig`, the list of available services and their type identifiers), see the `base44-sdk` skill's [`connectors.md`](../base44-sdk/references/connectors.md).

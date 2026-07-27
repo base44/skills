@@ -267,16 +267,16 @@ const res = await base44.functions.invoke("processOrder", {
 });
 const result = res.data; // ✅ e.g. res.data.success  (res itself is { data, status, headers, … })
 
-// Backend function (Deno)
+// Backend function
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
   const { orderId, action } = await req.json();
   // Process with service role for admin access
   const order = await base44.asServiceRole.entities.Orders.get(orderId);
   return Response.json({ success: true });
-});
+}
 ```
 
 ### Service Role Access
@@ -310,4 +310,4 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `asServiceRole.connectors` (app OAuth) | No | Yes |
 | `asServiceRole.sso` | No | Yes |
 
-Backend functions use `Deno.serve()` and `createClientFromRequest(req)` to get a properly authenticated client.
+Backend functions `export default` an async request handler and use `createClientFromRequest(req)` to get a properly authenticated client.
