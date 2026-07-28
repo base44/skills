@@ -5,8 +5,14 @@ Push local entity definitions to Base44.
 ## Syntax
 
 ```bash
-npx base44 entities push
+npx base44 entities push [options]
 ```
+
+## Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `-y, --yes` | Skip the confirmation prompt | No |
 
 ## Authentication
 
@@ -47,6 +53,19 @@ The push operation synchronizes your local entity schema with Base44:
 - **Created**: New entities that didn't exist in Base44
 - **Updated**: Existing entities with modified schema or configuration
 - **Deleted**: Entities that were removed from your local configuration
+
+## Confirmation Prompt
+
+Since push replaces remote entities with your local copy (deleting any not present locally), the CLI asks for confirmation before proceeding:
+
+```bash
+$ npx base44 entities push
+
+This will overwrite your app's entities with your local copy and delete any not present locally.
+? Are you sure you want to continue? › (y/N)
+```
+
+Pass `-y`/`--yes` to skip the prompt. **In non-interactive mode, `--yes` is required** — without it, the command throws instead of hanging on a prompt.
 
 ## Error Handling
 

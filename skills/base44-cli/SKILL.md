@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.5
+    version: 0.1.6
 ---
 
 # Base44 CLI
@@ -487,14 +487,14 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
    ```
 
 Or deploy individual resources:
-- `npx base44 entities push` - Push entities only
+- `npx base44 entities push -y` - Push entities only
 - `npx base44 functions deploy` - Deploy functions only
 - `npx base44 functions delete <name>` - Delete a deployed function
 - `npx base44 functions list` - List all deployed functions
 - `npx base44 functions pull` - Pull deployed functions to local files
-- `npx base44 agents push` - Push agents only
+- `npx base44 agents push -y` - Push agents only
 - `npx base44 connectors pull` - Pull connectors from Base44
-- `npx base44 connectors push` - Push connectors only
+- `npx base44 connectors push -y` - Push connectors only
 - `npx base44 auth pull` - Pull auth config from Base44
 - `npx base44 auth push` - Push auth config only
 - `npx base44 site deploy -y` - Deploy site only
@@ -546,8 +546,8 @@ This creates `base44/.types/types.d.ts` with typed registries for the `@base44/s
 
 ### Deploying Individual Resources
 ```bash
-# Push only entities
-npx base44 entities push
+# Push only entities (destructive - replaces remote entities, so -y skips the confirmation prompt)
+npx base44 entities push -y
 
 # Deploy only functions (all)
 npx base44 functions deploy
@@ -556,14 +556,14 @@ npx base44 functions deploy my-function other-function
 # Deploy and prune removed functions
 npx base44 functions deploy --force
 
-# Push only agents
-npx base44 agents push
+# Push only agents (destructive - replaces remote agents, so -y skips the confirmation prompt)
+npx base44 agents push -y
 
 # Pull connectors from Base44
 npx base44 connectors pull
 
-# Push only connectors
-npx base44 connectors push
+# Push only connectors (destructive - overwrites remote connectors, so -y skips the confirmation prompt)
+npx base44 connectors push -y
 
 # Deploy only site
 npx base44 site deploy -y

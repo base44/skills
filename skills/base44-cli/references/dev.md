@@ -64,6 +64,10 @@ npx base44 dev
 npx base44 dev --port 4500
 ```
 
+## Local Function Runtime
+
+Backend functions run locally against **workerd** (via Miniflare) by default — the same runtime Base44 uses in production, so `base44:runtime` APIs (`secrets`, `waitUntil`) behave the same locally as when deployed. It falls back to a Deno subprocess when workerd can't be loaded (e.g. the standalone binary distribution, which can't embed workerd's native executable) or when forced with `B44_DEV_FUNCTIONS_RUNTIME=deno`.
+
 ## Notes
 
 - Use this from a linked local project, not with `--app-id`
