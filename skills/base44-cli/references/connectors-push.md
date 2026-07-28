@@ -5,7 +5,7 @@ Push local connector configurations to Base44, synchronizing scopes and handling
 ## Usage
 
 ```bash
-npx base44 connectors push [--dir <path>]
+npx base44 connectors push [--dir <path>] [-y|--yes]
 ```
 
 ## Options
@@ -13,6 +13,20 @@ npx base44 connectors push [--dir <path>]
 | Option | Description | Required |
 |--------|--------------|----------|
 | `--dir <path>` | Directory to read connector files from. Only used with `--app-id` (no local project); defaults to `./connectors` | No |
+| `-y, --yes` | Skip the confirmation prompt | No |
+
+## Confirmation Prompt
+
+Because push overwrites your app's connectors with your local copy (removing any not present locally), the CLI asks for confirmation before proceeding:
+
+```bash
+$ npx base44 connectors push
+
+This will overwrite your app's connectors with your local copy and remove any not present locally.
+? Are you sure you want to continue? › (y/N)
+```
+
+Pass `-y`/`--yes` to skip the prompt. **In non-interactive mode, `--yes` is required** — without it, the command throws instead of hanging on a prompt (this check runs before the OAuth flow, which is skipped separately in non-interactive mode — see below).
 
 ## Projectless Mode
 
@@ -110,7 +124,11 @@ Summary:
 
 ## CI/CD Environments
 
-In non-interactive environments (no TTY, such as CI/CD pipelines), the OAuth flow is skipped automatically:
+In non-interactive environments (no TTY, such as CI/CD pipelines), you must pass `-y`/`--yes` or the push confirmation throws. The OAuth flow is skipped automatically:
+
+```bash
+npx base44 connectors push --yes
+```
 
 ```
 Skipped OAuth in non-interactive mode. Run 'base44 connectors push' locally or open the links above to authorize.

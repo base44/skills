@@ -5,8 +5,14 @@ Push local AI agent configurations to Base44. Agents are conversational AI assis
 ## Syntax
 
 ```bash
-npx base44 agents push
+npx base44 agents push [options]
 ```
+
+## Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `-y, --yes` | Skip the confirmation prompt | No |
 
 ## Authentication
 
@@ -49,6 +55,19 @@ The push operation synchronizes your local agents with Base44:
 - **Deleted**: Agents that were removed from your local configuration
 
 **Warning**: This is a full sync operation. Agents removed locally will be deleted from Base44.
+
+## Confirmation Prompt
+
+Because push replaces remote agent configs with your local agents (deleting any not present locally), the CLI asks for confirmation before proceeding:
+
+```bash
+$ npx base44 agents push
+
+This will replace all remote agent configs with your local agents and delete any not present locally.
+? Are you sure you want to continue? › (y/N)
+```
+
+Pass `-y`/`--yes` to skip the prompt. **In non-interactive mode, `--yes` is required** — without it, the command throws instead of hanging on a prompt.
 
 ## Error Handling
 
