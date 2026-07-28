@@ -22,7 +22,7 @@ The service-role client must include an on-behalf-of token for the same user pas
 ```javascript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
 
   // Get the current user
@@ -36,13 +36,13 @@ Deno.serve(async (req) => {
 
   // Use the token to authenticate with an external system
   return Response.json({ ssoToken: access_token });
-});
+}
 ```
 
 ### Get Token for a Specific User (Service Role)
 
 ```javascript
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
   const { userId } = await req.json();
 
@@ -50,7 +50,7 @@ Deno.serve(async (req) => {
   const { access_token } = await base44.asServiceRole.sso.getAccessToken(userId);
 
   return Response.json({ token: access_token });
-});
+}
 ```
 
 ### Get an ID Token for the User's Email Claim
@@ -60,7 +60,7 @@ Use an ID token instead of an access token when you need the user's email claim.
 ```javascript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
 
   const user = await base44.auth.me();
@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
 
   // Pass the ID token to code that validates it and reads the email claim.
   return Response.json({ idToken });
-});
+}
 ```
 
 ## Use Cases

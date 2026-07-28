@@ -57,14 +57,14 @@ const base44 = createClient({
 ```javascript
 import { createClientFromRequest } from "@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
   
   // Client inherits authentication from the request
   const user = await base44.auth.me();
   
   return Response.json({ user });
-});
+}
 ```
 
 ## Authentication Modes
@@ -107,7 +107,7 @@ Admin-level access. **Backend only.**
 
 ```javascript
 // Inside a backend function
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
   
   // User mode - respects permissions
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
   const oauthToken = await base44.asServiceRole.connectors.getAccessToken("slack");
   
   return Response.json({ myTasks, allTasks });
-});
+}
 ```
 
 ## Available Modules

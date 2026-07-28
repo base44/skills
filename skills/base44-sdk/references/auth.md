@@ -631,7 +631,7 @@ const user = await base44.auth.me();
 ```javascript
 import { createClientFromRequest } from "@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
 
   // Get user from request context
@@ -639,7 +639,7 @@ Deno.serve(async (req) => {
 
   // User operations here...
   return Response.json({ user });
-});
+}
 ```
 
 ---

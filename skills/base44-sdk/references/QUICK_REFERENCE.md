@@ -162,7 +162,7 @@ base44.asServiceRole.sso.getIdToken(userId) // current app user only; use for th
 ```javascript
 import { createClientFromRequest } from "@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
   const data = await req.json();
   
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
   const allRecords = await base44.asServiceRole.entities.Task.list();
   
   return Response.json({ success: true });
-});
+}
 ```
 
 ---

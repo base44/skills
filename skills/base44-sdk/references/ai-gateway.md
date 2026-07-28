@@ -69,7 +69,7 @@ import { ToolLoopAgent, tool, stepCountIs, hasToolCall } from "npm:ai@7.0.16";
 import { createOpenAICompatible } from "npm:@ai-sdk/openai-compatible@3.0.5";
 import { z } from "npm:zod@4.4.3";
 
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
 
   await agent.generate({ prompt: `Review this return request: ${JSON.stringify(request)}` });
   return Response.json({ ok: true });
-});
+}
 ```
 
 **Images:** when the agent needs to see an image, pass it as an image part in `messages`:

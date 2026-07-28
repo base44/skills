@@ -26,7 +26,7 @@ App-scoped OAuth tokens. The app builder connects the account once; all users sh
 
 ```javascript
 // Backend function only
-Deno.serve(async (req) => {
+export default async function (req) {
   const base44 = createClientFromRequest(req);
 
   // Recommended: use getConnection() for token + optional config
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
   });
 
   return Response.json(await response.json());
-});
+}
 ```
 
 ```javascript

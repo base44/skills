@@ -48,27 +48,27 @@ Rules:
 
 ## Entry Point File
 
-Functions export a request handler using `Deno.serve()`. Use the `npm:` prefix to import npm packages.
+Functions export a default request handler. Use the `npm:` prefix to import npm packages.
 
 ```typescript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req: Request): Promise<Response> {
   // Get authenticated client from request
   const base44 = createClientFromRequest(req);
-  
+
   // Parse input
   const { orderId, action } = await req.json();
-  
+
   // Your logic here
   const order = await base44.entities.Orders.get(orderId);
-  
+
   // Return response
   return Response.json({
     success: true,
     order: order
   });
-});
+}
 ```
 
 ### Request Object
@@ -108,11 +108,11 @@ base44/
 ```typescript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
     const { orderId } = await req.json();
-    
+
     // Validate input
     if (!orderId) {
       return Response.json(
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         { status: 400 }
       );
     }
-    
+
     // Fetch and process the order
     const order = await base44.entities.Orders.get(orderId);
     if (!order) {
@@ -129,20 +129,20 @@ Deno.serve(async (req) => {
         { status: 404 }
       );
     }
-    
+
     return Response.json({
       success: true,
       orderId: order.id,
       processedAt: new Date().toISOString()
     });
-    
+
   } catch (error) {
     return Response.json(
       { error: error.message },
       { status: 500 }
     );
   }
-});
+}
 ```
 
 ## Using Service Role Access
@@ -152,39 +152,54 @@ For admin-level operations, use `asServiceRole`:
 ```typescript
 import { createClientFromRequest } from "npm:@base44/sdk";
 
-Deno.serve(async (req) => {
+export default async function (req: Request): Promise<Response> {
   const base44 = createClientFromRequest(req);
-  
+
   // Check user is authenticated
   const user = await base44.auth.me();
   if (!user) {
     return Response.json({ error: "Unauthorized" }, { status: 401 });
   }
-  
+
   // Use service role for admin operations
   const allOrders = await base44.asServiceRole.entities.Orders.list();
-  
+
   return Response.json({ orders: allOrders });
-});
+}
 ```
 
 ## Using Secrets
 
-Access environment variables configured in the app dashboard:
+Read secrets configured in the app dashboard with `secrets.get()` from the `base44:runtime` module. `BASE44_APP_ID` is pre-populated; set everything else in app settings → environment variables.
 
 ```typescript
-Deno.serve(async (req) => {
-  // Access environment variables (configured in app settings)
-  const apiKey = Deno.env.get("STRIPE_API_KEY");
-  
+import { secrets } from "base44:runtime";
+
+export default async function (req: Request): Promise<Response> {
+  // Read a secret (configured in app settings)
+  const apiKey = secrets.get("STRIPE_API_KEY");
+
   const response = await fetch("https://api.stripe.com/v1/charges", {
     headers: {
       "Authorization": `Bearer ${apiKey}`
     }
   });
-  
+
   return Response.json(await response.json());
-});
+}
+```
+
+## Post-Response Work
+
+For work that should finish after the response is sent (analytics pings, non-critical logging), pass the promise to `waitUntil()` from `base44:runtime`. The response returns immediately and the function stays alive until the promise settles.
+
+```typescript
+import { waitUntil } from "base44:runtime";
+
+export default async function (req: Request): Promise<Response> {
+  waitUntil(fetch("https://hooks.example.com/ping", { method: "POST" }));
+  return Response.json({ ok: true });
+}
 ```
 
 ## Naming Conventions
@@ -207,9 +222,10 @@ For more details on deploying, see [functions-deploy.md](functions-deploy.md).
 
 ## Notes
 
-- Use `npm:` prefix for npm packages (e.g., `npm:@base44/sdk`)
+- Use `npm:` prefix for npm packages (e.g., `npm:@base44/sdk`), always with a pinned version
 - Use `createClientFromRequest(req)` to get a client that inherits the caller's auth context
-- Configure secrets via app dashboard for API keys
+- Configure secrets via app dashboard for API keys, and read them with `secrets.get()` from `base44:runtime`
+- Crypto is the async Web Crypto API — for Stripe webhooks use `await stripe.webhooks.constructEventAsync(...)`; the synchronous `constructEvent()` throws "SubtleCryptoProvider cannot be used in a synchronous context"
 - Make sure to handle errors gracefully and return appropriate HTTP status codes
 
 ## Multi-File Functions
@@ -248,7 +264,7 @@ base44/
 **Rules:**
 - Shared code **must** live in `base44/shared/`. Files elsewhere outside the function folder are not uploaded.
 - A relative import can reach a sibling (`./util.ts`) or `base44/shared/` (`../../shared/util.ts`) — but nothing further out. An import that escapes `base44/` (e.g. `../../../src/utils.ts`) fails at deploy time; move the file into `base44/shared/` instead.
-- For external packages use `npm:` or `jsr:` specifiers, not relative paths.
+- For external packages use `npm:` specifiers, not relative paths.
 
 ## Common Mistakes
 
