@@ -20,6 +20,8 @@ This skill activates on ANY mention of "base44" or when a `base44/` folder exist
 2. If **YES** (existing project scenario):
    - Transfer to base44-sdk skill for implementation
    - This skill only handles CLI commands (login, deploy, entities push)
+   - **Except running the app locally** — stays here. Read [Running Local Development](#running-local-development)
+     before starting a dev server: one way of running hits production data.
 3. If **NO**, decide between two initialization paths:
    - **Provisioned app** — the Base44 app already exists because it was just provisioned through a Stripe Projects / projects.dev flow, OR `BASE44_APP_ID` (or `BASE44_PROJECTS_BASE44_APP_ID`) is present in the environment or a `.env`/`.env.local` file:
      - Run `npx base44 scaffold` to set up local files for that **existing** app
@@ -559,12 +561,23 @@ npx base44 link --create --name my-app
 ```
 
 ### Running Local Development
-```bash
-# Starts the Base44 backend locally
-npx base44 dev
-```
 
-If you want `base44 dev` to run your frontend too, verify `base44/config.jsonc` has `site.serveCommand` set correctly (for example, `"serveCommand": "npm run dev"`). When that field is present, `base44 dev` runs both the backend and the frontend together.
+`npx base44 dev` starts the Base44 backend locally (entities, functions, auth) on a throwaway
+in-memory database — empty each start, gone on stop. A backend-only project needs nothing else; it
+also runs your frontend when `base44/config.jsonc` sets `site.serveCommand`, wired to that local
+backend.
+
+Running the frontend by itself talks to a different backend:
+
+| Command | Backend + data |
+|---------|----------------|
+| `npx base44 dev` | **local** — the throwaway one above |
+| `npm run dev` | **production** — the real app's live data |
+
+**Default to `npx base44 dev`.** Use `npm run dev` only when the user wants real data: every write
+hits the live app. The browser can't tell the modes apart; the vite startup line can —
+`[base44] Proxy enabled: /api -> https://base44.app (default)` means production. Say which you
+started. Options: [dev.md](references/dev.md).
 
 ### Deploying All Changes
 ```bash
