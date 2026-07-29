@@ -562,21 +562,23 @@ npx base44 link --create --name my-app
 
 ### Running Local Development
 
-`npx base44 dev` starts the Base44 backend locally (entities, functions, auth) on a throwaway
-in-memory database — empty each start, gone on stop. A backend-only project needs nothing else; it
-also runs your frontend when `base44/config.jsonc` sets `site.serveCommand`, wired to that local
-backend.
-
-Running the frontend by itself talks to a different backend:
+Always run through the CLI — two modes:
 
 | Command | Backend + data |
 |---------|----------------|
-| `npx base44 dev` | **local** — the throwaway one above |
-| `npm run dev` | **production** — the real app's live data |
+| `npx base44 dev` | **local** — throwaway, empty each start, gone on stop |
+| `npx base44 dev --remote` | **production** — the real app's live data |
 
-**Default to `npx base44 dev`.** Use `npm run dev` only when the user wants real data: every write
-hits the live app. The browser can't tell the modes apart; the vite startup line can —
-`[base44] Proxy enabled: /api -> https://base44.app (default)` means production. Say which you
+`base44 dev` starts the local backend (entities, functions, auth) and also serves your frontend when
+`base44/config.jsonc` sets `site.serveCommand`; a backend-only project needs nothing else.
+`--remote` runs *only* the frontend against the real backend, so it needs both a linked project and
+`site.serveCommand`.
+
+Don't run `npm run dev` yourself: without the env vars the CLI injects, the app has no backend to
+reach — the dev server prints which command to use instead.
+
+**Default to `npx base44 dev`.** Under `--remote` every write hits the live app. The vite startup
+line names the backend either way: `[base44] Proxy enabled: /api -> <target>`. Say which you
 started. Options: [dev.md](references/dev.md).
 
 ### Deploying All Changes
