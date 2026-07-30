@@ -73,7 +73,7 @@ The push operation synchronizes your local agent skills with Base44:
 - **Updated**: Existing skills with modified description or body
 - **Deleted**: Skills that were removed from your local `base44/agent-skills/` folder
 
-**Warning**: This is a full sync operation. Skills removed locally are deleted from Base44 on the next push. **Exception:** if you have *no* local skill files, the push is a **no-op** — a safety guard stops an empty local set from wiping all remote skills, so they are preserved. To remove a skill, delete its `.md` file while keeping the others (the last remaining skill can't be deleted via push — remove it from the dashboard).
+**Warning**: This is a full sync operation. Skills removed locally are deleted from Base44 on the next push. **Exception:** if you have *no* local skill files, the push is a **no-op** — a safety guard stops an empty local set from wiping all remote skills.
 
 ## Error Handling
 
