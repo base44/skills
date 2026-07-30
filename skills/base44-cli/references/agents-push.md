@@ -5,8 +5,14 @@ Push local AI agent configurations to Base44. Agents are conversational AI assis
 ## Syntax
 
 ```bash
-npx base44 agents push
+npx base44 agents push [options]
 ```
+
+## Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `-y, --yes` | Skip confirmation prompt | No |
 
 ## Authentication
 
@@ -17,18 +23,33 @@ npx base44 agents push
 1. Reads all agent files from the `base44/agents/` directory
 2. Validates agent configurations
 3. Displays the count of agents to be pushed
-4. Uploads agents to the Base44 backend
-5. Reports the results: created, updated, and deleted agents
+4. Asks for confirmation before replacing remote agents (unless `-y`/`--yes` is passed)
+5. Uploads agents to the Base44 backend
+6. Reports the results: created, updated, and deleted agents
 
 ## Prerequisites
 
 - Must be run from a Base44 project directory
 - Project must have agent definitions in the `base44/agents/` folder
 
-## Output
+## Confirmation Prompt
+
+This is a destructive, full-sync push: any remote agent not present locally is deleted. Before pushing, the CLI warns you and asks for confirmation:
 
 ```bash
 $ npx base44 agents push
+
+Found 2 agents to push
+⚠ This will replace all remote agent configs with your local agents and delete any not present locally.
+? Are you sure you want to continue? › Yes
+```
+
+In non-interactive mode (`--json`, CI/CD, no TTY), you must pass `-y`/`--yes` or the command throws.
+
+## Output
+
+```bash
+$ npx base44 agents push --yes
 
 Found 2 agents to push
 Pushing agents to Base44...

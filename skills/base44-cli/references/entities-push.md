@@ -5,8 +5,14 @@ Push local entity definitions to Base44.
 ## Syntax
 
 ```bash
-npx base44 entities push
+npx base44 entities push [options]
 ```
+
+## Options
+
+| Option | Description | Required |
+|--------|-------------|----------|
+| `-y, --yes` | Skip confirmation prompt | No |
 
 ## Authentication
 
@@ -17,18 +23,33 @@ npx base44 entities push
 1. Pushes all entities that exist in the `base44/entities` folder
 2. Validates that entities exist in the folder
 3. Displays the count of entities to be pushed
-4. Uploads entities to the Base44 backend
-5. Reports the results: created, updated, and deleted entities
+4. Asks for confirmation before overwriting remote entities (unless `-y`/`--yes` is passed)
+5. Uploads entities to the Base44 backend
+6. Reports the results: created, updated, and deleted entities
 
 ## Prerequisites
 
 - Must be run from a Base44 project directory
 - Project must have entity definitions in the `base44/entities` folder
 
-## Output
+## Confirmation Prompt
+
+This push overwrites your app's entities with your local copy and deletes any not present locally. Before pushing, the CLI warns you and asks for confirmation:
 
 ```bash
 $ npx base44 entities push
+
+Found 3 entities to push: User, Post, Comment
+⚠ This will overwrite your app's entities with your local copy and delete any not present locally.
+? Are you sure you want to continue? › Yes
+```
+
+In non-interactive mode (`--json`, CI/CD, no TTY), you must pass `-y`/`--yes` or the command throws.
+
+## Output
+
+```bash
+$ npx base44 entities push --yes
 
 Found 3 entities to push
 Pushing entities to Base44...

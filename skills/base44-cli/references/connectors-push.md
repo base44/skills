@@ -5,7 +5,7 @@ Push local connector configurations to Base44, synchronizing scopes and handling
 ## Usage
 
 ```bash
-npx base44 connectors push [--dir <path>]
+npx base44 connectors push [--dir <path>] [-y]
 ```
 
 ## Options
@@ -13,6 +13,21 @@ npx base44 connectors push [--dir <path>]
 | Option | Description | Required |
 |--------|--------------|----------|
 | `--dir <path>` | Directory to read connector files from. Only used with `--app-id` (no local project); defaults to `./connectors` | No |
+| `-y, --yes` | Skip confirmation prompt | No |
+
+## Confirmation Prompt
+
+This push overwrites your app's connectors with your local copy and removes any not present locally. Before pushing, the CLI warns you and asks for confirmation:
+
+```bash
+$ npx base44 connectors push
+
+Found 2 connectors to push: googlecalendar, slack
+⚠ This will overwrite your app's connectors with your local copy and remove any not present locally.
+? Are you sure you want to continue? › Yes
+```
+
+In non-interactive mode (`--json`, CI/CD, no TTY), you must pass `-y`/`--yes` or the command throws.
 
 ## Projectless Mode
 

@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.5
+    version: 0.1.7
 ---
 
 # Base44 CLI
@@ -121,6 +121,8 @@ my-app/
 │   │       └── entry.ts
 │   ├── agents/                  # Agent configurations (optional)
 │   │   └── support_agent.jsonc
+│   ├── agent-skills/            # Agent skill instructions (optional)
+│   │   └── pdf-export.md
 │   └── connectors/              # OAuth connector configurations (optional)
 │       └── googlecalendar.jsonc
 ├── src/                         # Frontend source code
@@ -139,6 +141,7 @@ my-app/
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
 - `base44/functions/*/entry.ts` - Backend function entry point
 - `base44/agents/*.jsonc` - Agent configurations (optional)
+- `base44/agent-skills/*.md` - Agent skill instructions (optional)
 - `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44 types generate`)
 - `base44/connectors/*.jsonc` - OAuth connector configurations (optional)
 - `src/api/base44Client.js` - Pre-configured SDK client for frontend use
@@ -152,6 +155,7 @@ my-app/
   "entitiesDir": "./entities",         // Optional: default "entities"
   "functionsDir": "./functions",       // Optional: default "functions"
   "agentsDir": "./agents",             // Optional: default "agents"
+  "agentSkillsDir": "./agent-skills",  // Optional: default "agent-skills"
   "connectorsDir": "./connectors",     // Optional: default "connectors"
   "site": {                            // Optional: site deployment config
     "installCommand": "npm install",   // Optional: install dependencies
@@ -172,6 +176,7 @@ my-app/
 | `entitiesDir` | Directory for entity schemas | `"entities"` |
 | `functionsDir` | Directory for backend functions | `"functions"` |
 | `agentsDir` | Directory for agent configs | `"agents"` |
+| `agentSkillsDir` | Directory for agent skill instructions | `"agent-skills"` |
 | `connectorsDir` | Directory for connector configs | `"connectors"` |
 | `site.installCommand` | Command to install dependencies | - |
 | `site.buildCommand` | Command to build the project | - |
@@ -269,7 +274,7 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 deploy` | Deploy all resources (entities, functions, agents, connectors, auth config, and site) | [deploy.md](references/deploy.md) |
+| `base44 deploy` | Deploy all resources (entities, functions, agents, agent skills, connectors, auth config, and site) | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 
@@ -368,6 +373,42 @@ Agents are conversational AI assistants that can interact with users, access you
 - **Backend function tools**: `function_name` + `description`
 
 **Memory config fields** (all optional, see [agents-push.md](references/agents-push.md#memory-configuration) for details): `enabled` (bool, default `true`), `scope` (`global`\|`user`\|`both`, default `both`), `include_other_conversation_context` (bool, default `false`), `instructions` (string\|null, default `null`)
+
+### Agent Skills Management
+
+Agent skills are reusable Markdown instructions that extend what your app's AI agents know how to do. Use these commands to manage them.
+
+| Action / Command             | Description                                    | Reference                                                     |
+| ----------------------------- | ----------------------------------------------- | -------------------------------------------------------------- |
+| Create Agent Skills          | Define skills in `base44/agent-skills` folder   | [agent-skills-push.md](references/agent-skills-push.md#agent-skill-file-format) |
+| `base44 agent-skills pull`   | Pull remote agent skills to local files         | [agent-skills-pull.md](references/agent-skills-pull.md)       |
+| `base44 agent-skills push`   | Push local agent skills to Base44               | [agent-skills-push.md](references/agent-skills-push.md)       |
+
+**Note:** Agent skill commands perform full synchronization - pushing replaces all remote skills with local ones, and pulling replaces all local skills with remote ones.
+
+#### Agent Skill Schema (Quick Reference)
+
+**File naming:** `base44/agent-skills/{skill-name}.md` (e.g., `pdf-export.md`)
+
+**Schema template:**
+```markdown
+---
+description: Export the current report as a PDF and attach it to the conversation.
+---
+
+Use this skill when the user asks to export, download, or share a report as a PDF.
+
+1. Call the `generate_report_pdf` function with the current report's entity ID.
+2. Attach the returned file URL in your reply.
+```
+
+**Naming rules:** Skill names (the file name minus `.md`) must match pattern `/^[a-z0-9]+(-[a-z0-9]+)*$/` (lowercase, hyphen-separated, 1-64 chars)
+- Valid: `pdf-export`, `order-lookup`
+- Invalid: `PdfExport`, `pdf_export`
+
+**Required fields:** `description` (frontmatter, 1-1024 chars), body (Markdown content, 1-15000 chars)
+
+For complete documentation, see [agent-skills-push.md](references/agent-skills-push.md).
 
 ### Connector Management
 
@@ -493,6 +534,7 @@ Or deploy individual resources:
 - `npx base44 functions list` - List all deployed functions
 - `npx base44 functions pull` - Pull deployed functions to local files
 - `npx base44 agents push` - Push agents only
+- `npx base44 agent-skills push` - Push agent skills only
 - `npx base44 connectors pull` - Pull connectors from Base44
 - `npx base44 connectors push` - Push connectors only
 - `npx base44 auth pull` - Pull auth config from Base44
@@ -559,6 +601,9 @@ npx base44 functions deploy --force
 # Push only agents
 npx base44 agents push
 
+# Push only agent skills
+npx base44 agent-skills push
+
 # Pull connectors from Base44
 npx base44 connectors pull
 
@@ -589,6 +634,9 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | No functions found          | Ensure functions exist in `base44/functions/` with `entry.ts` or `entry.js`   |
 | No agents found             | Ensure agents exist in `base44/agents/` directory with valid `.jsonc` configs       |
 | Invalid agent name          | Agent names must be lowercase alphanumeric with underscores only                    |
+| No agent skills found       | Ensure skill files exist in `base44/agent-skills/` directory with valid `.md` files  |
+| Invalid skill file          | Skill file name must be lowercase-hyphenated and include a `description` in its frontmatter |
+| Push cancelled / requires --yes | `agents push`, `agent-skills push`, `entities push`, and `connectors push` are destructive full-syncs — confirm interactively or pass `-y`/`--yes` in CI/non-interactive mode |
 | No connectors found         | Ensure connectors exist in `base44/connectors/` directory with valid `.jsonc` configs |
 | Invalid connector type      | Run `npx base44 connectors list-available` to see valid types |
 | Duplicate connector type    | Each connector type can only be defined once per project                            |
