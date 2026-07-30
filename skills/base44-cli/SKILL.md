@@ -271,12 +271,14 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 dev` | Start local development for your Base44 backend, and your frontend too when `site.serveCommand` is configured | [dev.md](references/dev.md) |
+| `base44 dev --remote` | Serve the frontend locally against the **production** backend | [dev.md](references/dev.md) |
 
 ### Deployment
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 deploy` | Deploy all resources (entities, functions, agents, agent skills, connectors, auth config, and site) | [deploy.md](references/deploy.md) |
+| `base44 build` | Build the site with its app id injected — use instead of a bare `npm run build` | — |
+| `base44 deploy` | Deploy all resources (entities, functions, agents, agent skills, connectors, auth config, and site); asks whether to build first, or pass `--build` / `--no-build` | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 
@@ -525,8 +527,7 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 5. Build and deploy everything:
    ```bash
-   npm run build
-   npx base44 deploy -y
+   npx base44 deploy --build -y
    ```
 
 Or deploy individual resources:
@@ -586,12 +587,14 @@ started. Options: [dev.md](references/dev.md).
 # Generate types (optional, for TypeScript projects)
 npx base44 types generate
 
-# Build your project first
-npm run build
-
-# Deploy everything (entities, functions, and site)
-npx base44 deploy -y
+# Deploy everything (entities, functions, and site), building the site first
+npx base44 deploy --build -y
 ```
+
+Build through the CLI, not with `npm run build`: `npx base44 build` injects `VITE_BASE44_APP_ID`,
+which a bare `npm run build` leaves unset — the bundle then can't resolve its own app and every API
+call on the deployed site fails. `npx base44 deploy` asks whether to build first; `--build` /
+`--no-build` answers up front (non-interactive defaults to upload-only, so CI is unchanged).
 
 ### Generating TypeScript Types
 ```bash
@@ -657,5 +660,6 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | Duplicate connector type    | Each connector type can only be defined once per project                            |
 | Connector authorization timeout | Re-run `npx base44 connectors push` and complete the OAuth flow in your browser  |
 | No site configuration found | Check that `site.outputDirectory` is configured in project config                   |
-| Site deployment fails       | Ensure you ran `npm run build` first and the build succeeded                        |
+| Site deployment fails       | Ensure the site was built first (`npx base44 build`, or `npx base44 deploy --build`) and the build succeeded |
+| Deployed site's API calls all fail | The bundle was built without its app id — rebuild with `npx base44 build`, not a bare `npm run build`, and redeploy |
 | Update available message    | If prompted to update, run `npm install -g base44@latest` (or use npx for local installs) |
