@@ -13,6 +13,8 @@ npx base44 deploy [options]
 | Option | Description |
 |--------|-------------|
 | `-y, --yes` | Skip confirmation prompt |
+| `--build` | Build the site before deploying (skips the prompt) |
+| `--no-build` | Deploy without building (skips the prompt) |
 
 ## What It Deploys
 
@@ -55,7 +57,8 @@ npx base44 deploy -y
 2. Detects available resources (entities, functions, agents, agent skills, connectors, site)
 3. Shows a summary of what will be deployed
 4. Asks for confirmation (unless `-y` flag is used)
-5. Deploys all resources in sequence:
+5. If a site is configured with `site.buildCommand`, builds it (see [Build Before Deploy](#build-before-deploy))
+6. Deploys all resources in sequence:
    - Sets app visibility (if configured)
    - Pushes entity schemas
    - Deploys functions
@@ -64,8 +67,19 @@ npx base44 deploy -y
    - Pushes auth configuration
    - Pushes connector configurations
    - Uploads site files
-6. Handles OAuth authorization for any new connectors that require it
-7. Displays the dashboard URL and app URL (if site was deployed)
+7. Handles OAuth authorization for any new connectors that require it
+8. Displays the dashboard URL and app URL (if site was deployed)
+
+## Build Before Deploy
+
+If `site.outputDirectory` is configured, `deploy` can build the site for you before uploading it:
+
+- `--build`: always builds first (runs `site.buildCommand` with `VITE_BASE44_APP_ID` injected), and errors out if `site.buildCommand` isn't configured
+- `--no-build`: never builds, deploys whatever is already in `site.outputDirectory`
+- Neither flag, interactive mode, `site.buildCommand` configured: asks "Build the site first?"
+- Neither flag, non-interactive mode (or no `site.buildCommand`): skips building silently
+
+This is the same build step as running `base44 build` separately.
 
 ## Connector OAuth Flow
 
@@ -79,7 +93,7 @@ Some connectors still require authorization. Run 'base44 connectors push' or ope
 
 - Must be run from a linked Base44 project directory
 - Must be authenticated (run `npx base44 login` first)
-- For site deployment, must run `npm run build` first
+- For site deployment, either configure `site.buildCommand` so `deploy` can build it for you, or build it yourself before running `deploy --no-build`
 
 ## Output
 
@@ -91,12 +105,13 @@ After successful deployment:
 
 - If no resources are found, the command exits with a message
 - Use individual commands (`entities push`, `functions deploy`, `agents push`, `agent-skills push`, `connectors push`, `site deploy`) if you only want to deploy specific resources
-- The site must be built before deployment - this command does not run `npm run build` for you
+- In non-interactive mode (`-y`), the site is not built unless `--build` is also passed
 
 ## Related Commands
 
 | Command | Description |
 |---------|-------------|
+| `base44 build` | Build the site (with the app id injected) without deploying |
 | `base44 entities push` | Push only entities |
 | `base44 functions deploy` | Deploy only functions |
 | `base44 agents push` | Push only agents |

@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.7
+    version: 0.1.8
 ---
 
 # Base44 CLI
@@ -179,7 +179,7 @@ my-app/
 | `agentSkillsDir` | Directory for agent skill instructions | `"agent-skills"` |
 | `connectorsDir` | Directory for connector configs | `"connectors"` |
 | `site.installCommand` | Command to install dependencies | - |
-| `site.buildCommand` | Command to build the project | - |
+| `site.buildCommand` | Command to build the project; used by `base44 build` and `base44 deploy`/`base44 site deploy --build` (runs with `VITE_BASE44_APP_ID` set) | - |
 | `site.serveCommand` | Command to run dev server | - |
 | `site.outputDirectory` | Build output directory for deployment | - |
 
@@ -274,7 +274,8 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 deploy` | Deploy all resources (entities, functions, agents, agent skills, connectors, auth config, and site) | [deploy.md](references/deploy.md) |
+| `base44 build` | Build the site with the app id injected (`VITE_BASE44_APP_ID`), without deploying | [build.md](references/build.md) |
+| `base44 deploy` | Deploy all resources (entities, functions, agents, agent skills, connectors, auth config, and site); can build the site first with `--build`/`--no-build` | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 
