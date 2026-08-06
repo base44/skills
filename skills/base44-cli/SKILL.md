@@ -322,6 +322,15 @@ For complete documentation, see [entities-create.md](references/entities-create.
 | `base44 functions list`   | List all deployed functions on Base44 remote  | [functions-list.md](references/functions-list.md)       |
 | `base44 functions pull [name]` | Pull deployed functions from Base44 to local files | [functions-pull.md](references/functions-pull.md)  |
 
+### Workflow Runs
+
+Workflows are the automation system (cron schedules, entity triggers, connector events, in-app agent actions). These commands are read-only: they answer "what workflows exist" and "did my scheduled work fail, and why".
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 workflows list` | List this app's workflows with status and run summary | [workflows-list.md](references/workflows-list.md) |
+| `base44 workflows runs [--status <s>] [--since <t>]` | List workflow runs, newest first; failed runs include the underlying error | [workflows-runs.md](references/workflows-runs.md) |
+
 ### Agent Management
 
 Agents are conversational AI assistants that can interact with users, access your app's entities, and call backend functions. Use these commands to manage agent configurations.
