@@ -1,6 +1,6 @@
 ---
 name: base44-sdk
-description: "The base44 SDK is the library to communicate with base44 services. In projects, you use it to communicate with remote resources (entities, backend functions, ai agents) and to write backend functions. This skill is the place for learning about available modules and types. When you plan or implement a feature, you must learn this skill"
+description: "The base44 SDK is the library to communicate with base44 services. In projects, you use it to communicate with remote resources (entities, backend functions, realtime actors, ai agents) and to write backend functions and actors. This skill is the place for learning about available modules and types, including actors — the realtime/WebSocket primitive for multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
 ---
 
 # Base44 Coder
@@ -126,6 +126,9 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `room.on('message', cb)` | `room.subscribe(cb)` (one callback receives every message) |
 | `room.emit(data)` | `room.send(data)` |
 | `new WebSocket(...)` for app realtime | `base44.actors.<Name>(id).connect()` |
+| `const unsub = room.subscribe(cb); unsub()` | `const sub = room.subscribe(cb); sub.unsubscribe()` |
+
+> **The two `subscribe()` methods return different shapes.** `Connection.subscribe()` (actors) returns an object — `sub.unsubscribe()`. `entities.<Name>.subscribe()` returns the unsubscribe **function** itself — `unsub()`. Don't carry one convention to the other.
 
 ### Entities - WRONG vs CORRECT
 
@@ -301,16 +304,22 @@ export default async function (req) {
 // Frontend — connect inside useEffect and always clean up
 useEffect(() => {
   const room = base44.actors.ChatRoom(roomId).connect();
-  const sub = room.subscribe((msg) => setMessages((prev) => [...prev, msg]));
-  return () => { sub.unsubscribe(); room.close(); };
-}, [roomId]);
+  const sub = room.subscribe((msg) => {
+    if (msg.type === "message") setMessages((prev) => [...prev, msg]);   // switch on type; drop unknowns
+  });
+  return () => { sub.unsubscribe(); room.close(); };   // NOTE: actors return { unsubscribe() },
+}, [roomId]);                                          // entities.subscribe() returns the function itself
 
 // Actor — base44/actors/ChatRoom/entry.ts
 import { Actor } from "base44:runtime/actors";
 
 export default class ChatRoom extends Actor {
   handleConnect(conn) { conn.send({ type: "welcome" }); }        // one client
-  handleMessage(conn, msg) { this.broadcast({ type: "message", text: msg.text }); }  // everyone
+  handleMessage(conn, msg) {
+    // Always validate: the payload is attacker-controlled and msg can even be null.
+    if (msg?.type !== "message" || typeof msg.text !== "string") return;
+    this.broadcast({ type: "message", text: msg.text.slice(0, 2000) });   // everyone
+  }
   handleClose(conn) {}
 }
 ```

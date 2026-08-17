@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, ai agents), initialization and actions (resource creation, deployment). This skill is the place for learning about how to configure resources. When you plan or implement a feature, you must learn this skill"
+description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, realtime actors, ai agents), initialization and actions (resource creation, deployment). This skill is the place for learning about how to configure resources, including actors — the realtime/WebSocket primitive behind multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
 metadata:
   sourcePackage:
     name: base44
@@ -336,6 +336,7 @@ Actors are stateful realtime server rooms over WebSockets — one live instance 
 | ---------------- | ----------- | --------- |
 | Create Actors | Define actors in `base44/actors` | [actors-create.md](references/actors-create.md) |
 | `base44 actors deploy [names...]` | Deploy local actors to Base44; optionally target specific actors | [actors-deploy.md](references/actors-deploy.md) |
+| `base44 actors delete <names...>` | Tear down deployed actors (destroys the published script) | [actors-deploy.md](references/actors-deploy.md#deleting-a-deployed-actor) |
 
 #### Actor Layout (Quick Reference)
 
@@ -346,19 +347,23 @@ Actors are stateful realtime server rooms over WebSockets — one live instance 
 import { Actor } from "base44:runtime/actors";
 
 export default class ChatRoom extends Actor {
-  handleConnect(conn) { conn.send({ type: "welcome" }); }
-  handleMessage(conn, msg) { this.broadcast({ type: "message", text: msg.text }); }
+  handleConnect(conn) { conn.send({ type: "welcome" }); }   // this client only
+  handleMessage(conn, msg) {
+    // Always validate: the payload is attacker-controlled and msg can even be null.
+    if (msg?.type !== "message" || typeof msg.text !== "string") return;
+    this.broadcast({ type: "message", text: msg.text.slice(0, 2000) });   // the whole room
+  }
   handleClose(conn) {}
 }
 ```
 
-**Naming rules:** actor names become a JavaScript class binding and the WebSocket connect handler — they must match `[A-Za-z_][A-Za-z0-9_]*` (max 128 chars, no `/`, `-`, `.` or `:`), must not be a JS reserved word, and cannot be nested in subfolders.
+**Naming rules:** actor names become a JavaScript class binding and the WebSocket connect handler — they must match `[A-Za-z_][A-Za-z0-9_]*` (max 128 chars, no `/`, `-`, `.` or `:`), must not be a JS reserved word, must not collide with a backend function name, and cannot be nested in subfolders. The CLI checks all of this locally before uploading; a folder with a dot in its name is skipped instead (so `ChatRoom.bak/` is safe scratch space).
 - Valid: `ChatRoom`, `BoardRoom`, `Lobby`
 - Invalid: `chat-room`, `games/Arena`, `class`
 
-**Required:** `entry.ts` (or `entry.js`) that **default-exports** a class extending `Actor` from `base44:runtime/actors`.
+**Required:** `entry.ts` (or `entry.js`) that **default-exports** a class extending `Actor` from `base44:runtime/actors`. In TypeScript, also declare `handleTick() {}` — it is an abstract member of `Actor`.
 
-**Differs from functions:** only the actor's own folder is uploaded (no `base44/shared/`), no `--force` prune, no `list`/`pull`/`delete` commands, no local `base44 dev` runtime, and automations are not supported.
+**Differs from functions:** only the actor's own folder is uploaded (no `base44/shared/`), no `--force` prune, no `list`/`pull` commands, no local `base44 dev` runtime, names cannot be path-like, and automations are not supported.
 
 For complete documentation, see [actors-create.md](references/actors-create.md).
 
@@ -574,6 +579,7 @@ Or deploy individual resources:
 - `npx base44 functions list` - List all deployed functions
 - `npx base44 functions pull` - Pull deployed functions to local files
 - `npx base44 actors deploy` - Deploy realtime actors only
+- `npx base44 actors delete <name>` - Tear down a deployed actor
 - `npx base44 agents push` - Push agents only
 - `npx base44 agent-skills push` - Push agent skills only
 - `npx base44 connectors pull` - Pull connectors from Base44
@@ -643,6 +649,8 @@ npx base44 functions deploy --force
 npx base44 actors deploy
 # Deploy specific actors
 npx base44 actors deploy ChatRoom BoardRoom
+# Tear down a deployed actor
+npx base44 actors delete ChatRoom
 
 # Push only agents
 npx base44 agents push
@@ -679,7 +687,9 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
 | No functions found          | Ensure functions exist in `base44/functions/` with `entry.ts` or `entry.js`   |
 | No actors found             | Ensure actors exist as `base44/actors/<ActorName>/entry.ts` (never directly in `base44/actors/`) |
-| Invalid actor name          | Actor names must match `[A-Za-z_][A-Za-z0-9_]*` (no `/`, `-`, `.` or `:`), avoid JS reserved words, and cannot be nested |
+| Invalid actor name          | Actor names must match `[A-Za-z_][A-Za-z0-9_]*` (no `/`, `-`, `.` or `:`), avoid JS reserved words, and cannot be nested. Caught locally, before any upload |
+| `actors cannot be nested`   | Flatten to `base44/actors/<ActorName>/entry.ts`, or rename a helper you called `entry.ts` — every entry file under `base44/actors/` counts as an actor |
+| Actor and function share a name | They deploy into one namespace — rename one of them |
 | Actor file rejected in the functions bucket | A file importing `base44:runtime/actors` must live at `base44/actors/<ActorName>/entry.ts` — move it out of `base44/functions/` |
 | No agents found             | Ensure agents exist in `base44/agents/` directory with valid `.jsonc` configs       |
 | Invalid agent name          | Agent names must be lowercase alphanumeric with underscores only                    |

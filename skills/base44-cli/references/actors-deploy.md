@@ -81,6 +81,23 @@ A failing actor does not abort the run — the remaining actors are still attemp
 
 The confirmation summary lists the actor count alongside the other resources.
 
+## Deleting a Deployed Actor
+
+```bash
+npx base44 actors delete ChatRoom              # one actor
+npx base44 actors delete ChatRoom BoardRoom    # several (comma-separated also works)
+```
+
+This tears the actor down on the server: it destroys the published script, so live clients lose the room and a later `actors deploy` starts it fresh. It is a **remote** operation — the local folder is untouched, and the actor does not need to still exist on disk for it to work. Delete the folder yourself if you don't want the next deploy to recreate the actor.
+
+At least one name is required. A name the server doesn't know is reported as `not found` rather than an error, so re-running the command is safe:
+
+```bash
+$ npx base44 actors delete ChatRoom
+✓ ChatRoom deleted
+└ Actor "ChatRoom" deleted
+```
+
 ## Configuration
 
 The actors directory is configurable in `base44/config.jsonc`:
@@ -119,22 +136,28 @@ error: entry.ts found directly in the actors directory — it must be inside a n
 | `No actors found` | Ensure actors exist as `base44/actors/<Name>/entry.ts` |
 | `Actor not found in project: X` | Check the spelling; the actor name is the folder name, case-sensitive |
 | `entry.ts found directly in the actors directory` | Move it into a named subfolder (`base44/actors/ChatRoom/entry.ts`) |
-| `Duplicate actor name` | Two folders resolve to the same actor name — rename one |
-| `Invalid actor name '<name>'` | Actor names must match `[A-Za-z_][A-Za-z0-9_]*` (max 128 chars, no `/`, `-`, `.` or `:`) and not be a JavaScript reserved word. A name containing `/` means a nested folder — or a helper file named `entry.ts` — was picked up as an actor |
-| `'X' exists as both a backend function and a base44/actors/X/ …` | An actor and a function cannot share a name — rename one |
+| `Duplicate actor name` | One folder holds both `entry.js` and `entry.ts` — keep a single entry file |
+| `Invalid actor name '<name>'` | Actor names must match `[A-Za-z_][A-Za-z0-9_]*` (max 128 chars, no `/`, `-`, `.` or `:`) and not be a JavaScript reserved word. Rename the folder in PascalCase |
+| `Invalid actor name '<name>' — actors cannot be nested` | Flatten to one folder level, **or** rename a helper you called `entry.ts` (every entry file under `base44/actors/` counts as an actor) |
+| `'X' exists as both a backend function and an actor` | Actors and functions share one deploy namespace — rename one of them |
 | `'X' cannot have automations` | Actors serve only the realtime WebSocket path; move automation-triggered work into a backend function |
-| Deploy rejects the actor as needing the Cloudflare backend | Actors require the Cloudflare runtime; deploying through this command activates it |
+| Deploy rejects the actor as needing the Cloudflare backend | Actors run only on the Cloudflare runtime. A **backend-less** app is activated automatically by this command, but an app already on the Deno runtime cannot host actors and is rejected — migrate the backend first |
+
+The name and nesting checks run **locally at discovery**, before anything uploads, so they cost no network round-trip and cannot leave a deploy half-applied. Everything else in this table comes back from the server.
 
 ## Differences from `functions deploy`
 
 | Capability | Functions | Actors |
 |------------|-----------|--------|
 | Deploy all / by name | Yes | Yes |
+| `delete` subcommand | Yes | Yes — `base44 actors delete <names...>` |
 | `--force` prune of removed remotes | Yes | No |
-| `list` / `pull` / `delete` subcommands | Yes | No |
+| `list` / `pull` subcommands | Yes | No |
 | `base44/shared/` uploaded with the resource | Yes | No — only the actor's own folder |
 | Local `base44 dev` runtime | Yes | No — verify against a deployed actor |
-| Deployed in parallel | Yes | No — sequential, one actor at a time |
+| Names may be nested / path-like | Yes (`foo/bar`) | No — one folder level, and a JS identifier |
+
+Both deploy **sequentially**, one item at a time. A failing item does not stop its siblings — the remaining actors (or functions) are still attempted — but it does abort the remaining **stages** of `base44 deploy`, so a bad actor blocks everything after step 3 (agent skills, agents, auth, connectors, site).
 
 ## Use Cases
 

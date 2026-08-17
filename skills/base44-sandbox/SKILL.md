@@ -1,6 +1,6 @@
 ---
 name: base44-sandbox
-description: "Develop a Base44 app remotely inside Base44's cloud sandbox using your own agent — no local checkout and no deploy/push commands. The implementation is remote: writing a resource file into the sandbox is what ships it (backend functions, entities, and agents all auto-sync from the file you write), and OAuth connectors are set up against the remote app via MCP tools or the projectless `base44 connectors` CLI. This skill is the place for learning what you can author in the sandbox, how backend functions, entities, and agents are structured, and how to connect a connector without a local filesystem. Triggers on 'develop my Base44 app remotely', 'no local files', 'cloud sandbox', 'create an entity/agent remotely', 'connect a connector remotely', 'bring my own agent', or any work editing a Base44 app inside a sandbox."
+description: "Develop a Base44 app remotely inside Base44's cloud sandbox using your own agent — no local checkout and no deploy/push commands. The implementation is remote: writing a resource file into the sandbox is what ships it (backend functions, realtime actors, entities, and agents all auto-sync from the file you write), and OAuth connectors are set up against the remote app via MCP tools or the projectless `base44 connectors` CLI. This skill is the place for learning what you can author in the sandbox, how backend functions, actors, entities, and agents are structured, and how to connect a connector without a local filesystem. Triggers on 'develop my Base44 app remotely', 'no local files', 'cloud sandbox', 'create an entity/agent remotely', 'add realtime/multiplayer/presence remotely', 'connect a connector remotely', 'bring my own agent', or any work editing a Base44 app inside a sandbox."
 ---
 
 # Base44 in the Cloud Sandbox
@@ -13,7 +13,7 @@ For **how to connect** to the sandbox (MCP endpoint or the `base44 sandbox` CLI,
 
 ## ⚡ The mental model: writing the file *is* the deploy
 
-You are working on a **remote** app, not a local checkout. The project-level CLI workflow does **not** apply — never run `base44 deploy`, `base44 functions deploy`, `base44 actors deploy`, `base44 ... push`, `base44 create`, or `base44 scaffold`. They assume a local project and a manual deploy step that does not exist here.
+You are working on a **remote** app, not a local checkout. The project-level CLI workflow does **not** apply — never run `base44 deploy`, `base44 functions deploy`, `base44 actors deploy`, `base44 actors delete`, `base44 ... push`, `base44 create`, or `base44 scaffold`. They assume a local project and a manual deploy step that does not exist here.
 
 Instead: **as soon as you write a resource file into the sandbox — a backend function, an actor, an entity, or an agent — the platform deploys/syncs it from there.** Your write is auto-committed (~5s debounce) and goes live. You do not run, and must not wait for, any `deploy` / `push` command.
 
@@ -101,7 +101,7 @@ export default class ChatRoom extends Actor {
 Conventions:
 - **PascalCase** folder name — it becomes a JavaScript class binding, so `[A-Za-z_][A-Za-z0-9_]*` only (no `-`, `.`, `/`), no JS reserved words, and **no nested folders**.
 - The entry must **default-export** a class extending `Actor`; the class name itself is cosmetic.
-- Handlers: `handleConnect(conn)` / `handleMessage(conn, msg)` / `handleClose(conn)`, plus optional `handleStart()` and `handleWake(key)`. Never override `onStart`/`onAlarm`.
+- Handlers: `handleConnect(conn)` / `handleMessage(conn, msg)` / `handleClose(conn)`, plus optional `handleStart()` and `handleWake(key)`. For a room that must advance on its own (game loop, visible countdown), override `shouldTick()` and the platform calls `handleTick()` every `tickIntervalMs` (default 100) while it returns true. Never override `onStart`/`onAlarm`.
 - Persist anything you can't lose in `this.storage` and rehydrate it in `handleStart()` — instance fields reset when the room hibernates.
 - `this.broadcast(...)` for room-wide state; `conn.send(...)` for events about one client.
 - `this.client` is an **anonymous** Base44 client (RLS-gated) for server-side reads and function calls.
