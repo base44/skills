@@ -1,6 +1,6 @@
 # base44 deploy
 
-Deploys all project resources (entities, functions, agents, agent skills, connectors, and site) to Base44 in a single command.
+Deploys all project resources (entities, functions, actors, agents, agent skills, connectors, and site) to Base44 in a single command.
 
 ## Syntax
 
@@ -20,12 +20,13 @@ The command automatically detects and deploys:
 
 1. **Entities** - All `.jsonc` files in `base44/entities/`
 2. **Functions** - All functions in `base44/functions/`
-3. **Agents** - All agent configurations in `base44/agents/`
-4. **Agent Skills** - All skill files in `base44/agent-skills/`
-5. **Connectors** - All connector configurations in `base44/connectors/`
-6. **Auth Config** - Authentication settings from `base44/auth/` (if present)
-7. **Visibility** - App visibility (`public`, `private`, or `workspace`) from the `visibility` field in `base44/config.jsonc` (if set)
-8. **Site** - Built files from `site.outputDirectory` (if configured)
+3. **Actors** - All realtime actors in `base44/actors/`
+4. **Agents** - All agent configurations in `base44/agents/`
+5. **Agent Skills** - All skill files in `base44/agent-skills/`
+6. **Connectors** - All connector configurations in `base44/connectors/`
+7. **Auth Config** - Authentication settings from `base44/auth/` (if present)
+8. **Visibility** - App visibility (`public`, `private`, or `workspace`) from the `visibility` field in `base44/config.jsonc` (if set)
+9. **Site** - Built files from `site.outputDirectory` (if configured)
 
 ## Examples
 
@@ -52,13 +53,14 @@ npx base44 deploy -y
 ## What It Does
 
 1. Reads project configuration from `base44/config.jsonc`
-2. Detects available resources (entities, functions, agents, agent skills, connectors, site)
+2. Detects available resources (entities, functions, actors, agents, agent skills, connectors, site)
 3. Shows a summary of what will be deployed
 4. Asks for confirmation (unless `-y` flag is used)
 5. Deploys all resources in sequence:
    - Sets app visibility (if configured)
    - Pushes entity schemas
    - Deploys functions
+   - Deploys actors
    - Pushes agent skill files
    - Pushes agent configurations
    - Pushes auth configuration
@@ -90,7 +92,7 @@ After successful deployment:
 ## Notes
 
 - If no resources are found, the command exits with a message
-- Use individual commands (`entities push`, `functions deploy`, `agents push`, `agent-skills push`, `connectors push`, `site deploy`) if you only want to deploy specific resources
+- Use individual commands (`entities push`, `functions deploy`, `actors deploy`, `agents push`, `agent-skills push`, `connectors push`, `site deploy`) if you only want to deploy specific resources
 - The site must be built before deployment - this command does not run `npm run build` for you
 
 ## Related Commands
@@ -99,6 +101,7 @@ After successful deployment:
 |---------|-------------|
 | `base44 entities push` | Push only entities |
 | `base44 functions deploy` | Deploy only functions |
+| `base44 actors deploy` | Deploy only actors |
 | `base44 agents push` | Push only agents |
 | `base44 agent-skills push` | Push only agent skills |
 | `base44 connectors push` | Push only connectors |

@@ -121,6 +121,9 @@ my-app/
 │   ├── functions/               # Backend functions (optional)
 │   │   └── my-function/
 │   │       └── entry.ts
+│   ├── actors/                  # Realtime actors (optional)
+│   │   └── ChatRoom/
+│   │       └── entry.ts
 │   ├── agents/                  # Agent configurations (optional)
 │   │   └── support_agent.jsonc
 │   ├── agent-skills/            # Agent skill instructions (optional)
@@ -142,6 +145,7 @@ my-app/
 - `base44/config.jsonc` - Project name, description, site build settings
 - `base44/entities/*.jsonc` - Data model schemas (see Entity Schema section)
 - `base44/functions/*/entry.ts` - Backend function entry point
+- `base44/actors/*/entry.ts` - Realtime actor entry point (optional)
 - `base44/agents/*.jsonc` - Agent configurations (optional)
 - `base44/agent-skills/*.md` - Agent skill instructions (optional)
 - `base44/.types/types.d.ts` - Auto-generated TypeScript types for entities, functions, and agents (created by `npx base44 types generate`)
@@ -156,6 +160,7 @@ my-app/
   "visibility": "public",              // Optional: "public" | "private" | "workspace"
   "entitiesDir": "./entities",         // Optional: default "entities"
   "functionsDir": "./functions",       // Optional: default "functions"
+  "actorsDir": "./actors",             // Optional: default "actors"
   "agentsDir": "./agents",             // Optional: default "agents"
   "agentSkillsDir": "./agent-skills",  // Optional: default "agent-skills"
   "connectorsDir": "./connectors",     // Optional: default "connectors"
@@ -177,6 +182,7 @@ my-app/
 | `visibility` | App visibility: `public`, `private`, or `workspace` | - |
 | `entitiesDir` | Directory for entity schemas | `"entities"` |
 | `functionsDir` | Directory for backend functions | `"functions"` |
+| `actorsDir` | Directory for realtime actors | `"actors"` |
 | `agentsDir` | Directory for agent configs | `"agents"` |
 | `agentSkillsDir` | Directory for agent skill instructions | `"agent-skills"` |
 | `connectorsDir` | Directory for connector configs | `"connectors"` |
@@ -278,7 +284,7 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 build` | Build the site with its app id injected — use instead of a bare `npm run build` | — |
-| `base44 deploy` | Deploy all resources (entities, functions, agents, agent skills, connectors, auth config, and site); asks whether to build first, or pass `--build` / `--no-build` | [deploy.md](references/deploy.md) |
+| `base44 deploy` | Deploy all resources (entities, functions, actors, agents, agent skills, connectors, auth config, and site); asks whether to build first, or pass `--build` / `--no-build` | [deploy.md](references/deploy.md) |
 
 ### Entity Management
 
@@ -334,6 +340,40 @@ Workflows are the automation system (cron schedules, entity triggers, connector 
 |---------|-------------|-----------|
 | `base44 workflows list` | List this app's workflows with status and run summary | [workflows-list.md](references/workflows-list.md) |
 | `base44 workflows runs [--status <s>] [--since <t>]` | List workflow runs, newest first; failed runs include the underlying error | [workflows-runs.md](references/workflows-runs.md) |
+
+### Actor Management
+
+Actors are stateful realtime server rooms over WebSockets — one live instance per room id, shared by every client connected to that id. Use them for multiplayer sessions, collaborative boards, presence and live cursors, in-room chat, and live auctions.
+
+| Action / Command | Description | Reference |
+| ---------------- | ----------- | --------- |
+| Create Actors | Define actors in `base44/actors` | [actors-create.md](references/actors-create.md) |
+| `base44 actors deploy [names...]` | Deploy local actors to Base44; optionally target specific actors | [actors-deploy.md](references/actors-deploy.md) |
+
+#### Actor Layout (Quick Reference)
+
+**File naming:** `base44/actors/{ActorName}/entry.ts` — the folder is the actor's identity.
+
+```javascript
+// base44/actors/ChatRoom/entry.ts
+import { Actor } from "base44:runtime/actors";
+
+export default class ChatRoom extends Actor {
+  handleConnect(conn) { conn.send({ type: "welcome" }); }
+  handleMessage(conn, msg) { this.broadcast({ type: "message", text: msg.text }); }
+  handleClose(conn) {}
+}
+```
+
+**Naming rules:** actor names become a JavaScript class binding and the WebSocket connect handler — they must match `[A-Za-z_][A-Za-z0-9_]*` (max 128 chars, no `/`, `-`, `.` or `:`), must not be a JS reserved word, and cannot be nested in subfolders.
+- Valid: `ChatRoom`, `BoardRoom`, `Lobby`
+- Invalid: `chat-room`, `games/Arena`, `class`
+
+**Required:** `entry.ts` (or `entry.js`) that **default-exports** a class extending `Actor` from `base44:runtime/actors`.
+
+**Differs from functions:** only the actor's own folder is uploaded (no `base44/shared/`), no `--force` prune, no `list`/`pull`/`delete` commands, no local `base44 dev` runtime, and automations are not supported.
+
+For complete documentation, see [actors-create.md](references/actors-create.md).
 
 ### Agent Management
 
@@ -497,9 +537,9 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 types generate` | Generate TypeScript types (`types.d.ts`) from entities, functions, agents, and connectors | [types-generate.md](references/types-generate.md) |
+| `base44 types generate` | Generate TypeScript types (`types.d.ts`) from entities, functions, actors, agents, and connectors | [types-generate.md](references/types-generate.md) |
 
-**Output:** `base44/.types/types.d.ts` — augments `@base44/sdk` module with typed registries (`EntityTypeRegistry`, `FunctionNameRegistry`, `AgentNameRegistry`, `ConnectorTypeRegistry`).
+**Output:** `base44/.types/types.d.ts` — augments `@base44/sdk` module with typed registries (`EntityTypeRegistry`, `FunctionNameRegistry`, `AgentNameRegistry`, `ConnectorTypeRegistry`, `ActorNameRegistry`).
 
 **No authentication required.** Runs entirely locally. Automatically updates `tsconfig.json` to include the generated types.
 
@@ -545,6 +585,7 @@ Or deploy individual resources:
 - `npx base44 functions delete <name>` - Delete a deployed function
 - `npx base44 functions list` - List all deployed functions
 - `npx base44 functions pull` - Pull deployed functions to local files
+- `npx base44 actors deploy` - Deploy realtime actors only
 - `npx base44 agents push` - Push agents only
 - `npx base44 agent-skills push` - Push agent skills only
 - `npx base44 connectors pull` - Pull connectors from Base44
@@ -607,11 +648,11 @@ call on the deployed site fails. `npx base44 deploy` asks whether to build first
 
 ### Generating TypeScript Types
 ```bash
-# Generate types from entities, functions, agents, and connectors
+# Generate types from entities, functions, actors, agents, and connectors
 npx base44 types generate
 ```
 
-This creates `base44/.types/types.d.ts` with typed registries for the `@base44/sdk` module. Run this after changing entities, functions, agents, or connectors to keep your types in sync. No authentication required.
+This creates `base44/.types/types.d.ts` with typed registries for the `@base44/sdk` module. Run this after changing entities, functions, actors, agents, or connectors to keep your types in sync. No authentication required.
 
 ### Deploying Individual Resources
 ```bash
@@ -624,6 +665,11 @@ npx base44 functions deploy
 npx base44 functions deploy my-function other-function
 # Deploy and prune removed functions
 npx base44 functions deploy --force
+
+# Deploy only actors (all)
+npx base44 actors deploy
+# Deploy specific actors
+npx base44 actors deploy ChatRoom BoardRoom
 
 # Push only agents
 npx base44 agents push
@@ -659,6 +705,9 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | No entities found           | Ensure entities exist in `base44/entities/` directory                               |
 | Entity not recognized       | Ensure file uses kebab-case naming (e.g., `team-member.jsonc` not `TeamMember.jsonc`) |
 | No functions found          | Ensure functions exist in `base44/functions/` with `entry.ts` or `entry.js`   |
+| No actors found             | Ensure actors exist as `base44/actors/<ActorName>/entry.ts` (never directly in `base44/actors/`) |
+| Invalid actor name          | Actor names must match `[A-Za-z_][A-Za-z0-9_]*` (no `/`, `-`, `.` or `:`), avoid JS reserved words, and cannot be nested |
+| Actor file rejected in the functions bucket | A file importing `base44:runtime/actors` must live at `base44/actors/<ActorName>/entry.ts` — move it out of `base44/functions/` |
 | No agents found             | Ensure agents exist in `base44/agents/` directory with valid `.jsonc` configs       |
 | Invalid agent name          | Agent names must be lowercase alphanumeric with underscores only                    |
 | No agent skills found       | Ensure skill files exist in `base44/agent-skills/` directory with valid `.md` files  |
