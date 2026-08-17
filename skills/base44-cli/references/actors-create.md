@@ -62,7 +62,7 @@ The name becomes the Durable Object class *and* the WebSocket connect handler, s
 
 All `*.js`, `*.ts`, `*.json`, and `*.jsonc` files under the actor folder are included when deploying.
 
-**Never name a helper `entry.ts`.** Every `entry.ts`/`entry.js` under `base44/actors/` is treated as an actor entry, at any depth — so `base44/actors/BoardRoom/lib/entry.ts` is discovered as an actor named `BoardRoom/lib` and rejected on deploy (names cannot contain `/`). Name helpers anything else.
+**Never name a helper `entry.ts`.** Every `entry.ts`/`entry.js` under `base44/actors/` is treated as an actor entry, at any depth — so `base44/actors/BoardRoom/lib/entry.ts` resolves to the nested name `BoardRoom/lib` and fails the "actors cannot be nested" check. The CLI's error names both causes (a genuinely nested actor, or a misnamed helper); rename the helper to anything else.
 
 ## Entry Point File
 
@@ -84,15 +84,22 @@ export default class BoardRoom extends Actor {
     // a hibernation wake keeps sockets ATTACHED without re-running handleConnect.
     this.items = new Map((await this.storage.get("items")) ?? []);
     this.users = new Map((await this.storage.get("seats")) ?? []);
+    // Only a HIBERNATION wake still has sockets attached. A cold wake (deploy,
+    // idle-out) has none — and the client that triggered it is not attached yet —
+    // so pruning there would throw away every persisted seat.
     const live = new Set(this.getConnections().map((c) => c.id));
-    for (const id of this.users.keys()) if (!live.has(id)) this.users.delete(id);
+    if (live.size > 0) {
+      for (const id of this.users.keys()) if (!live.has(id)) this.users.delete(id);
+      await this.saveSeats();   // persist the prune, or the next wake re-reads the stale map
+    }
     this.nextSeat = Math.max(0, ...[...this.users.values()].map((u) => u.seat)) + 1;
   }
 
   async handleConnect(conn) {
+    // reject() closes the socket but does not return from the handler — return yourself.
     if (!this.users.has(conn.id) && this.users.size >= MAX_USERS) {
-      conn.reject(4001, "room full");   // closes the socket but does NOT return
-      return;                            // from the handler — return immediately
+      conn.reject(4001, "room full");
+      return;
     }
     // Reconnects are routine (network blips, reloads, redeploys): a returning
     // id reclaims its entry — never demote it or mint a new seat.
@@ -155,6 +162,7 @@ The class name is cosmetic — the deploy re-exports your default export under t
 | `handleClose(conn)` | A connection closed |
 | `handleStart()` | Optional. Any time the instance wakes (deploy, idle-out, hibernation) — before any connection is handled. Rehydrate state here |
 | `handleWake(key)` | Optional. A timer armed with `this.schedule(key, at)` came due |
+| `handleTick()` | The managed ticker's callback — see [The Managed Ticker (Opt-In)](#the-managed-ticker-opt-in). Declare it even if you never opt in: it is an abstract member, so a **TypeScript** actor needs `handleTick() {}` to compile (plain-JavaScript actors can omit it) |
 
 Never override `onStart` or `onAlarm` — those are platform plumbing.
 
@@ -212,6 +220,43 @@ async handleWake(key) {
 - Fires **even if the room is empty and asleep**.
 - One-shot and coarse (±seconds); re-scheduling the same key overwrites it.
 - Good for turn/forfeit timers, delayed cleanup of abandoned rooms, and absolute-time events. In-session countdowns should stay timestamp-driven on the client.
+
+## The Managed Ticker (Opt-In)
+
+`schedule()` handles *one* wake at an absolute time. When the room has to advance **on its own, repeatedly** — a game loop, a simulation step, a server-driven countdown — use the managed ticker instead.
+
+You opt in by overriding `shouldTick()`. While it returns `true`, the platform calls `handleTick()` every `tickIntervalMs` (default `100`). When it returns `false` the ticker stops and the room is free to idle out as usual.
+
+```javascript
+import { Actor } from "base44:runtime/actors";
+
+export default class Match extends Actor {
+  phase = "waiting";
+  tickIntervalMs = 50;   // 20 fps; default is 100
+
+  shouldTick() {
+    return this.phase === "playing";   // cheap and side-effect free — it runs every tick
+  }
+
+  handleTick() {
+    this.advance();                     // move the simulation forward
+    this.broadcast({ type: "frame", state: this.publicState() });
+    if (this.isOver()) this.phase = "done";   // ticker stops on the next check
+  }
+
+  handleMessage(conn, msg) {
+    if (msg?.type === "start") this.phase = "playing";   // ticking resumes from here
+  }
+}
+```
+
+- **`shouldTick()` must be cheap and side-effect free.** It is consulted on every tick; do the work in `handleTick()`.
+- **Don't write to `this.storage` every tick** — that is exactly the high-frequency churn to avoid. Persist at checkpoints (phase changes, round ends) and rehydrate in `handleStart()`; instance fields are still lost on a wake.
+- **Don't re-arm the ticker from `handleTick()`** with `schedule()`. Flip the state that `shouldTick()` reads and let the platform manage the loop.
+- A tick is not a delivery guarantee — clients can miss frames. Broadcast enough state to resynchronize, not just deltas.
+- If the room only needs *one* future event, use [Scheduled Wakes](#scheduled-wakes); the ticker is for continuous advancement.
+
+`handleTick()` is an abstract member of `Actor`, so a **TypeScript** actor must declare it even when it never opts in — `handleTick() {}` is enough. Plain-JavaScript actors can omit it.
 
 ## Broadcasting vs Per-Client Messages
 
@@ -288,10 +333,13 @@ One actor instance = one session (one board, one match, one auction). Never funn
 ## Deploying Actors
 
 ```bash
-npx base44 actors deploy
+npx base44 actors deploy          # all actors
+npx base44 actors delete Lobby    # tear one down on the server
 ```
 
 Actors are also deployed as part of `npx base44 deploy`. For details, see [actors-deploy.md](actors-deploy.md).
+
+Deleting the folder does **not** remove a deployed actor — the next deploy simply stops including it while the old one keeps serving. Run `actors delete` to tear it down.
 
 ## Notes
 
@@ -309,7 +357,10 @@ Actors are also deployed as part of `npx base44 deploy`. For details, see [actor
 | `import { Actor } from "@base44/sdk"` | `import { Actor } from "base44:runtime/actors"` | Only the virtual module resolves the base class at deploy time |
 | `base44/actors/chat-room/entry.ts` | `base44/actors/ChatRoom/entry.ts` | The name becomes a JS class binding — no hyphens |
 | `base44/actors/games/Arena/entry.ts` | `base44/actors/Arena/entry.ts` | Actors cannot be nested |
+| A helper at `base44/actors/BoardRoom/lib/entry.ts` | `base44/actors/BoardRoom/lib/helper.ts` | Every `entry.ts` under the actors dir is an actor entry, so this reads as the nested name `BoardRoom/lib` |
 | `export class ChatRoom extends Actor` only | `export default class ChatRoom extends Actor` | The deploy re-exports the **default** export |
+| A TypeScript actor with no `handleTick` | Add `handleTick() {}` | It is an abstract member of `Actor`; the file will not compile without it |
+| Deleting the folder to remove a deployed actor | `npx base44 actors delete <Name>` | Removing the source only stops future deploys; the live actor keeps serving |
 | `import { ok } from "../../shared/util.ts"` | Keep the helper inside the actor folder | Only the actor's own folder is uploaded |
 | Storing state only in instance fields | `this.storage.put(...)` + rehydrate in `handleStart()` | Instance fields are lost when the room hibernates |
 | `this.broadcast({ type: "your_hand", cards })` | `conn.send({ type: "your_hand", cards })` | Per-client events must not be broadcast |

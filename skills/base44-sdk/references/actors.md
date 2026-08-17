@@ -33,7 +33,7 @@ actorRef.connect(options?): Connection
 
 - `options.id` (optional): the connection id, which becomes the actor's `conn.id`. Supply a stable value so a reconnect reuses the same server-side identity; omit for an auto-generated one
 - Returns a `Connection` synchronously — messages you send are buffered until the socket opens
-- **Idempotent**: calling `connect()` again on the same ref returns the same connection
+- **Idempotent per ref**: calling `connect()` again on the *same* ref returns the same connection. But `base44.actors.ChatRoom(id)` mints a **new** ref on every call, so `base44.actors.ChatRoom(id).connect()` opens a **new** socket each time — hold the ref (or the connection) yourself, as the React example does
 
 ### `Connection.subscribe`
 
@@ -267,6 +267,12 @@ interface ActorSubscription {
   unsubscribe(): void;
 }
 
+/** Resolve a name to its message types via ActorRegistry; `unknown` if untyped. */
+type ToClientFor<N extends string> =
+  N extends keyof ActorRegistry ? ActorRegistry[N]["toClient"] : unknown;
+type ToServerFor<N extends string> =
+  N extends keyof ActorRegistry ? ActorRegistry[N]["toServer"] : unknown;
+
 /** A live connection to an actor instance. */
 interface Connection<N extends string = string> {
   /** The connection id (the value the actor sees as `conn.id`). */
@@ -313,9 +319,10 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   abstract handleConnect(conn: Conn<Outgoing>): void | Promise<void>;
   abstract handleMessage(conn: Conn<Outgoing>, msg: Incoming): void | Promise<void>;
   abstract handleClose(conn: Conn<Outgoing>): void | Promise<void>;
+  /** The managed ticker's callback. Runs only while `shouldTick()` returns true. */
   abstract handleTick(): void | Promise<void>;
   handleStart(): void | Promise<void>;
-  protected handleWake(key: string): void | Promise<void>;
+  handleWake(key: string): void | Promise<void>;
   protected schedule(key: string, at: number | Date): Promise<void>;
   protected cancelSchedule(key: string): Promise<void>;
   protected broadcast(data: Outgoing): void;
@@ -324,10 +331,18 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   protected get storage(): Storage;
   /** Anonymous Base44 client scoped to this actor — RLS-gated, production data. */
   protected get client(): Base44Client;
+  /** Override to opt into the managed ticker; must be cheap and side-effect free. */
+  shouldTick?(): boolean;
+  /** Ticker period in ms. Default 100. */
+  tickIntervalMs: number;
 }
 ```
 
+The members you **implement** (`handleConnect`, `handleMessage`, `handleClose`, `handleTick`, `handleStart`, `handleWake`, `shouldTick`, `tickIntervalMs`) are public — override them without a modifier. The members you only **call** (`broadcast`, `getConnections`, `schedule`, `cancelSchedule`, `instanceId`, `storage`, `client`) are `protected`: reachable via `this` inside your actor, invisible from outside it. Marking an override `protected` where the base declares it public is a compile error (`TS2416`), so don't add the modifier to a handler.
+
 `handleTick` is an abstract member, so a **TypeScript** actor has to declare it to compile — `handleTick() {}` is all it needs. Plain-JavaScript actors can omit it.
+
+It only *runs* if you opt into the managed ticker by overriding `shouldTick()`: the platform then calls `handleTick()` every `tickIntervalMs` while that returns true, and stops (letting the room idle out) when it returns false. Reach for it when the room must advance on its own — a game loop, a visible countdown, a simulation step — and see the base44-cli skill's [actors-create.md](../../base44-cli/references/actors-create.md#the-managed-ticker-opt-in) for the full pattern.
 
 ## Notes
 
