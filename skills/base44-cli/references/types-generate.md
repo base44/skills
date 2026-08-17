@@ -1,6 +1,6 @@
 # `base44 types generate`
 
-Generate TypeScript declaration file (`types.d.ts`) from project resources (entities, functions, agents, connectors).
+Generate TypeScript declaration file (`types.d.ts`) from project resources (entities, functions, actors, agents, connectors).
 
 ## Usage
 
@@ -10,7 +10,7 @@ npx base44 types generate
 
 ## What It Does
 
-1. **Reads project configuration** — Scans `base44/entities/`, `base44/functions/`, `base44/agents/`, and `base44/connectors/` for all defined resources
+1. **Reads project configuration** — Scans `base44/entities/`, `base44/functions/`, `base44/actors/`, `base44/agents/`, and `base44/connectors/` for all defined resources
 2. **Generates `base44/.types/types.d.ts`** — Creates a TypeScript declaration file that augments the `@base44/sdk` module with typed registries
 3. **Updates `tsconfig.json`** (if present) — Automatically adds `base44/.types/*.d.ts` to the `include` array so TypeScript picks up the generated types
 
@@ -28,12 +28,17 @@ base44/.types/types.d.ts
 
 ### Generated Content
 
-The declaration file augments the `@base44/sdk` module with four registries:
+The declaration file augments the `@base44/sdk` module with five registries:
 
 - **`EntityTypeRegistry`** — Maps entity names to their TypeScript interfaces (compiled from entity JSON schemas)
 - **`FunctionNameRegistry`** — Lists all backend function names
 - **`AgentNameRegistry`** — Lists all agent names
 - **`ConnectorTypeRegistry`** — Lists all connector types
+- **`ActorNameRegistry`** — Lists all actor names
+
+A registry with no entries is omitted from the file entirely.
+
+Actor **message** types are not generated — augment `ActorRegistry` by hand to type `subscribe` callbacks and `send` payloads (see the base44-sdk skill's [actors.md](../../base44-sdk/references/actors.md)).
 
 **Example output:**
 
@@ -69,6 +74,10 @@ declare module '@base44/sdk' {
   interface ConnectorTypeRegistry {
     "googlecalendar": true;
   }
+
+  interface ActorNameRegistry {
+    "ChatRoom": true;
+  }
 }
 ```
 
@@ -93,6 +102,7 @@ If the path is already included, or no `tsconfig.json` exists, this step is sile
 
 - After creating or modifying entity schemas in `base44/entities/`
 - After adding or removing backend functions in `base44/functions/`
+- After adding or removing actors in `base44/actors/`
 - After adding or removing agents in `base44/agents/`
 - After adding or removing connectors in `base44/connectors/`
 - When setting up a TypeScript project for the first time with Base44
