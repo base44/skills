@@ -1,6 +1,6 @@
 ---
 name: base44-sdk
-description: "The base44 SDK is the library to communicate with base44 services. In projects, you use it to communicate with remote resources (entities, backend functions, ai agents) and to write backend functions. This skill is the place for learning about available modules and types. When you plan or implement a feature, you must learn this skill"
+description: "The base44 SDK is the library to communicate with base44 services. In projects, you use it to communicate with remote resources (entities, backend functions, realtime actors, ai agents) and to write backend functions and actors. This skill is the place for learning about available modules and types, including actors — the realtime/WebSocket primitive for multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
 ---
 
 # Base44 Coder
@@ -116,6 +116,20 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 
 > **Exception:** an OpenAI-compatible client (e.g. the Vercel AI SDK) **is** correct when pointed at `base44.aiGateway.connection()` — that's how you build code agents (agent loops with tools). Use `InvokeLLM` only for a single call with no tools. See [ai-gateway.md](references/ai-gateway.md).
 
+### Actors - WRONG vs CORRECT
+
+| ❌ WRONG (hallucinated) | ✅ CORRECT |
+|------------------------|-----------|
+| `actors.connect('ChatRoom', roomId)` | `actors.ChatRoom(roomId).connect()` |
+| `actors.ChatRoom.connect(roomId)` | `actors.ChatRoom(roomId).connect()` |
+| `actors.ChatRoom(roomId).subscribe(cb)` | subscribe on the **connection**: `const conn = actors.ChatRoom(roomId).connect(); conn.subscribe(cb)` |
+| `room.on('message', cb)` | `room.subscribe(cb)` (one callback receives every message) |
+| `room.emit(data)` | `room.send(data)` |
+| `new WebSocket(...)` for app realtime | `base44.actors.<Name>(id).connect()` |
+| `const unsub = room.subscribe(cb); unsub()` | `const sub = room.subscribe(cb); sub.unsubscribe()` |
+
+> **The two `subscribe()` methods return different shapes.** `Connection.subscribe()` (actors) returns an object — `sub.unsubscribe()`. `entities.<Name>.subscribe()` returns the unsubscribe **function** itself — `unsub()`. Don't carry one convention to the other.
+
 ### Entities - WRONG vs CORRECT
 
 | ❌ WRONG (hallucinated) | ✅ CORRECT |
@@ -134,6 +148,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `auth` | Login, register, user management | [auth.md](references/auth.md) |
 | `agents` | AI conversations and messages | [base44-agents.md](references/base44-agents.md) |
 | `functions` | Backend function invocation | [functions.md](references/functions.md) |
+| `actors` | Realtime rooms over WebSockets (multiplayer, collaboration, presence) | [actors.md](references/actors.md) |
 | `integrations` | AI, email, file uploads, custom APIs | [integrations.md](references/integrations.md) |
 | `aiGateway` | Connect an OpenAI-compatible SDK to Base44's AI gateway | [ai-gateway.md](references/ai-gateway.md) |
 | `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
@@ -148,9 +163,9 @@ For client setup and authentication modes, see [client.md](references/client.md)
 
 Each reference file includes a "Type Definitions" section with TypeScript interfaces and types for the module's methods, parameters, and return values.
 
-**Getting typed entities, functions, and agents:** The Base44 CLI generates types from your project resources (entities, functions, agents), including augmentations to `EntityTypeRegistry`, `FunctionNameRegistry`, and `AgentNameRegistry`, and wires them into your project so you get autocomplete and type checking without manual setup. For how to generate types, use the **base44-cli** skill.
+**Getting typed entities, functions, actors, and agents:** The Base44 CLI generates types from your project resources (entities, functions, actors, agents), including augmentations to `EntityTypeRegistry`, `FunctionNameRegistry`, `ActorNameRegistry`, and `AgentNameRegistry`, and wires them into your project so you get autocomplete and type checking without manual setup. For how to generate types, use the **base44-cli** skill.
 
-**Manual augmentation:** You can instead augment the registries yourself in a `.d.ts` file; see the Type Definitions sections in [entities.md](references/entities.md), [functions.md](references/functions.md), and [base44-agents.md](references/base44-agents.md).
+**Manual augmentation:** You can instead augment the registries yourself in a `.d.ts` file; see the Type Definitions sections in [entities.md](references/entities.md), [functions.md](references/functions.md), [actors.md](references/actors.md), and [base44-agents.md](references/base44-agents.md). Actor **message** types are always hand-authored — augment `ActorRegistry` so the actor and its clients share one definition.
 
 ## Installation
 
@@ -221,6 +236,10 @@ const base44 = createClient({
 - Run server-side code → `functions.invoke()`
 - Need admin access → `base44.asServiceRole.functions.invoke()`
 
+**Realtime shared session?**
+- Multiplayer, collaborative board/doc, presence, live cursors, in-room chat → `actors.<Name>(roomId).connect()` (see [actors.md](references/actors.md))
+- Just keeping a list of records live on screen → `entities.EntityName.subscribe()`, **not** an actor
+
 **External services?**
 - Send emails → `integrations.Core.SendEmail()`
 - Upload files → `integrations.Core.UploadFile()`
@@ -279,6 +298,32 @@ export default async function (req) {
 }
 ```
 
+### Realtime Room (Actor)
+
+```javascript
+// Frontend — connect inside useEffect and always clean up
+useEffect(() => {
+  const room = base44.actors.ChatRoom(roomId).connect();
+  const sub = room.subscribe((msg) => {
+    if (msg.type === "message") setMessages((prev) => [...prev, msg]);   // switch on type; drop unknowns
+  });
+  return () => { sub.unsubscribe(); room.close(); };   // NOTE: actors return { unsubscribe() },
+}, [roomId]);                                          // entities.subscribe() returns the function itself
+
+// Actor — base44/actors/ChatRoom/entry.ts
+import { Actor } from "base44:runtime/actors";
+
+export default class ChatRoom extends Actor {
+  handleConnect(conn) { conn.send({ type: "welcome" }); }        // one client
+  handleMessage(conn, msg) {
+    // Always validate: the payload is attacker-controlled and msg can even be null.
+    if (msg?.type !== "message" || typeof msg.text !== "string") return;
+    this.broadcast({ type: "message", text: msg.text.slice(0, 2000) });   // everyone
+  }
+  handleClose(conn) {}
+}
+```
+
 ### Service Role Access
 
 Use `asServiceRole` in backend functions for admin-level operations:
@@ -301,6 +346,7 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `agents` | Yes | Yes |
 | `functions.invoke()` | Yes | Yes |
 | `functions.fetch()` | Yes | Yes |
+| `actors` (connect to a room) | Yes | No — the actor *is* the server side |
 | `integrations` | Yes | Yes |
 | `aiGateway` | No | Yes |
 | `analytics` | Yes | Yes |
