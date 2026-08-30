@@ -1,6 +1,6 @@
 ---
 name: base44-troubleshooter
-description: Troubleshoot production issues using backend function logs. Use when investigating app errors, debugging function calls, or diagnosing production problems in Base44 apps.
+description: Troubleshoot production issues using backend function logs and workflow run history. Use when investigating app errors, debugging function calls, diagnosing why a scheduled job or automation failed, or diagnosing production problems in Base44 apps.
 ---
 
 # Troubleshoot Production Issues
@@ -30,6 +30,8 @@ npx base44 logs --app-id app_123
 | Command | Description | Reference |
 |---------|-------------|-----------|
 | `base44 logs` | Fetch function logs for this app | [project-logs.md](references/project-logs.md) |
+| `base44 workflows runs` | List workflow runs, newest first; failed runs carry the failing task and the underlying error | [workflows-runs.md](../base44-cli/references/workflows-runs.md) |
+| `base44 workflows list` | List this app's workflows with status and run summary | [workflows-list.md](../base44-cli/references/workflows-list.md) |
 
 ## Logs are not read-after-write
 
@@ -76,7 +78,32 @@ a healthy stream:
 - **Once it falls back to polling it stays polling** for the life of that process.
   Re-run the command if you want it to retry the realtime stream.
 
-### 2. Check Recent Errors
+### 2. Ask whether it was a scheduled run, not a request
+
+Workflows are the automation system — cron schedules, entity triggers, connector
+events, in-app agent actions. **When the complaint is "my scheduled job didn't run" or
+"the automation stopped working", function logs are the wrong tool.** They show what a
+function printed; they cannot tell you whether a run was dispatched at all, which task
+inside it failed, or why the workflow stopped firing.
+
+```bash
+npx base44 workflows runs --status failed
+npx base44 workflows list
+```
+
+A failed run carries the failing task and the underlying error, so start there and drop
+into `base44 logs` only once you know which function a failing task called.
+`workflows list` reports `consecutiveFailures` — anything above zero is a workflow that
+needs attention.
+
+Two things that mislead here:
+
+- **`manual` in the trigger column does not mean a person clicked something.** It is
+  what a run is stamped with when it was dispatched with no trigger type at all.
+- **Test runs are included**, tagged next to the trigger type as `(scheduled, test)`.
+  A run you fired yourself to check something will show up in the list.
+
+### 3. Check Recent Errors
 
 Start by pulling the latest errors across all functions:
 
@@ -84,7 +111,7 @@ Start by pulling the latest errors across all functions:
 npx base44 logs --level error
 ```
 
-### 3. Drill Into a Specific Function
+### 4. Drill Into a Specific Function
 
 If you know which function is failing:
 
@@ -103,7 +130,7 @@ per-function deployment emit unstamped rows, so a filtered view can hide them; t
 self-heals on the app's next deploy. If a filtered run comes back empty, re-run
 without `--function` before concluding there are no logs.
 
-### 4. Inspect a Time Range
+### 5. Inspect a Time Range
 
 Correlate with user-reported issue timestamps:
 
@@ -111,7 +138,7 @@ Correlate with user-reported issue timestamps:
 npx base44 logs --function <function_name> --since <start_time> --until <end_time>
 ```
 
-### 5. Analyze the Logs
+### 6. Analyze the Logs
 
 - Look for stack traces and error messages in the output
 - Check timestamps to correlate with user-reported issues
