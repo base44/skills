@@ -1,0 +1,31 @@
+name: wix gateway proxy check
+
+# Dummy connectivity check for the Wix npm embargo gateway: runs the
+# wix-gateway-proxy action, then curls the registry so the request resolves
+# through the gateway and prints the result.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wix-gateway-proxy-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  proxy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Wix gateway proxy (mandatory)
+        uses: ./.github/actions/wix-gateway-proxy
+
+      - name: Connection check through the gateway
+        # -v prints the negotiated chain, which is the actual signal here: the
+        # subject/issuer must be the embargo proxy, not npm's real Cloudflare cert.
+        run: curl -vI https://registry.npmjs.org/react
+
+      - name: NPM install for verification
+        run: npm install mermaid-rs-wasm@0.0.3
