@@ -31,9 +31,52 @@ npx base44 logs --app-id app_123
 |---------|-------------|-----------|
 | `base44 logs` | Fetch function logs for this app | [project-logs.md](references/project-logs.md) |
 
+## Logs are not read-after-write
+
+**A single fetch that misses your run proves nothing.** One-shot `base44 logs` reads
+an index that lags behind the invocation, so an empty result right after triggering a
+function is the expected result, not evidence of a problem.
+
+- **Live debugging: use `--follow`.** Where the realtime stream is available it
+  delivers lines in **under a second**. Where it is not, the CLI falls back to
+  polling on its own and prints which mode you are in
+  (`Realtime stream unavailable — falling back to polling (lines may lag ~20-30s).`).
+  Either way `--follow` is the right tool — you never have to pick.
+- **One-shot fetches lag ~20-30s.** That is ingestion time, not a filter problem.
+- **When output is empty, the variable to change is TIME, never a flag.** Wait and
+  re-run the same command. Widening `--limit`, dropping `--level`, or switching
+  `--order` changes nothing about a line that has not been ingested yet, and
+  re-rolling flags is how agents talk themselves into a wrong diagnosis.
+
 ## Troubleshooting Flow
 
-### 1. Check Recent Errors
+### 1. Watch it happen — `--follow`
+
+If you can trigger the failure (or it is happening now), start here rather than
+fetching after the fact:
+
+```bash
+npx base44 logs --follow
+npx base44 logs --follow --function <function_name>
+```
+
+Then invoke the function and read what arrives. Rules that keep you from misreading
+a healthy stream:
+
+- **Never decide on a timer.** Open the stream, trigger the function, and read until
+  you see the lines — do not read a fixed window, print, and conclude "broken".
+  A quiet stream is quiet because nothing has been invoked.
+- **Delivery is per-invocation, not per-line.** A long-running function's lines all
+  arrive when the invocation ends. Silence mid-invocation is normal.
+- **Redeploying mid-follow is safe.** A deploy rotates the script in seconds and the
+  same open stream delivers the new code's lines on the next invoke. Do not tear the
+  stream down and rebuild it after every deploy.
+- **`--since` is rejected with `--follow`** (the stream starts from now), as are
+  `--until` and `--order`. For anything historical, use a one-shot fetch.
+- **Once it falls back to polling it stays polling** for the life of that process.
+  Re-run the command if you want it to retry the realtime stream.
+
+### 2. Check Recent Errors
 
 Start by pulling the latest errors across all functions:
 
@@ -41,7 +84,7 @@ Start by pulling the latest errors across all functions:
 npx base44 logs --level error
 ```
 
-### 2. Drill Into a Specific Function
+### 3. Drill Into a Specific Function
 
 If you know which function is failing:
 
@@ -55,7 +98,12 @@ If you are outside the project directory, pass the app explicitly:
 npx base44 logs --app-id app_123 --function <function_name> --level error
 ```
 
-### 3. Inspect a Time Range
+A `--function` filter is a filter on *stamped* rows. Apps still on the legacy
+per-function deployment emit unstamped rows, so a filtered view can hide them; this
+self-heals on the app's next deploy. If a filtered run comes back empty, re-run
+without `--function` before concluding there are no logs.
+
+### 4. Inspect a Time Range
 
 Correlate with user-reported issue timestamps:
 
@@ -63,8 +111,18 @@ Correlate with user-reported issue timestamps:
 npx base44 logs --function <function_name> --since <start_time> --until <end_time>
 ```
 
-### 4. Analyze the Logs
+### 5. Analyze the Logs
 
 - Look for stack traces and error messages in the output
 - Check timestamps to correlate with user-reported issues
-- Use `--limit` to fetch more entries if the default 50 isn't enough
+- Pass `--limit` explicitly to reach further back — there is no default page size, and the server returns at most 500 entries however high you set it
+
+## Reading an empty result
+
+`No logs found matching the filters.` is ambiguous — never read it as "healthy". It
+means one of:
+
+- the run has not been ingested yet (most common — wait and re-run, see above)
+- no function by that name, or the filter dropped unstamped rows (see step 3)
+- the app has not been published, when reading `--env prod`
+  (`No production logs found.` — try `--env preview` for draft logs)
