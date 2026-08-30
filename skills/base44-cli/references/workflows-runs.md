@@ -47,7 +47,7 @@ With `--json`, each run is a record: `runId`, `workflowId`, `workflowName`, `tri
 
 ## Notes
 
-- **Trigger types**: `scheduled` (cron), `entity`, `connector`, `in_app_agent`, and `manual`.
+- **Trigger types**: `scheduled` (cron), `entity`, `connector`, `in_app_agent`, `app_user_auth`, `app_publish`, `app_payment`, `webhook`, `goal_file` — plus `manual`, which is what a run is stamped with when it was dispatched without a trigger type at all (a "run now" typically lands here).
 - **Test runs are included.** Runs fired via "run now" (including the dashboard's test button) carry a `test` tag appended to the trigger type in the output (e.g. `(scheduled, test)`) and `isTestRun: true` in JSON. If you just created a workflow and fired it to verify, your run WILL appear — marked as a test run.
 - A failed run's `errorMessage` names the failing task and, when a backend function was the cause, includes the function's HTTP failure. To dig further into that function's own logs, use `base44 logs --function <name>` — and remember function logs can take ~30s to appear.
 - `--limit` tops out at **200** and there is no paging flag, so a busy app's older runs cannot be reached from the CLI. Narrow with `--since` and `--status` rather than assuming a full page is the whole history.
