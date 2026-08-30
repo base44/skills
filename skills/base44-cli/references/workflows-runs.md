@@ -48,8 +48,9 @@ With `--json`, each run is a record: `runId`, `workflowId`, `workflowName`, `tri
 ## Notes
 
 - **Trigger types**: `scheduled` (cron), `entity`, `connector`, `in_app_agent`, and `manual`.
-- **Test runs are included.** Runs fired via "run now" (including the dashboard's test button) are marked `(test)` in the output and `isTestRun: true` in JSON. If you just created a workflow and fired it to verify, your run WILL appear — marked as a test run.
+- **Test runs are included.** Runs fired via "run now" (including the dashboard's test button) carry a `test` tag appended to the trigger type in the output (e.g. `(scheduled, test)`) and `isTestRun: true` in JSON. If you just created a workflow and fired it to verify, your run WILL appear — marked as a test run.
 - A failed run's `errorMessage` names the failing task and, when a backend function was the cause, includes the function's HTTP failure. To dig further into that function's own logs, use `base44 logs --function <name>` — and remember function logs can take ~30s to appear.
+- `--limit` tops out at **200** and there is no paging flag, so a busy app's older runs cannot be reached from the CLI. Narrow with `--since` and `--status` rather than assuming a full page is the whole history.
 - `statusReason` is a typed reason populated only for failed/cancelled runs (e.g. `insufficient_credits`); read it together with `status`.
 - **Apps that predate Workflows** (legacy automations) are not readable via this command; it fails with an explanation rather than returning an empty list.
 - An empty result tells you whether the app has no workflows at all, or has workflows but no matching runs — read the message, don't assume.
