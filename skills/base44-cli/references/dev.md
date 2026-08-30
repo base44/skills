@@ -15,6 +15,7 @@ npx base44 dev [options]
 | Option | Description | Required | Default |
 |--------|-------------|----------|---------|
 | `-p, --port <number>` | Port for the local Base44 backend | No | 4400 |
+| `--remote` | Serve only the frontend, against your app's production backend | No | — |
 
 ## Authentication
 
@@ -54,6 +55,12 @@ Before using `base44 dev` for full-stack local development, verify your config:
 
 If `site.serveCommand` is missing, `base44 dev` still works, but it only starts the Base44 backend.
 
+## Remote Mode (`--remote`)
+
+`npx base44 dev --remote` starts no local backend: it runs only your frontend (`site.serveCommand`),
+wired to your app's **production** backend — every read and write hits live data. Use it to develop
+the UI against real content; default to plain `base44 dev` otherwise.
+
 ## Examples
 
 ```bash
@@ -62,6 +69,9 @@ npx base44 dev
 
 # Start the backend on a specific port
 npx base44 dev --port 4500
+
+# Frontend only, against the production backend (live data)
+npx base44 dev --remote
 ```
 
 ## Notes
