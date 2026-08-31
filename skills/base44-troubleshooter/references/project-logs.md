@@ -21,7 +21,7 @@ This command can run from a linked project, or outside a project when you pass `
 | `-n, --limit <n>` | Number of results to return. **No default** — the server returns at most 500 whether or not you pass it, and a larger value is clamped to 500 | No |
 | `--order <order>` | Sort order: `asc` or `desc`. Only affects a **multi-function** fetch (it orders the client-side merge); ignored when reading a single function. Cannot be combined with `--follow` | No |
 | `--env <env>` | Which deployment to read logs from: `preview` (current draft) or `prod` (published). Default: `preview` | No |
-| `-f, --follow` | Stream new logs as they arrive instead of a one-shot fetch. Realtime (sub-second) where the stream is available, otherwise the CLI polls automatically (~20-30s lag). Cannot be combined with `--since`, `--until` or `--order` | No |
+| `-f, --follow` | Stream new logs as they arrive instead of a one-shot fetch. Realtime (sub-second) where the stream is available; where it cannot be opened the CLI polls instead (~20-30s lag). Cannot be combined with `--since`, `--until` or `--order` | No |
 
 ## Examples
 
@@ -78,7 +78,7 @@ npx base44 logs --follow --function my-function
 - The `--since` and `--until` values accept an ISO datetime, or a relative shorthand (e.g. `1h`, `30m`, `2d`) measured back from now. ISO values without a timezone are normalized to UTC (appends `Z`).
 - `--env` defaults to `preview`. If `prod` returns no logs, the app may not have been published yet — try `--env preview` to see draft logs.
 - **`No logs found matching the filters.` is ambiguous.** It means one of: the run has not been ingested yet (~20-30s; wait and re-run — *do not* change flags), there is no function by that name, or a `--function` filter dropped unstamped rows from a legacy per-function deployment. It never means "the app is healthy".
-- `--follow` streams logs indefinitely (oldest to newest) instead of a single fetch; it's incompatible with `--since`, `--until` and `--order`. See [Following logs live](#following-logs-live).
+- `--follow` streams logs indefinitely (oldest to newest) instead of a single fetch; it's incompatible with `--since`, `--until` and `--order`. A stream that is lost and cannot be re-established ends the command with an error rather than dropping to polling. See [Following logs live](#following-logs-live).
 - Pass the global `--json` flag to emit each log entry (or, with `--follow`, each new line) as JSON instead of the human-readable format.
 
 ## Following logs live
@@ -86,27 +86,51 @@ npx base44 logs --follow --function my-function
 `--follow` is the tool to reach for when you can reproduce the problem, because it
 does not wait on log ingestion.
 
-### The two modes, and why you don't choose
+### Streaming or polling is decided once, at startup
 
-`--follow` first opens a realtime stream. Where that stream is available lines arrive
-**in under a second** of the invocation ending. Where it is not — the app is still on
-a legacy per-function deployment, or the feature is not yet enabled for it — the
-request is refused and the CLI **falls back to polling on its own**, printing which
-mode you are in:
+`--follow` opens a realtime stream before it prints anything, and **that first attempt
+decides the mode for the whole run.**
+
+**The stream opens** — lines arrive **in under a second** of the invocation ending, and
+you stay in realtime for the rest of the run.
+
+**The stream is refused** — the app is still on a legacy per-function deployment, or
+the feature is not enabled for it. The CLI says so and polls instead, for the life of
+the process:
 
 ```
-Realtime stream unavailable — falling back to polling (lines may lag ~20-30s).
-Realtime stream disconnected — falling back to polling (lines may lag ~20-30s).
+Realtime logs are not available for this app — falling back to polling (lines may lag ~20-30s).
 ```
 
-The command works either way; the only difference is latency. Two consequences worth
-knowing:
+**The stream cannot be reached** — a transient failure that survived the retries. Same
+outcome, different message:
 
-- On a legacy per-function app, a `--follow --function <name>` run is refused (404)
-  and polls instead. This self-heals on the app's next deploy — nothing to fix.
-- **The fallback is one-way.** Once a run has conceded to polling it polls for the
-  life of that process; it never re-attempts the stream. Re-run the command to try
-  realtime again.
+```
+Could not reach the realtime log stream — falling back to polling (lines may lag ~20-30s).
+```
+
+Either way the command keeps working; the only difference is latency. On a legacy
+per-function app, `--follow --function <name>` is refused (404) and polls — that
+self-heals on the app's next deploy, there is nothing to fix.
+
+### A stream that dies mid-run ends the command — it does not quietly start polling
+
+Once the stream has opened there is **no polling fallback left**. If it is lost and
+cannot be re-established — repeated dead connections, or a typed end frame saying the
+tail is gone — `--follow` exits with an error rather than degrading:
+
+```
+The realtime log stream stopped and could not be re-established
+```
+
+It suggests starting a new tail (`base44 logs --follow`) or reading recent logs without
+streaming (`base44 logs`).
+
+**This matters if you are driving the CLI from a script or an agent loop.** A non-zero
+exit from `--follow` partway through is the stream giving up, not proof that logging is
+broken and not a reason to change flags. Re-run the same command. Ordinary reconnects
+are invisible: the CLI reconnects on its own and only errors once it has run out of
+attempts.
 
 ### Reading the stream without fooling yourself
 

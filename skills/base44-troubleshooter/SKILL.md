@@ -40,10 +40,10 @@ an index that lags behind the invocation, so an empty result right after trigger
 function is the expected result, not evidence of a problem.
 
 - **Live debugging: use `--follow`.** Where the realtime stream is available it
-  delivers lines in **under a second**. Where it is not, the CLI falls back to
-  polling on its own and prints which mode you are in
-  (`Realtime stream unavailable — falling back to polling (lines may lag ~20-30s).`).
-  Either way `--follow` is the right tool — you never have to pick.
+  delivers lines in **under a second**. Where it is not, the CLI says so and polls
+  instead (`Realtime logs are not available for this app — falling back to polling
+  (lines may lag ~20-30s).`). Either way `--follow` is the right tool — you never
+  have to pick.
 - **One-shot fetches lag ~20-30s.** That is ingestion time, not a filter problem.
 - **When output is empty, the variable to change is TIME, never a flag.** Wait and
   re-run the same command. Widening `--limit`, dropping `--level`, or switching
@@ -75,8 +75,13 @@ a healthy stream:
   stream down and rebuild it after every deploy.
 - **`--since` is rejected with `--follow`** (the stream starts from now), as are
   `--until` and `--order`. For anything historical, use a one-shot fetch.
-- **Once it falls back to polling it stays polling** for the life of that process.
-  Re-run the command if you want it to retry the realtime stream.
+- **The mode is decided once, at startup.** If the first connection is refused or
+  unreachable, the run polls for its whole life. If the stream opens, there is no
+  polling fallback left.
+- **A stream lost mid-run ends the command** with
+  `The realtime log stream stopped and could not be re-established`. That non-zero
+  exit is the stream giving up, not proof that logging is broken — re-run the same
+  command rather than changing flags.
 
 ### 2. Ask whether it was a scheduled run, not a request
 
