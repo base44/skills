@@ -120,6 +120,13 @@ Either way the command keeps working; the only difference is latency. On a legac
 per-function app, `--follow --function <name>` is refused (404) and polls — that
 self-heals on the app's next deploy, there is nothing to fix.
 
+Both warnings go to **stderr**, never into the log output on stdout. They are shown
+above as they appear when output is **piped or otherwise not a terminal** — which is
+how an agent or a script sees them. In an interactive terminal the same text is
+rendered by the fancy logger with a coloured glyph instead of the literal
+`Warning: ` prefix, so match on the sentence, not on the prefix. Under `--json`
+there is no warning line at all.
+
 ### A stream that dies mid-run ends the command — it does not quietly start polling
 
 Once the stream has opened there is **no polling fallback left**. If it is lost and
@@ -131,7 +138,11 @@ Error: The realtime log stream stopped and could not be re-established
 ```
 
 It exits **1**, and suggests starting a new tail (`base44 logs --follow`) or reading
-recent logs without streaming (`base44 logs`).
+recent logs without streaming (`base44 logs`). As with the warnings, the literal
+`Error: ` prefix is what a piped or non-terminal run prints; an interactive terminal
+renders the same message with a glyph. Under `--json` this failure arrives **only** as
+one more object on stdout (see the `--json` note above) — there is no `Error:` line to
+match at all.
 
 **This matters if you are driving the CLI from a script or an agent loop.** Exit 1 from
 `--follow` partway through is the stream giving up, not proof that logging is
