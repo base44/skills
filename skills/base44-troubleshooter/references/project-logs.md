@@ -18,7 +18,7 @@ This command can run from a linked project, or outside a project when you pass `
 | `--since <datetime>` | Show logs from this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`). Cannot be combined with `--follow` | No |
 | `--until <datetime>` | Show logs until this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`). Cannot be combined with `--follow` | No |
 | `--level <level>` | Filter by log level: `info`, `warning`, `error`, `debug` | No |
-| `-n, --limit <n>` | Number of results to return. **No default** — the server returns at most 500 whether or not you pass it, and a larger value is clamped to 500 | No |
+| `-n, --limit <n>` | Number of results to return. **No default** — the CLI sends a limit only when you pass one, and a value above 500 is clamped down to 500 | No |
 | `--order <order>` | Sort order: `asc` or `desc`. Only affects a **multi-function** fetch (it orders the client-side merge); ignored when reading a single function. Cannot be combined with `--follow` | No |
 | `--env <env>` | Which deployment to read logs from: `preview` (current draft) or `prod` (published). Default: `preview` | No |
 | `-f, --follow` | Stream new logs as they arrive instead of a one-shot fetch. Realtime (sub-second) where the stream is available; where it cannot be opened the CLI polls instead (~20-30s lag). Cannot be combined with `--since`, `--until` or `--order` | No |
@@ -73,7 +73,7 @@ npx base44 logs --follow --function my-function
 - When multiple functions are specified, logs are merged and sorted by timestamp.
 - If `--function` is omitted, logs are fetched for **all functions** in the current app.
 - The `--limit` applies after merging logs from all specified functions.
-- There is **no default page size**. The CLI applies a limit only when you pass one, and the server returns at most 500 entries either way — a `--limit` above 500 is clamped down to it. Do not plan on paging further back by raising the number.
+- There is **no default page size**. The CLI sends a limit only when you pass one, and a `--limit` above 500 is clamped down to 500 — so do not plan on paging further back by raising the number. What you get when you omit it is not a fixed number: the runtime decides, and it may cap you at 500 anyway. Pass `--limit` when the count matters to you.
 - `--order` is only honored for the client-side merge of several functions. The server does not read it, so it is inert on a single-function fetch — the entries come back newest-first regardless.
 - The `--since` and `--until` values accept an ISO datetime, or a relative shorthand (e.g. `1h`, `30m`, `2d`) measured back from now. ISO values without a timezone are normalized to UTC (appends `Z`).
 - `--env` defaults to `preview`. If `prod` returns no logs, the app may not have been published yet — try `--env preview` to see draft logs.
@@ -158,9 +158,11 @@ The CLI handles all of this for you — this section matters only if you are con
 - The typed `event: end` frame is what disambiguates silence, and its `retriable`
   flag is the whole contract: `true` — every reason the backend currently sends,
   including a tail that went unavailable — means **reconnect immediately**; `false`
-  means stop streaming and use the bounded polling route. Do not branch on the reason
-  string. (Falling back to polling is driven by the connection being *refused*, not by
-  an end frame.)
+  means stop streaming. Do not branch on the reason string. What you do after a
+  `false` is your choice as a raw consumer — the bounded polling route is the obvious
+  one — but note the CLI itself does **not** do that: it ends the run with an error
+  (see above). (And a fallback to polling in the CLI is driven by the *first*
+  connection being refused, never by an end frame.)
 - Reconnect on a drop rather than giving up on the first one. Carry the last seen
   timestamp across the reconnect — but for **dedupe**, and to resume a polling
   fallback where the stream left off. It does not make the handover gapless: a tail

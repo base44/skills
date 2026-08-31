@@ -147,7 +147,7 @@ npx base44 logs --function <function_name> --since <start_time> --until <end_tim
 
 - Look for stack traces and error messages in the output
 - Check timestamps to correlate with user-reported issues
-- Pass `--limit` explicitly to reach further back — there is no default page size, and the server returns at most 500 entries however high you set it
+- Pass `--limit` explicitly to reach further back — there is no default page size, and a value above 500 is clamped down to 500
 
 ## Reading an empty result
 
