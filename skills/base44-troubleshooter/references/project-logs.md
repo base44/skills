@@ -80,7 +80,13 @@ npx base44 logs --follow --function my-function
 - **`No logs found matching the filters.` is ambiguous.** It means one of: the run has not been ingested yet (~20-30s; wait and re-run — *do not* change flags), there is no function by that name, or a `--function` filter dropped unstamped rows from a legacy per-function deployment. It never means "the app is healthy".
 - `--follow` streams logs indefinitely (oldest to newest) instead of a single fetch; it's incompatible with `--since`, `--until` and `--order`. A stream that is lost and cannot be re-established ends the command with an error rather than dropping to polling. See [Following logs live](#following-logs-live).
 - Pass the global `--json` flag to emit each log entry as JSON instead of the human-readable format.
-- **With `--follow`, `--json` output is one JSON object per line, not one JSON document.** Parse it line by line as it arrives; there is no closing bracket, because a live tail never ends normally. If the stream is lost, the error arrives as one more object on its own line — `{"error": "The realtime log stream stopped and could not be re-established", "code": "API_ERROR", "hints": [...]}` — so a consumer that parses per line sees the failure as data rather than as a broken document.
+- **With `--follow`, `--json` output is one JSON object per line, not one JSON document.** Parse it line by line as it arrives; there is no closing bracket, because a live tail never ends normally. Nothing goes to stderr. If the stream is lost, the error arrives as one more object on its own line and the process exits 1:
+
+  ```json
+  {"error":"The realtime log stream stopped and could not be re-established","code":"API_ERROR","hints":[{"message":"Start a new live tail","command":"base44 logs --follow"},{"message":"Or read recent logs without streaming","command":"base44 logs"}]}
+  ```
+
+  Note `hints` holds **objects**, each with `message` and `command` — not strings. A consumer that parses per line sees the failure as data rather than as a broken document.
 
 ## Following logs live
 
@@ -100,19 +106,28 @@ the feature is not enabled for it. The CLI says so and polls instead, for the li
 the process:
 
 ```
-Realtime logs are not available for this app — falling back to polling (lines may lag ~20-30s).
+Warning: Realtime logs are not available for this app — falling back to polling (lines may lag ~20-30s).
 ```
 
 **The stream cannot be reached** — a transient failure that survived the retries. Same
 outcome, different message:
 
 ```
-Could not reach the realtime log stream — falling back to polling (lines may lag ~20-30s).
+Warning: Could not reach the realtime log stream — falling back to polling (lines may lag ~20-30s).
 ```
 
 Either way the command keeps working; the only difference is latency. On a legacy
 per-function app, `--follow --function <name>` is refused (404) and polls — that
 self-heals on the app's next deploy, there is nothing to fix.
+
+Both warnings go to **stderr**, never into the log output on stdout. They are shown
+above as they appear when output is **piped or otherwise not a terminal** — which is
+how an agent or a script sees them. In an interactive terminal the same text is
+rendered by the fancy logger with a coloured glyph instead of the literal
+`Warning: ` prefix, so match on the sentence, not on the prefix. Under `--json` the
+warning still prints, on stderr — `--json` routes logs to stderr rather than silencing
+them, so a `--json` run gives you both: this warning on stderr, and log lines on
+stdout. (Only the lost-stream failure below is stdout-only.)
 
 ### A stream that dies mid-run ends the command — it does not quietly start polling
 
@@ -121,14 +136,18 @@ cannot be re-established — repeated dead connections, or a typed end frame say
 tail is gone — `--follow` exits with an error rather than degrading:
 
 ```
-The realtime log stream stopped and could not be re-established
+Error: The realtime log stream stopped and could not be re-established
 ```
 
-It suggests starting a new tail (`base44 logs --follow`) or reading recent logs without
-streaming (`base44 logs`).
+It exits **1**, and suggests starting a new tail (`base44 logs --follow`) or reading
+recent logs without streaming (`base44 logs`). As with the warnings, the literal
+`Error: ` prefix is what a piped or non-terminal run prints; an interactive terminal
+renders the same message with a glyph. Under `--json` this failure arrives **only** as
+one more object on stdout (see the `--json` note above) — there is no `Error:` line to
+match at all.
 
-**This matters if you are driving the CLI from a script or an agent loop.** A non-zero
-exit from `--follow` partway through is the stream giving up, not proof that logging is
+**This matters if you are driving the CLI from a script or an agent loop.** Exit 1 from
+`--follow` partway through is the stream giving up, not proof that logging is
 broken and not a reason to change flags. Re-run the same command. Ordinary reconnects
 are invisible: the CLI reconnects on its own and only errors once it has run out of
 attempts.
