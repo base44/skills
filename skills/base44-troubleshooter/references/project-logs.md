@@ -162,7 +162,8 @@ The CLI handles all of this for you — this section matters only if you are con
   `false` is your choice as a raw consumer — the bounded polling route is the obvious
   one — but note the CLI itself does **not** do that: it ends the run with an error
   (see above). (And a fallback to polling in the CLI is driven by the *first*
-  connection being refused, never by an end frame.)
+  connection failing — either refused outright, or still unreachable after its
+  retries — never by an end frame.)
 - Reconnect on a drop rather than giving up on the first one. Carry the last seen
   timestamp across the reconnect — but for **dedupe**, and to resume a polling
   fallback where the stream left off. It does not make the handover gapless: a tail
