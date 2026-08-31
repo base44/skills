@@ -124,8 +124,10 @@ Both warnings go to **stderr**, never into the log output on stdout. They are sh
 above as they appear when output is **piped or otherwise not a terminal** — which is
 how an agent or a script sees them. In an interactive terminal the same text is
 rendered by the fancy logger with a coloured glyph instead of the literal
-`Warning: ` prefix, so match on the sentence, not on the prefix. Under `--json`
-there is no warning line at all.
+`Warning: ` prefix, so match on the sentence, not on the prefix. Under `--json` the
+warning still prints, on stderr — `--json` routes logs to stderr rather than silencing
+them, so a `--json` run gives you both: this warning on stderr, and log lines on
+stdout. (Only the lost-stream failure below is stdout-only.)
 
 ### A stream that dies mid-run ends the command — it does not quietly start polling
 
