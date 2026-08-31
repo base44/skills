@@ -100,14 +100,14 @@ the feature is not enabled for it. The CLI says so and polls instead, for the li
 the process:
 
 ```
-Realtime logs are not available for this app — falling back to polling (lines may lag ~20-30s).
+Warning: Realtime logs are not available for this app — falling back to polling (lines may lag ~20-30s).
 ```
 
 **The stream cannot be reached** — a transient failure that survived the retries. Same
 outcome, different message:
 
 ```
-Could not reach the realtime log stream — falling back to polling (lines may lag ~20-30s).
+Warning: Could not reach the realtime log stream — falling back to polling (lines may lag ~20-30s).
 ```
 
 Either way the command keeps working; the only difference is latency. On a legacy
@@ -121,14 +121,14 @@ cannot be re-established — repeated dead connections, or a typed end frame say
 tail is gone — `--follow` exits with an error rather than degrading:
 
 ```
-The realtime log stream stopped and could not be re-established
+Error: The realtime log stream stopped and could not be re-established
 ```
 
-It suggests starting a new tail (`base44 logs --follow`) or reading recent logs without
-streaming (`base44 logs`).
+It exits **1**, and suggests starting a new tail (`base44 logs --follow`) or reading
+recent logs without streaming (`base44 logs`).
 
-**This matters if you are driving the CLI from a script or an agent loop.** A non-zero
-exit from `--follow` partway through is the stream giving up, not proof that logging is
+**This matters if you are driving the CLI from a script or an agent loop.** Exit 1 from
+`--follow` partway through is the stream giving up, not proof that logging is
 broken and not a reason to change flags. Re-run the same command. Ordinary reconnects
 are invisible: the CLI reconnects on its own and only errors once it has run out of
 attempts.
