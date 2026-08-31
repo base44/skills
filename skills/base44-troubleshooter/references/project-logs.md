@@ -80,7 +80,13 @@ npx base44 logs --follow --function my-function
 - **`No logs found matching the filters.` is ambiguous.** It means one of: the run has not been ingested yet (~20-30s; wait and re-run — *do not* change flags), there is no function by that name, or a `--function` filter dropped unstamped rows from a legacy per-function deployment. It never means "the app is healthy".
 - `--follow` streams logs indefinitely (oldest to newest) instead of a single fetch; it's incompatible with `--since`, `--until` and `--order`. A stream that is lost and cannot be re-established ends the command with an error rather than dropping to polling. See [Following logs live](#following-logs-live).
 - Pass the global `--json` flag to emit each log entry as JSON instead of the human-readable format.
-- **With `--follow`, `--json` output is one JSON object per line, not one JSON document.** Parse it line by line as it arrives; there is no closing bracket, because a live tail never ends normally. If the stream is lost, the error arrives as one more object on its own line — `{"error": "The realtime log stream stopped and could not be re-established", "code": "API_ERROR", "hints": [...]}` — so a consumer that parses per line sees the failure as data rather than as a broken document.
+- **With `--follow`, `--json` output is one JSON object per line, not one JSON document.** Parse it line by line as it arrives; there is no closing bracket, because a live tail never ends normally. Nothing goes to stderr. If the stream is lost, the error arrives as one more object on its own line and the process exits 1:
+
+  ```json
+  {"error":"The realtime log stream stopped and could not be re-established","code":"API_ERROR","hints":[{"message":"Start a new live tail","command":"base44 logs --follow"},{"message":"Or read recent logs without streaming","command":"base44 logs"}]}
+  ```
+
+  Note `hints` holds **objects**, each with `message` and `command` — not strings. A consumer that parses per line sees the failure as data rather than as a broken document.
 
 ## Following logs live
 
