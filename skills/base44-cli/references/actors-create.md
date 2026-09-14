@@ -4,6 +4,8 @@ Actors are Base44's realtime primitive: **stateful server rooms over WebSockets*
 
 Actors are defined locally in your project and deployed to the Base44 backend, just like backend functions.
 
+Actors use direct WebSocket connections to Cloudflare. The SDK handles connection-token minting automatically; actors receive verified connection identity and can use `this.client.asServiceRole` for validated, room-owned work.
+
 ## When to Use an Actor
 
 | Use an actor | Use something else |
@@ -12,7 +14,7 @@ Actors are defined locally in your project and deployed to the Base44 backend, j
 | Collaborative boards, docs, whiteboards | A page that just lists records live → `base44.entities.Thing.subscribe()` |
 | Presence and live cursors | Async or request/response work → backend functions |
 | In-room chat | Scheduled/background jobs → backend functions + automations |
-| Live auctions, countdowns, shared timers | Anything that must attribute writes to a signed-in user → backend functions |
+| Live auctions, countdowns, shared timers | Work requiring app secrets or private data sources → backend functions |
 
 ## Actor Directory
 
@@ -180,16 +182,18 @@ Never override `onStart` or `onAlarm` — those are platform plumbing.
 | `this.schedule(key, at)` | Arm a one-shot wake at `at` (epoch ms or `Date`) |
 | `this.cancelSchedule(key)` | Cancel a pending wake |
 | `this.client` | An anonymous Base44 SDK client (see [Calling Base44](#calling-base44-from-an-actor)) |
+| `this.client.asServiceRole` | Admin-level entity access, function calls, and integrations for validated, room-owned work |
 
 ### The Connection Object (`conn`)
 
 | Member | Description |
 |--------|-------------|
 | `conn.id` | Per-connection identity, chosen by the client and reused across reconnects |
+| `conn.identity` | Platform-verified principal: `{ type: "authenticated", userId }` or `{ type: "anonymous", anonymousId }`. Preserved across hibernation |
 | `conn.send(data)` | Send a message to this one client |
 | `conn.reject(code, reason)` | Refuse the connection (closes the socket; **`return` immediately after**) |
 
-`conn.id` is client-held. It's the right key for seats, roles, and reconnect reclamation — it is **never** trusted attribution. Durable per-user results (leaderboards, rewards, saved documents) must go through a signed-in path outside the actor.
+Keep `conn.id` internal for seats and reconnect bookkeeping — never broadcast it or use it as proof of authorship or permissions. Publish a separate server-assigned seat or participant id for presence. For user attribution, check `conn.identity?.type === "authenticated"` and use `conn.identity.userId`; an anonymous visitor is not a signed-in user. Bind user-owned state and permissions to that verified identity, even when a reconnect reuses the same `conn.id`.
 
 ## State, Hibernation, and Reconnects
 
@@ -269,42 +273,37 @@ Messages are JSON in both directions. `type` values beginning with `__` are rese
 
 When a session produces something that must outlive the room (the finished drawing, a chat transcript, an exported document):
 
-1. The **actor** broadcasts the authoritative result *and* writes it to `this.storage`, then re-`conn.send`s it to (re)connecting clients — a frontend cannot read actor storage, so that resend is the retry path.
-2. The **frontend** persists it to entities. It has the signed-in user identity; the actor does not.
+1. The **actor** writes its validated result to `this.storage` and persists the canonical entity record through `this.client.asServiceRole`. For user attribution, store an explicit field from authenticated `conn.identity.userId`.
+2. The actor broadcasts the result and re-`conn.send`s it to (re)connecting clients — a frontend cannot read actor storage. The frontend displays this result and writes only user-owned records, not the room's canonical result.
 
-Delivery is at-least-once, so the persistence step must be **idempotent**: key the record by the room's instance id and check for an existing record before creating one. Readers treat the earliest record per key as canonical.
+Make entity persistence **idempotent** using a stable key such as the room's instance id. Keep a pending result in actor storage until the entity write succeeds, and retry failed writes with a scheduled wake so persistence does not depend on a connected browser. Restrict canonical-result entity writes to the server; do not grant anonymous or frontend clients write access to make persistence work.
 
 ## Calling Base44 from an Actor
 
-Every actor has `this.client`, a ready-made `@base44/sdk` client acting as the app's **anonymous** role:
+Every actor has `this.client`, a ready-made `@base44/sdk` client whose ordinary calls use the app's **anonymous** role. Backend functions can be invoked anonymously, so use `this.client.functions.invoke(...)`. Actors also have `this.client.asServiceRole` for admin-level entity access and integrations:
 
 ```javascript
-const rows = await this.client.entities.Room.filter({ status: "open" });
+const rows = await this.client.asServiceRole.entities.Room.filter({ status: "open" });
 
 const res = await this.client.functions.invoke("settle_auction", { roomId: this.instanceId });
 const settled = res.data;   // invoke() returns the raw response; the JSON is on .data
 ```
 
-- Entity access is RLS-gated exactly like a logged-out visitor.
-- It always operates on production data.
-- It **cannot** act as a signed-in user — never route a user-attributed write through it.
+- Ordinary entity access is RLS-gated like a logged-out visitor; `asServiceRole` bypasses RLS. Validate client input and permissions before privileged calls, and use them for work the room owns: canonical results, registry rows, or private configuration.
+- Both clients use production entity data and call the function version pinned to the actor's deployment.
+- Neither client impersonates a signed-in user. Attribute service-role records with an explicit field from authenticated `conn.identity.userId`; never take that field from the message payload.
+- The runtime exchanges and caches the service token automatically. The first privileged call after a wake incurs an exchange, so keep privileged calls on persistence paths rather than on every message or tick.
 
 ## Using Secrets
 
-Secrets work the same as in backend functions:
+Actors **do not receive app secrets or private data-source bindings**. Put secret-dependent operations in a backend function that reads the secret and performs the operation there. For example, define `fetch_market_price` to use `MARKET_API_KEY` and return the price, then call it from the actor:
 
 ```javascript
-import { Actor } from "base44:runtime/actors";
-import { secrets } from "base44:runtime";
-
-export default class PriceRoom extends Actor {
-  async handleStart() {
-    this.apiKey = secrets.get("MARKET_API_KEY");
-  }
-}
+const res = await this.client.functions.invoke("fetch_market_price", { symbol: "ACME" });
+const price = res.data;   // the function returns the result, never the secret
 ```
 
-`BASE44_API_URL` and `BASE44_FUNCTIONS_VERSION` are reserved — the platform injects them for `this.client`, so a secret of either name is not readable from an actor. Pick another name.
+The platform provisions `ACTOR_TOKEN_SECRET` automatically on the first actor deploy. Do not ask the user to create it or overwrite it during setup: changing it rotates the actors' keys. It is not exposed to actor or function code. Actor runtime configuration and derived signing keys are platform-managed.
 
 ## Multi-File Actors
 

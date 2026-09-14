@@ -89,7 +89,8 @@ export default class ChatRoom extends Actor {
   }
   async handleMessage(conn, msg) {
     if (msg?.type !== "message" || typeof msg.text !== "string") return;   // validate everything
-    const entry = { from: conn.id, text: msg.text.slice(0, 2000) };
+    const authorUserId = conn.identity?.type === "authenticated" ? conn.identity.userId : null;
+    const entry = { authorUserId, text: msg.text.slice(0, 2000) };
     this.history = [...this.history, entry].slice(-100);
     await this.storage.put("history", this.history);
     this.broadcast({ type: "message", ...entry });            // the whole room
@@ -104,9 +105,12 @@ Conventions:
 - Handlers: `handleConnect(conn)` / `handleMessage(conn, msg)` / `handleClose(conn)`, plus optional `handleStart()` and `handleWake(key)`. For a room that must advance on its own (game loop, visible countdown), override `shouldTick()` and the platform calls `handleTick()` every `tickIntervalMs` (default 100) while it returns true. Never override `onStart`/`onAlarm`.
 - Persist anything you can't lose in `this.storage` and rehydrate it in `handleStart()` — instance fields reset when the room hibernates.
 - `this.broadcast(...)` for room-wide state; `conn.send(...)` for events about one client.
-- `this.client` is an **anonymous** Base44 client (RLS-gated) for server-side reads and function calls.
+- Actors use direct connections; the SDK handles token minting and connection auth. `conn.identity` holds the verified authenticated `userId` or anonymous `anonymousId` and survives hibernation. Use authenticated `userId` for attribution and permissions; guest chat messages above use `authorUserId: null`.
+- Keep client-chosen `conn.id` internal for reconnect bookkeeping. Use separate server-assigned participant ids for public presence; never broadcast reconnect ids or treat them as proof of authorship or permissions.
+- `this.client` uses the **anonymous** role (RLS-gated). `this.client.asServiceRole` provides admin-level entity access, function calls, and integrations for validated, room-owned work. Neither impersonates a user: attribute records with an explicit field from authenticated `conn.identity.userId`.
 - The actor is authoritative: clients send inputs, the actor validates and broadcasts. Never trust client-computed outcomes.
-- Durable results (the finished drawing, a chat transcript): the actor broadcasts the result **and** writes it to `this.storage`, then re-`conn.send`s it to (re)connecting clients — the frontend cannot read actor storage, so that resend is the retry path. The **frontend** persists it to entities (it has the user identity). Delivery is at-least-once, so make that write idempotent: key the record by the room's instance id and check before creating.
+- Durable results (the finished drawing, a chat transcript): the **actor** stores the validated result in `this.storage` and persists the canonical entity record via `this.client.asServiceRole`, with idempotent writes keyed by the room's instance id. Retain pending writes and retry with a scheduled wake if needed. Broadcast and re-send the result to (re)connecting clients for display; the frontend writes only user-owned records. Keep canonical-result entity writes restricted to the server.
+- Actors receive no app secrets or private data-source bindings. Put operations requiring them in a backend function and call it from the actor. `ACTOR_TOKEN_SECRET` is automatically provisioned; do not create or overwrite it during setup, since changing it rotates the actors' keys.
 - Automations are not supported on an actor.
 
 For the full authoring reference (naming, lifecycle, storage/hibernation, scheduled wakes, rooms and discovery), see the `base44-cli` skill's [`actors-create.md`](../base44-cli/references/actors-create.md) — but **ignore its "Deploying Actors" / CLI sections**, which assume a local project.

@@ -145,9 +145,11 @@ The instance id is what separates one room from another.
 
 ## Authentication
 
-The signed-in user's existing access token rides the connection automatically; nothing to mint or pass. Anonymous (logged-out) connections are allowed when the app permits them, and a login or logout is picked up on the next reconnect.
+Actors use direct connections. The SDK authenticates a connection-token request using the user's existing session, then opens the WebSocket directly to Cloudflare with the returned credentials. You do not mint or pass tokens yourself. Anonymous (logged-out) connections are allowed when the app permits them, and a login or logout is picked up on the next reconnect.
 
-`conn.id` on the server is chosen by the client, so it identifies a *connection*, not a person. It is the right key for seats and reconnects and the wrong key for anything that must be attributed to a user — do those writes through a backend function.
+On the actor, `conn.identity` is the platform-verified principal: `{ type: "authenticated", userId }` or `{ type: "anonymous", anonymousId }`. It survives hibernation. For user attribution and permissions, check for an authenticated identity and use `userId` — never a user id supplied in a message. An anonymous visitor is not a signed-in user.
+
+`conn.id` is client-chosen reconnect bookkeeping. Keep it out of broadcasts, public records, and author fields; use a separate server-assigned participant id for presence. A returning connection id alone must not grant access to another user's state or permissions.
 
 ## Writing an Actor
 
@@ -164,24 +166,27 @@ export default class ChatRoom extends Actor {
 
   handleConnect(conn) {
     conn.send({ type: "history", messages: this.history });   // just this client
-    this.broadcast({ type: "joined", id: conn.id });          // the whole room
+    this.broadcast({ type: "joined" });                     // the whole room
   }
 
   async handleMessage(conn, msg) {
     if (msg?.type !== "message" || typeof msg.text !== "string") return;
-    const entry = { from: conn.id, text: msg.text.slice(0, 2000) };
+    const authorUserId = conn.identity?.type === "authenticated" ? conn.identity.userId : null;
+    const entry = { authorUserId, text: msg.text.slice(0, 2000) };
     this.history = [...this.history, entry].slice(-100);
     await this.storage.put("history", this.history);          // survives hibernation
     this.broadcast({ type: "message", ...entry });
   }
 
   handleClose(conn) {
-    this.broadcast({ type: "left", id: conn.id });
+    this.broadcast({ type: "left" });
   }
 }
 ```
 
-Key rules: instance fields are lost when the room hibernates (persist in `this.storage`, rehydrate in `handleStart`), `this.broadcast()` is for room-wide state while `conn.send()` is for one client, and `this.client` is an **anonymous** Base44 client for server-side reads/calls.
+This example attributes signed-in authors with verified `userId`; guest messages have `authorUserId: null`. Connection IDs never enter the chat history or presence messages.
+
+Instance fields are lost when the room hibernates: persist in `this.storage` and rehydrate in `handleStart`. `this.broadcast()` sends room-wide state; `conn.send()` sends to one client. `this.client` uses the **anonymous** role, while `this.client.asServiceRole` provides admin-level access for validated, room-owned work. Persist canonical room results from the actor through `asServiceRole`, using an explicit field from authenticated `conn.identity.userId` when attribution is needed. Keep frontend writes limited to user-owned records.
 
 For the complete authoring contract — naming, lifecycle handlers, storage and hibernation, scheduled wakes, rooms and discovery, deployment — see [actors-create.md](../../base44-cli/references/actors-create.md) in base44-cli.
 
@@ -197,16 +202,18 @@ For the complete authoring contract — naming, lifecycle handlers, storage and 
 
 **How to get typed actor names:** the Base44 CLI generates an augmentation of `ActorNameRegistry` from your project (`base44 types generate`). For how to run it, use the **base44-cli** skill.
 
-**Message types** are hand-authored in `ActorRegistry`, so the actor and the client share one source of truth:
+**Message types** are hand-authored in `ActorRegistry`, so the actor and the client share one source of truth. Put this in a declaration file included by your TypeScript project (e.g. `base44/.types/actor-messages.d.ts`). Keep the top-level import: it makes this a module augmentation instead of shadowing the SDK's exports.
 
 ```typescript
+import "@base44/sdk";
+
 declare module "@base44/sdk" {
   interface ActorRegistry {
     ChatRoom: {
       toClient:
-        | { type: "history"; messages: { from: string; text: string }[] }
-        | { type: "message"; from: string; text: string }
-        | { type: "joined" | "left"; id: string };
+        | { type: "history"; messages: { authorUserId: string | null; text: string }[] }
+        | { type: "message"; authorUserId: string | null; text: string }
+        | { type: "joined" | "left" };
       toServer: { type: "message"; text: string };
     };
   }
@@ -300,9 +307,15 @@ interface ActorClient<N extends string = string> {
 Server-side types (`Actor`, `Conn`, `Storage`) come from the actor base class:
 
 ```typescript
+type ActorConnectionIdentity =
+  | Readonly<{ type: "authenticated"; userId: string }>
+  | Readonly<{ type: "anonymous"; anonymousId: string }>;
+
 interface Conn<Send = unknown> {
   /** Unique per-connection id (one per socket/tab). */
   id: string;
+  /** Platform-verified principal, preserved across hibernation. */
+  identity?: ActorConnectionIdentity;
   send(data: Send): void;
   reject(code: number, reason: string): void;
 }
@@ -329,7 +342,7 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   protected getConnections(): Conn<Outgoing>[];
   protected get instanceId(): string;
   protected get storage(): Storage;
-  /** Anonymous Base44 client scoped to this actor — RLS-gated, production data. */
+  /** Anonymous client with an asServiceRole client for validated, room-owned work. */
   protected get client(): Base44Client;
   /** Override to opt into the managed ticker; must be cheap and side-effect free. */
   shouldTick?(): boolean;

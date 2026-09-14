@@ -345,6 +345,8 @@ Workflows are the automation system (cron schedules, entity triggers, connector 
 
 Actors are stateful realtime server rooms over WebSockets — one live instance per room id, shared by every client connected to that id. Use them for multiplayer sessions, collaborative boards, presence and live cursors, in-room chat, and live auctions.
 
+Actors use direct connections with SDK-managed authentication. Use verified `conn.identity` for user attribution and `this.client.asServiceRole` to persist validated room results. Actors receive no app secrets; put secret-dependent operations in a backend function. See [actors-create.md](references/actors-create.md) for the authoring contract.
+
 | Action / Command | Description | Reference |
 | ---------------- | ----------- | --------- |
 | Create Actors | Define actors in `base44/actors` | [actors-create.md](references/actors-create.md) |

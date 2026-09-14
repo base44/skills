@@ -326,7 +326,7 @@ export default class ChatRoom extends Actor {
 
 ### Service Role Access
 
-Use `asServiceRole` in backend functions for admin-level operations:
+Use `asServiceRole` in backend functions for admin-level operations. Actors expose `this.client.asServiceRole` for validated, room-owned work such as persisting canonical results; use verified `conn.identity.userId` from an authenticated connection for explicit user attribution. See [actors.md](references/actors.md).
 
 ```javascript
 // User mode - respects permissions
