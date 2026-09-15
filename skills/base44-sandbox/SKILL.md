@@ -1,6 +1,6 @@
 ---
 name: base44-sandbox
-description: "Develop a Base44 app remotely inside Base44's cloud sandbox using your own agent — no local checkout and no deploy/push commands. The implementation is remote: writing a resource file into the sandbox is what ships it (backend functions, entities, and agents all auto-sync from the file you write), and OAuth connectors are set up against the remote app via MCP tools or the projectless `base44 connectors` CLI. This skill is the place for learning what you can author in the sandbox, how backend functions, entities, and agents are structured, and how to connect a connector without a local filesystem. Triggers on 'develop my Base44 app remotely', 'no local files', 'cloud sandbox', 'create an entity/agent remotely', 'connect a connector remotely', 'bring my own agent', or any work editing a Base44 app inside a sandbox."
+description: "Develop a Base44 app remotely inside Base44's cloud sandbox using your own agent — no local checkout and no deploy/push commands. The implementation is remote: writing a resource file into the sandbox is what ships it (backend functions, realtime actors, entities, and agents all auto-sync from the file you write), and OAuth connectors are set up against the remote app via MCP tools or the projectless `base44 connectors` CLI. This skill is the place for learning what you can author in the sandbox, how backend functions, actors, entities, and agents are structured, and how to connect a connector without a local filesystem. Triggers on 'develop my Base44 app remotely', 'no local files', 'cloud sandbox', 'create an entity/agent remotely', 'add realtime/multiplayer/presence remotely', 'connect a connector remotely', 'bring my own agent', or any work editing a Base44 app inside a sandbox."
 ---
 
 # Base44 in the Cloud Sandbox
@@ -13,9 +13,9 @@ For **how to connect** to the sandbox (MCP endpoint or the `base44 sandbox` CLI,
 
 ## ⚡ The mental model: writing the file *is* the deploy
 
-You are working on a **remote** app, not a local checkout. The project-level CLI workflow does **not** apply — never run `base44 deploy`, `base44 functions deploy`, `base44 ... push`, `base44 create`, or `base44 scaffold`. They assume a local project and a manual deploy step that does not exist here.
+You are working on a **remote** app, not a local checkout. The project-level CLI workflow does **not** apply — never run `base44 deploy`, `base44 functions deploy`, `base44 actors deploy`, `base44 actors delete`, `base44 ... push`, `base44 create`, or `base44 scaffold`. They assume a local project and a manual deploy step that does not exist here.
 
-Instead: **as soon as you write a resource file into the sandbox — a backend function, an entity, or an agent — the platform deploys/syncs it from there.** Your write is auto-committed (~5s debounce) and goes live. You do not run, and must not wait for, any `deploy` / `push` command.
+Instead: **as soon as you write a resource file into the sandbox — a backend function, an actor, an entity, or an agent — the platform deploys/syncs it from there.** Your write is auto-committed (~5s debounce) and goes live. You do not run, and must not wait for, any `deploy` / `push` command.
 
 **One exception — connectors.** OAuth connectors aren't authored as files; they're set up against the remote app by its id, either with the MCP connector tools or with the dedicated, projectless `base44 connectors` commands (which take `--app-id` and need no local project). See [Connectors](#connectors-oauth-integrations) below.
 
@@ -26,6 +26,7 @@ You *may* still use `run_command` (`sandbox run` in the CLI) for ordinary checks
 | Resource | Status in the sandbox |
 |----------|-----------------------|
 | **Backend functions** (`base44/functions/`) | ✅ Supported — write the files; they deploy from the sandbox. |
+| **Actors** (`base44/actors/`) | ✅ Supported — write `entry.ts`; the actor deploys from the sandbox. Deleting the entry file tears it down. |
 | **Entities** (`base44/entities/`) | ✅ Supported — write the `.jsonc` schema file; it auto-syncs. No `entities push`. |
 | **Agents** (`base44/agents/`) | ✅ Supported — write the `.jsonc` config file; it auto-syncs. No `agents push`. |
 | **Frontend code** (`src/…`) | ✅ Supported — edit normally; HMR/preview reflects it. Use the **`base44-sdk`** skill for SDK API usage. |
@@ -61,6 +62,60 @@ Conventions:
 That's enough to author functions correctly. For deeper detail and more examples (service role, secrets, common mistakes), see the `base44-cli` skill's reference: [`functions-create.md`](../base44-cli/references/functions-create.md) — but **ignore its "Deploying Functions" / CLI sections** and its **`function.jsonc`** guidance, which assume a local project and do not apply in the sandbox (here you only write `entry.ts`).
 
 > **Calling the function from the frontend:** `base44.functions.invoke(name, data)` returns the **raw axios response** — your function's JSON is on **`.data`** (`const result = res.data`), not the top-level object, and it **throws on non-2xx** (error body at `err.response.data`). See the `base44-sdk` skill's [`functions.md`](../base44-sdk/references/functions.md) for details.
+
+## Actors (realtime)
+
+Actors are stateful realtime server rooms over WebSockets — one live instance per room id, shared by everyone connected to that id. Reach for one when users interact **live in one shared session**: multiplayer, collaborative boards/docs, presence and live cursors, in-room chat, live auctions. A page that merely lists records live does not need an actor (`base44.entities.Thing.subscribe()` covers that).
+
+One folder per actor in `base44/actors/`, containing `entry.ts`. Just write the file — it deploys; **don't run `base44 actors deploy` or `deploy`.** Write **plain JavaScript**, exactly like a backend function — no type annotations; the file is `.ts` only because that is the entry contract. There is no test tool for an actor (it serves WebSockets, not requests) — verify it in the preview.
+
+```
+base44/actors/
+  ChatRoom/
+    entry.ts
+```
+
+```javascript
+// base44/actors/ChatRoom/entry.ts
+import { Actor } from "base44:runtime/actors";   // the only import that resolves the base class
+
+export default class ChatRoom extends Actor {
+  async handleStart() {
+    // Runs on every wake — instance fields are lost when the room hibernates.
+    this.history = (await this.storage.get("history")) ?? [];
+  }
+  handleConnect(conn) {
+    conn.send({ type: "history", messages: this.history });   // this client only
+  }
+  async handleMessage(conn, msg) {
+    if (msg?.type !== "message" || typeof msg.text !== "string") return;   // validate everything
+    const authorUserId = conn.identity?.type === "authenticated" ? conn.identity.userId : null;
+    const entry = { authorUserId, text: msg.text.slice(0, 2000) };
+    this.history = [...this.history, entry].slice(-100);
+    await this.storage.put("history", this.history);
+    this.broadcast({ type: "message", ...entry });            // the whole room
+  }
+  handleClose(conn) {}
+}
+```
+
+Conventions:
+- **PascalCase** folder name — it becomes a JavaScript class binding, so `[A-Za-z_][A-Za-z0-9_]*` only (no `-`, `.`, `/`), no JS reserved words, and **no nested folders**.
+- The entry must **default-export** a class extending `Actor`; the class name itself is cosmetic.
+- Handlers: `handleConnect(conn)` / `handleMessage(conn, msg)` / `handleClose(conn)`, plus optional `handleStart()` and `handleWake(key)`. For a room that must advance on its own (game loop, visible countdown), override `shouldTick()` and the platform calls `handleTick()` every `tickIntervalMs` (default 100) while it returns true. Never override `onStart`/`onAlarm`.
+- Persist anything you can't lose in `this.storage` and rehydrate it in `handleStart()` — instance fields reset when the room hibernates.
+- `this.broadcast(...)` for room-wide state; `conn.send(...)` for events about one client.
+- Actors use direct connections; the SDK handles token minting and connection auth. `conn.identity` holds the verified authenticated `userId` or anonymous `anonymousId` and survives hibernation. Use authenticated `userId` for attribution and permissions; guest chat messages above use `authorUserId: null`.
+- Keep client-chosen `conn.id` internal for reconnect bookkeeping. Use separate server-assigned participant ids for public presence; never broadcast reconnect ids or treat them as proof of authorship or permissions.
+- `this.client` uses the **anonymous** role (RLS-gated). `this.client.asServiceRole` provides admin-level entity access, function calls, and integrations for validated, room-owned work. Neither impersonates a user: attribute records with an explicit field from authenticated `conn.identity.userId`.
+- The actor is authoritative: clients send inputs, the actor validates and broadcasts. Never trust client-computed outcomes.
+- Durable results (the finished drawing, a chat transcript): the **actor** stores the validated result in `this.storage` and persists the canonical entity record via `this.client.asServiceRole`, with idempotent writes keyed by the room's instance id. Retain pending writes and retry with a scheduled wake if needed. Broadcast and re-send the result to (re)connecting clients for display; the frontend writes only user-owned records. Keep canonical-result entity writes restricted to the server.
+- Actors receive no app secrets or private data-source bindings. Put operations requiring them in a backend function and call it from the actor. `ACTOR_TOKEN_SECRET` is automatically provisioned; do not create or overwrite it during setup, since changing it rotates the actors' keys.
+- Automations are not supported on an actor.
+
+For the full authoring reference (naming, lifecycle, storage/hibernation, scheduled wakes, rooms and discovery), see the `base44-cli` skill's [`actors-create.md`](../base44-cli/references/actors-create.md) — but **ignore its "Deploying Actors" / CLI sections**, which assume a local project.
+
+> **Connecting from the frontend:** `base44.actors.ChatRoom(roomId).connect()` returns a connection with `.subscribe(cb)`, `.send(data)`, and `.close()`. Connect inside a `useEffect` and clean up both. See the `base44-sdk` skill's [`actors.md`](../base44-sdk/references/actors.md).
 
 ## Entities
 
@@ -194,7 +249,7 @@ https://app.base44.com/api/sandbox/<APP_ID>/local-agent/readme.md
 ## Workflow in the sandbox
 
 1. **Orient** — `list_directory` / `read_file` / `grep` (`sandbox ls` / `sandbox read` / `sandbox grep` in the CLI) to understand the app before changing anything.
-2. **Author** — create or edit resource files (backend functions, entities, agents) and frontend code following the conventions above; set up connectors via the connect flow.
+2. **Author** — create or edit resource files (backend functions, actors, entities, agents) and frontend code following the conventions above; set up connectors via the connect flow.
 3. **Verify** — optionally `run_command` (`sandbox run`) `npm run build` / `npx tsc --noEmit`, and use `get_app_preview_url` to eyeball changes (see `base44-remote-dev`).
 4. **Let it ship** — do **nothing** to deploy. Writing the file is the deploy; the auto-commit (~5s) persists and ships it. Pause a moment after your last edit before disconnecting so the commit lands.
 5. **(Optional) Checkpoint** — mark a known-good restore point the user can roll back to with `create_checkpoint` (`base44 sandbox checkpoint --name "..."` in the CLI). It flushes pending changes first, so the checkpoint captures your latest code. See `base44-remote-dev` for details.
