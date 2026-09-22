@@ -27,6 +27,14 @@ jobs:
       github.event.action == 'labeled' &&
       github.event.label.name == 'auto-skill-update'
     steps:
+      - name: Checkout for wix gateway proxy
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          sparse-checkout: .github
+
+      - name: Wix gateway proxy (mandatory)
+        uses: ./.github/actions/wix-gateway-proxy
+
       - name: Notify Slack
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
