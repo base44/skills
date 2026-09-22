@@ -142,14 +142,16 @@ Summarize the structure before editing.
   does not persist across calls, so use the `cwd` parameter or chain commands
   (`cd sub && cmd`). Timeout defaults to 120s (max 600s); output is capped at
   ~1 MB.
-- **`create_checkpoint`** (`sandbox checkpoint` in the CLI) — save a named
-  restore point the user can later roll back to. Takes an optional `name`
-  (message/title; auto-generated if omitted). Any pending changes are **flushed
+- **`create_checkpoint`** (`sandbox checkpoint` in the CLI) — save a restore
+  point in the builder's version history. Takes an optional `name`
+  (message/title; auto-generated if omitted — a short summary of what changed
+  helps the user pick the right version). Any pending changes are **flushed
   and committed first** so the checkpoint anchors to your latest code; it then
-  returns the checkpoint id, name, and git commit hash. Use it to mark a
-  known-good state before or after a chunk of edits. (If a recent auto-commit
-  can't be confirmed durable yet, it refuses with the retryable
-  `COMMIT_FLUSH_PENDING` rather than checkpoint stale state — retry shortly.)
+  returns the checkpoint id, name, and git commit hash. **Call it when you
+  finish a unit of work and always before you stop** — see Section 6 for why
+  uncheckpointed work can be rolled back. (If a recent auto-commit can't be
+  confirmed durable yet, it refuses with the retryable `COMMIT_FLUSH_PENDING`
+  rather than checkpoint stale state — retry shortly.)
 
 Example:
 
@@ -206,6 +208,13 @@ Practical implications:
 
 - There's a small loss window (~5s) — don't kill the session immediately after
   the last edit; give it a moment to commit.
+- **A commit is not a checkpoint.** Only checkpoints appear in the builder's
+  version history. When the user clicks **Restore** on an earlier version or
+  **Revert this** on a builder message, the app's code rolls back to that
+  checkpoint's commit, and everything written after the last checkpoint is
+  discarded with no restore point to bring it back. Call `create_checkpoint`
+  (`sandbox checkpoint`) when you finish a unit of work and always before you
+  stop, so the user's next Restore lands on your work instead of erasing it.
 - Edits to entities, agents, workflows, backend functions, and page routing are
   synced into Base44 automatically after the commit. Plain page/component/CSS
   edits live in git and need nothing extra.
@@ -265,9 +274,11 @@ Messages are written so the agent can self-correct — read them and adjust.
   it usually names the exact file and line.
 - **Let it commit.** Pause a few seconds after your final edit so the auto-commit
   lands before you disconnect or publish.
-- **Checkpoint known-good states.** Use `create_checkpoint` (`sandbox checkpoint`)
-  to mark a restore point before or after a risky chunk of edits — it flushes
-  pending changes first, so the user can always roll back to that point.
+- **Checkpoint your work — every time.** Call `create_checkpoint` (`sandbox checkpoint`)
+  when you finish a unit of work and before you stop, plus one before a risky
+  chunk of edits. It flushes pending changes first. Without it your edits are
+  committed but invisible to version history, and the next Restore or Revert
+  in the builder discards them (Section 6).
 - **One agent at a time.** The feature is designed for a single external agent
   per app; don't run parallel sessions against the same app.
 
@@ -300,7 +311,10 @@ no `config.jsonc` is required.
 npx base44 sandbox read --app-id <APP_ID> src/App.jsx
 ```
 
-`base44 sandbox checkpoint` takes an optional `--name` (message/title) and saves a restore point:
+`base44 sandbox checkpoint` takes an optional `--name` (message/title) and saves a restore point.
+Run it when you finish a unit of work and before you stop — CLI writes are committed but not
+checkpointed, and a Restore or Revert in the builder discards everything after the last checkpoint
+(Section 6):
 
 ```bash
 npx base44 sandbox checkpoint --app-id <APP_ID> --name "before refactor"
