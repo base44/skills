@@ -222,7 +222,7 @@ Operations succeed or fail based on these rules - no partial results.
 
 RLS and FLS are configured in entity schema files (`base44/entities/*.jsonc`). See [entities-create.md](../../base44-cli/references/entities-create.md#row-level-security-rls) for configuration details.
 
-**Note:** `asServiceRole` sets the user's role to `"admin"` but does NOT bypass RLS. Your RLS rules must include admin access (e.g., `{ "user_condition": { "role": "admin" } }`) for service role operations to succeed.
+**Note:** `asServiceRole` bypasses entity access rules and field-level security entirely, regardless of how the entity is configured. Use it only for trusted backend logic - if your function needs access checks, you're responsible for enforcing them yourself.
 
 ## Type Definitions
 
