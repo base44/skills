@@ -31,6 +31,10 @@ Every call is metered against your app's credit quota, the same quota
 | **Gateway videos** | Model choice, image/video/audio references, first/last frames, or anything outside the `GenerateVideo` schema. It is an asynchronous job: create, then retrieve later. |
 | **AI decisions** (gateway `typesafe`) | Classify, score, or route a record against named criteria and get probabilities back — instead of `InvokeLLM` with a JSON schema. |
 
+Apps that restrict Core integrations (the default for new apps) also block frontend calls to
+`GenerateImage` and `GenerateVideo`; call them from a backend function as
+`base44.asServiceRole.integrations.Core.*`.
+
 ## Methods
 
 | Method | Signature | Description |
@@ -211,7 +215,7 @@ export default async function (req) {
   if (action === "create") {
     // The function picks the model and duration; the browser only sends the prompt.
     const job = await videos.create(
-      { model: "seedance_2_fast", prompt, seconds: 4 },
+      { model: "veo_3_1_lite", prompt, seconds: 4, generate_audio: false },
       { maxRetries: 0 },
     );
     return Response.json(job, { status: 202 });
@@ -244,11 +248,15 @@ if (video.status === "failed") throw new Error(video.error?.message || "Video ge
 - **Statuses:** `queued`, `in_progress`, `completed`, `failed`. Treat `queued`/`in_progress`
   or hitting your polling limit as **unfinished, not failed**. For background flows,
   persist `video.id` (e.g. in an entity) and retrieve it in a later run.
+- **Cost differs a lot by model.** A 4-second clip without audio ranged from 48 credits
+  (`veo_3_1_lite`) to over 350 (`kling_3`) when this was written. Preview with `dry_run`
+  before choosing a model, and default to `veo_3_1_lite` unless the app needs another.
 - **Models:** there is **no `automatic`** — pass a specific model:
   `veo_3_1_lite`, `veo_3_1_fast`, `seedance_2`, `seedance_2_5`, `seedance_2_fast`,
   `seedance_2_mini`, `kling_3`, `minimax_h3`, `minimax_h3_max`, `grok_imagine_video`,
   `grok_imagine_video_1_5`. Supported `seconds`, `resolution`, `aspect_ratio`, and
-  references differ per model; unsupported values return **400**, and an unknown model
+  references differ per model, and some models reject `generate_audio`; unsupported values
+  return **400**, and an unknown model
   (including `automatic`) returns **404**.
 - **Request fields:** `model`, `prompt`, `seconds`, `aspect_ratio`, `resolution`,
   `generate_audio`, `seed`, `dry_run`, and either `frame_images` (up to 2, each
