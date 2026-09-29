@@ -70,16 +70,18 @@ CreateFileSignedUrl({file_uri, expires_in?}) → Promise<{signed_url}>
 ExtractDataFromUploadedFile({file_url, json_schema}) → Promise<object>
 ```
 
-**AI surface:** single call, no tools → `InvokeLLM`; chat product for users → `base44.agents`; task-with-tools agent (code) → `aiGateway` (see below).
+**AI surface:** single call, no tools → `InvokeLLM`; chat product for users → `base44.agents`; task-with-tools agent (code) → `aiGateway`; one default image → `GenerateImage`; multiple/configured/edited images, or any video → `aiGateway`; classify/score/route → `aiGateway` Jev (see below).
 
 ### AI Gateway (`base44.aiGateway.*`)
 
 ```
-connection() → { baseURL, token }   // feed to any OpenAI-compatible SDK (Vercel AI SDK, Mastra, OpenAI); backend only
-asServiceRole.aiGateway.connection() → { baseURL, token }
+connection({ provider?: "openai" | "typesafe" }) → { baseURL, token, headers }   // backend only; always pass headers
+asServiceRole.aiGateway.connection(options?) → { baseURL, token, headers }
 ```
 
-Build **code agents** (agent loops with tools) on Base44's AI gateway. Model `automatic` by default; no streaming. See [ai-gateway.md](ai-gateway.md).
+- `openai` (default): chat completions for **code agents** (model `automatic` by default), `images.generate` / `images.edit`, and async `videos.create` / `videos.retrieve` (specific model required).
+- `typesafe`: `experimental_evaluate` with `typesafe.evaluationModel("jev")` for classify/score/route decisions.
+- Set `maxRetries: 0` on image, video, and evaluation calls. See [ai-gateway.md](ai-gateway.md).
 
 ### Custom Integrations (`base44.integrations.custom.*`)
 
