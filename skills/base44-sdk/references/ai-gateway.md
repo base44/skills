@@ -1,9 +1,9 @@
 # AI Gateway Module
 
-Call Base44's managed AI models from your own backend code via `base44.aiGateway`.
+Call Base44's managed AI models from your own backend code via `base44.asServiceRole.aiGateway`.
 
-> **Note:** Intended for backend functions. It uses your app's models, billing, and
-> credit quota — there is no API key to manage.
+> **Note:** Backend functions only. It uses your app's models, billing, and credit
+> quota — there is no API key to manage.
 
 ## Overview
 
@@ -25,9 +25,10 @@ Every call is metered against your app's credit quota, the same quota
 | **`integrations.Core.InvokeLLM`** | A **single** call, no tools. Don't chain it to simulate an agent loop. See [integrations.md](integrations.md). |
 | **In-app agents** (`base44.agents`) | **Managed and conversational** — app users talk to it and the platform runs the agent loop for you. See [base44-agents.md](base44-agents.md). |
 | **Code agents** (gateway chat) | **Programmable, not a conversation** — a backend function where **your** code owns the loop, tools, model, and result; triggered by an entity event / schedule / webhook, not a chat. |
-| **`integrations.Core.GenerateImage`** | One image from a prompt, default settings. |
+| **`integrations.Core.GenerateImage`** | One image from a prompt (optionally with reference images), default settings. See [integrations.md](integrations.md). |
 | **Gateway images** | Several images per request, a specific model, aspect ratio or resolution, reference images, or editing an existing image. |
-| **Gateway videos** | Any video generation. It is an asynchronous job: create, then retrieve later. |
+| **`integrations.Core.GenerateVideo`** | Straightforward text-to-video: `{ prompt, duration?: 4 \| 6 \| 8, aspect_ratio?: "16:9" \| "9:16", generate_audio? }` → `{ url }`. Waits for the result (30–60 s). |
+| **Gateway videos** | Model choice, image/video/audio references, first/last frames, or anything outside the `GenerateVideo` schema. It is an asynchronous job: create, then retrieve later. |
 | **AI decisions** (gateway `typesafe`) | Classify, score, or route a record against named criteria and get probabilities back — instead of `InvokeLLM` with a JSON schema. |
 
 ## Methods
@@ -36,43 +37,45 @@ Every call is metered against your app's credit quota, the same quota
 |--------|-----------|-------------|
 | `connection(options?)` | `({ provider?: "openai" \| "typesafe" }) => AiGatewayConnection` | Returns `{ baseURL, token, headers }` for the selected provider. Defaults to `openai`. |
 
-Available in user mode (`base44.aiGateway`, the default — runs with the caller's
-permissions) and with the service-role token (`base44.asServiceRole.aiGateway`) for
-genuine cross-user or system work.
+Call it as **`base44.asServiceRole.aiGateway.connection()`**. `base44.aiGateway` (the
+caller's token) also exists, but new apps restrict Core integrations by default, and a
+public app then rejects user-token gateway calls with **403**. Service-role calls from a
+backend function always pass.
 
 `headers` requires `@base44/sdk` 0.8.52+ and `provider` requires 0.8.50+.
 
 ## Rules for every gateway call
 
 - **Backend function only** (`createClientFromRequest(req)`). All other backend-function
-  rules (deployment, secrets, error handling) apply — see the functions guide. Never send
-  the gateway `token` to the browser.
-- **Guard the function** with `await base44.auth.me()` before calling the gateway.
+  rules (deployment, secrets, error handling) apply — see [functions.md](functions.md).
+  Never send the gateway `token` to the browser.
+- **Guard user-triggered functions** with `await base44.auth.me()` before the service-role
+  call — every call spends the app owner's credits. Scheduled or entity-triggered runs
+  have no caller to check.
+- **Decide cost-driving parameters in code** (model, image count, video duration,
+  resolution). Don't pass a browser-supplied request straight to the gateway, or any
+  signed-in user can pick the most expensive options.
 - **Always pass `headers`** to the client (`defaultHeaders` for the `openai` SDK, `headers`
   for Vercel AI SDK providers). On a client from `createClientFromRequest()` it carries the
   signed `Base44-State` that a workspace IP allowlist requires; without it those
   workspaces reject the call.
-- **Scope:** code agents should run in the caller's scope (`base44.aiGateway`) so their
-  entity tools stay RLS-bound. Image, video, and evaluation calls don't touch entities, so
-  either scope works; use `asServiceRole` when there is no signed-in caller (e.g. a
-  scheduled automation).
 - **Set `maxRetries: 0` on image, video, and evaluation calls.** Client retries replay
   billed requests.
 
 ## Build a code agent
 
-1. Get the connection with `base44.aiGateway.connection()` → `{ baseURL, token, headers }`.
+1. Get the connection with `base44.asServiceRole.aiGateway.connection()` → `{ baseURL, token, headers }`.
 2. Point an agent SDK's OpenAI-compatible provider at it (`baseURL`, `apiKey: token`, `headers`).
 3. Give the agent tools that read/act on your app via `base44.*`, and let it finish by
    recording its result through a tool.
 
 **Rules:**
-- **Run in the caller's scope by default.** Use `base44.aiGateway.connection()` and
-  `base44.entities.*` so the agent runs with the calling user's permissions (RLS applies)
-  and can't exceed them. Reach for `asServiceRole` only for genuine cross-user/system
-  work — and then **scope tools to trusted context, not agent-chosen inputs** (e.g. fix
-  `customer_email` from the request, not an agent parameter), since `asServiceRole` runs
-  with full access.
+- **Tools run in the caller's scope by default.** The gateway connection is service-role,
+  but the agent's tools should use `base44.entities.*` so they act with the calling user's
+  permissions (RLS applies) and can't exceed them. Use `base44.asServiceRole.entities.*`
+  in a tool only for genuine cross-user/system work — and then **scope it to trusted
+  context, not agent-chosen inputs** (e.g. fix `customer_email` from the request, not an
+  agent parameter), since service role has full access.
 - **Stateless between invocations.** Persistent memory means storing and replaying state
   (e.g. in an entity).
 - Use model **`automatic`** unless the task needs a specific model — non-default models
@@ -98,7 +101,7 @@ export default async function (req) {
   const { return_id } = await req.json();
   const request = await base44.entities.ReturnRequest.get(return_id);
 
-  const { baseURL, token, headers } = base44.aiGateway.connection();
+  const { baseURL, token, headers } = base44.asServiceRole.aiGateway.connection();
   const base44Models = createOpenAICompatible({ name: "base44", baseURL, apiKey: token, headers });
 
   const agent = new ToolLoopAgent({
@@ -153,13 +156,13 @@ supported.
 ```javascript
 import OpenAI from "npm:openai@6.45.0";
 
-const { baseURL, token, headers } = base44.aiGateway.connection();
+const { baseURL, token, headers } = base44.asServiceRole.aiGateway.connection();
 const client = new OpenAI({ baseURL, apiKey: token, defaultHeaders: headers, maxRetries: 0 });
 
 const { data, usage } = await client.images.generate({
   model: "automatic",
   prompt: `${description}. Studio lighting.`,
-  n: 1,                         // 1-4 images per request
+  n: 1,                         // up to 4 per request; some models allow fewer
   response_format: "url",       // "url" or "b64_json"; default "b64_json"
   // Base44 extensions beyond the OpenAI spec:
   aspect_ratio: "16:9",
@@ -172,7 +175,10 @@ const { data, usage } = await client.images.generate({
 - **Editing:** `client.images.edit({ model, prompt, image })` needs at least one input
   image — uploaded bytes in `image`, or `reference_image_urls`. Generations accept
   `reference_image_urls` too.
-- **Other options:** `quality`, `output_format`, `background` (transparent/opaque) — support is model-specific.
+- **Other options:** `quality`, `output_format`, `background` (transparent/opaque) — support is
+  model-specific. With `automatic`, setting any of them (even `quality: "auto"`) skips the
+  Gemini models and routes to a GPT Image model, which changes the output and the cost —
+  omit them unless you need them.
 - **Models:** prefer `"automatic"`, which picks a model that supports the requested options.
   Pin one (e.g. `gemini_3_1_flash_image`, `gpt_image_2`) only when needed. Unsupported
   option/model combinations return **400**. Full model list and limits:
@@ -198,13 +204,17 @@ export default async function (req) {
   const user = await base44.auth.me();
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
-  const { action, request, videoId } = await req.json();
-  const { baseURL, token, headers } = base44.aiGateway.connection();
+  const { action, prompt, videoId } = await req.json();
+  const { baseURL, token, headers } = base44.asServiceRole.aiGateway.connection();
   const { videos } = new OpenAI({ baseURL, apiKey: token, defaultHeaders: headers });
 
   if (action === "create") {
-    // e.g. request = { model: "seedance_2_fast", prompt, seconds: 4 }
-    return Response.json(await videos.create(request, { maxRetries: 0 }), { status: 202 });
+    // The function picks the model and duration; the browser only sends the prompt.
+    const job = await videos.create(
+      { model: "seedance_2_fast", prompt, seconds: 4 },
+      { maxRetries: 0 },
+    );
+    return Response.json(job, { status: 202 });
   }
   if (action === "retrieve") {
     return Response.json(await videos.retrieve(videoId));
@@ -219,10 +229,7 @@ a backend function is a bounded HTTP call:
 ```javascript
 const isProcessing = (status) => status === "queued" || status === "in_progress";
 
-let { data: video } = await base44.functions.invoke("video-gateway", {
-  action: "create",
-  request: { model: "seedance_2_fast", prompt, seconds: 4 },
-});
+let { data: video } = await base44.functions.invoke("video-gateway", { action: "create", prompt });
 for (let attempt = 0; isProcessing(video.status) && attempt < 40; attempt += 1) {
   await new Promise((resolve) => setTimeout(resolve, 15_000));
   ({ data: video } = await base44.functions.invoke("video-gateway", {
@@ -241,7 +248,8 @@ if (video.status === "failed") throw new Error(video.error?.message || "Video ge
   `veo_3_1_lite`, `veo_3_1_fast`, `seedance_2`, `seedance_2_5`, `seedance_2_fast`,
   `seedance_2_mini`, `kling_3`, `minimax_h3`, `minimax_h3_max`, `grok_imagine_video`,
   `grok_imagine_video_1_5`. Supported `seconds`, `resolution`, `aspect_ratio`, and
-  references differ per model; unsupported values return **400**.
+  references differ per model; unsupported values return **400**, and an unknown model
+  (including `automatic`) returns **404**.
 - **Request fields:** `model`, `prompt`, `seconds`, `aspect_ratio`, `resolution`,
   `generate_audio`, `seed`, `dry_run`, and either `frame_images` (up to 2, each
   `{ type: "image_url", image_url: { url }, frame_type: "first_frame" | "last_frame" }`) or
@@ -249,13 +257,17 @@ if (video.status === "failed") throw new Error(video.error?.message || "Video ge
   `{ type: "image_url", image_url: { url } }` and likewise for `video_url` / `audio_url`) —
   don't combine the two. Reference URLs must be public HTTPS URLs.
 - **Cost preview:** `videos.create({ ...request, dry_run: true })` returns HTTP 200 with
-  `usage.base44_credits` and **no job id** — don't poll it.
+  `usage.base44_credits` and **no job id** — don't poll it, and don't return it as a 202.
 
 ## AI decisions (Jev)
 
 Structured evaluations: give the `jev` model some state and a set of questions, and get
 each answer back with probabilities. Use it to classify, score, or route; then apply your
 own thresholds and actions in deterministic code.
+
+- Needs **`ai` 7.0.105+** — older versions (including the `7.0.16` code-agent pin above) don't
+  export `experimental_evaluate`.
+- The model id is exactly **`"jev"`**. The package README's `"jev-latest"` is rejected by the gateway.
 
 ```javascript
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
@@ -268,7 +280,7 @@ export default async function (req) {
   if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
   const { message } = await req.json();
-  const { baseURL, token, headers } = base44.aiGateway.connection({ provider: "typesafe" });
+  const { baseURL, token, headers } = base44.asServiceRole.aiGateway.connection({ provider: "typesafe" });
   const typesafe = createTypeSafeAi({ baseURL, apiKey: token, headers });
 
   const result = await evaluate({
@@ -292,7 +304,7 @@ export default async function (req) {
 - `questions` — non-empty; questions can't depend on other answers in the same call.
   - `choice`: `criteria` required, an object of 1–255 named options (descriptions may be `null`).
   - `score`: `criteria` required, an array of 2–10 ordered rubric levels.
-  - `boolean`: `criteria` optional, an object with only `true`/`false` keys.
+  - `boolean`: `criteria` optional, an object with only `true`/`false` keys (descriptions may be `null`).
   - `instructions` and criteria descriptions may be a string, JSON object, or JSON array.
 
 **Response** (answer keys match question ids):
@@ -312,18 +324,16 @@ export default async function (req) {
 
 ## Models
 
-- **Chat:** any model available through `InvokeLLM`. Use **`automatic`** (the default,
-  cheapest) unless the task needs a specific model (e.g. `claude_sonnet_4_6`). Non-default
-  models cost more credits — use them only when needed, and tell the user.
+- **Chat:** any model available through `InvokeLLM`; `automatic` by default (see the
+  code-agent rules above).
 - **Images:** `automatic` or a pinned image model — see [Generate and edit images](#generate-and-edit-images).
 - **Videos:** always a specific model — see [Generate videos](#generate-videos).
 - **Evaluations:** `jev`.
 
 ## Notes
 
-- **Backend only.** `token` is the current caller's bearer — the app user's token for
-  `base44.aiGateway`, the service-role token for `base44.asServiceRole.aiGateway`, or an
-  empty string when unauthenticated.
+- **Token:** the service-role token for `base44.asServiceRole.aiGateway`; the caller's
+  token (or an empty string when unauthenticated) for `base44.aiGateway`.
 - **Billing:** metered per call against your app's credit quota (same as InvokeLLM). If
   the app is out of credits, calls are rejected before the model runs.
 

@@ -114,7 +114,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `uploadFile(file)` | `integrations.Core.UploadFile({file})` |
 | `storage.upload(file)` | `integrations.Core.UploadFile({file})` |
 
-> **Exception:** an OpenAI-compatible client (e.g. the Vercel AI SDK or the `openai` SDK) **is** correct when pointed at `base44.aiGateway.connection()` — that's how you build code agents (agent loops with tools) and call the gateway's image and video endpoints. Use `InvokeLLM` only for a single call with no tools. See [ai-gateway.md](references/ai-gateway.md).
+> **Exception:** an OpenAI-compatible client (e.g. the Vercel AI SDK or the `openai` SDK) **is** correct when pointed at `base44.asServiceRole.aiGateway.connection()` — that's how you build code agents (agent loops with tools) and call the gateway's image and video endpoints. Use `InvokeLLM` only for a single call with no tools. See [ai-gateway.md](references/ai-gateway.md).
 
 ### Actors - WRONG vs CORRECT
 
@@ -231,7 +231,7 @@ const base44 = createClient({
 - Generate text/JSON with AI → `integrations.Core.InvokeLLM()`
 - Generate one image with default settings → `integrations.Core.GenerateImage()`
 - Several images, a specific model/aspect ratio/resolution, reference images, or edits → `aiGateway` images (see [ai-gateway.md](references/ai-gateway.md#generate-and-edit-images))
-- Generate videos → `aiGateway` videos, an async job (see [ai-gateway.md](references/ai-gateway.md#generate-videos))
+- Generate a simple text-to-video → `integrations.Core.GenerateVideo()`; model choice, references, or frames → `aiGateway` videos, an async job (see [ai-gateway.md](references/ai-gateway.md#generate-videos))
 - Classify, score, or route a record against criteria → `aiGateway` with `provider: "typesafe"` (Jev), not `InvokeLLM` with a JSON schema (see [ai-gateway.md](references/ai-gateway.md#ai-decisions-jev))
 - Build a custom agent with tools (backend, agent SDK on the AI gateway) → `aiGateway` (see [ai-gateway.md](references/ai-gateway.md))
 
