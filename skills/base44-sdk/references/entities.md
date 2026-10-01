@@ -13,6 +13,8 @@ CRUD operations on data models. Access via `base44.entities.EntityName.method()`
 
 **Note:** The maximum limit for `list()` and `filter()` is 5,000 items per request.
 
+**Tip:** For data migrations or bulk operations from local scripts, you can also use the [REST API](rest-api.md) directly.
+
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `create(data)` | `Promise<T>` | Create one record |
