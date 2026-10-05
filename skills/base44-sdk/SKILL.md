@@ -1,6 +1,6 @@
 ---
 name: base44-sdk
-description: "The base44 SDK is the library to communicate with base44 services. In projects, you use it to communicate with remote resources (entities, backend functions, realtime actors, ai agents, and the AI gateway for code agents, image and video generation, and AI decisions) and to write backend functions and actors. This skill is the place for learning about available modules and types, including actors — the realtime/WebSocket primitive for multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
+description: "The base44 SDK is the library to communicate with base44 services. In projects, you use it to communicate with remote resources (entities, backend functions, realtime actors, ai agents, and the AI gateway for code agents, image, video, and speech generation, and AI decisions) and to write backend functions and actors. This skill is the place for learning about available modules and types, including actors — the realtime/WebSocket primitive for multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
 ---
 
 # Base44 Coder
@@ -114,7 +114,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `uploadFile(file)` | `integrations.Core.UploadFile({file})` |
 | `storage.upload(file)` | `integrations.Core.UploadFile({file})` |
 
-> **Exception:** an OpenAI-compatible client (e.g. the Vercel AI SDK or the `openai` SDK) **is** correct when pointed at `base44.asServiceRole.aiGateway.connection()` — that's how you build code agents (agent loops with tools) and call the gateway's image and video endpoints. Use `InvokeLLM` only for a single call with no tools. See [ai-gateway.md](references/ai-gateway.md).
+> **Exception:** an OpenAI-compatible client (e.g. the Vercel AI SDK or the `openai` SDK) **is** correct when pointed at `base44.asServiceRole.aiGateway.connection()` — that's how you build code agents (agent loops with tools) and call the gateway's image, video, and speech endpoints. Use `InvokeLLM` only for a single call with no tools. See [ai-gateway.md](references/ai-gateway.md).
 
 ### Actors - WRONG vs CORRECT
 
@@ -150,7 +150,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `functions` | Backend function invocation | [functions.md](references/functions.md) |
 | `actors` | Realtime rooms over WebSockets (multiplayer, collaboration, presence) | [actors.md](references/actors.md) |
 | `integrations` | AI, email, file uploads, custom APIs | [integrations.md](references/integrations.md) |
-| `aiGateway` | Base44's AI gateway: code agents, images, videos, and structured evaluations (Jev) | [ai-gateway.md](references/ai-gateway.md) |
+| `aiGateway` | Base44's AI gateway: code agents, images, videos, speech, and structured evaluations (Jev) | [ai-gateway.md](references/ai-gateway.md) |
 | `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
 | `appLogs` | Log user activity in app | [app-logs.md](references/app-logs.md) |
 | `users` | Invite users to the app | [users.md](references/users.md) |
@@ -232,6 +232,7 @@ const base44 = createClient({
 - Generate one image with default settings → `integrations.Core.GenerateImage()`
 - Several images, a specific model/aspect ratio/resolution, reference images, or edits → `aiGateway` images (see [ai-gateway.md](references/ai-gateway.md#generate-and-edit-images))
 - Generate a simple text-to-video → `integrations.Core.GenerateVideo()`; model choice, references, or frames → `aiGateway` videos, an async job (see [ai-gateway.md](references/ai-gateway.md#generate-videos))
+- Text-to-speech (TTS), read-aloud, or editing existing gateway speech code → [speech guide](references/ai-gateway.md#generate-speech) for browser/Core/gateway selection and usage
 - Classify, score, or route a record against criteria → `aiGateway` with `provider: "typesafe"` (Jev), not `InvokeLLM` with a JSON schema (see [ai-gateway.md](references/ai-gateway.md#ai-decisions-jev))
 - Build a custom agent with tools (backend, agent SDK on the AI gateway) → `aiGateway` (see [ai-gateway.md](references/ai-gateway.md))
 
