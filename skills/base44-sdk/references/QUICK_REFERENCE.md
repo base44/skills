@@ -63,6 +63,7 @@ fetch(path, init?) → Promise<Response>   // low-level, for streaming/custom me
 ```
 InvokeLLM({prompt, add_context_from_internet?, response_json_schema?, file_urls?}) → Promise<string | object>
 GenerateImage({prompt}) → Promise<{url}>
+GenerateSpeech({text, voice?, language_code?}) → Promise<{url}>   // stored MP3; voices river (default), honey, sunny, storm, spark; ≤5,000 chars
 SendEmail({to, subject, body, from_name?}) → Promise<any>
 UploadFile({file}) → Promise<{file_url}>
 UploadPrivateFile({file}) → Promise<{file_uri}>

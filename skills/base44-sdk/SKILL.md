@@ -232,7 +232,7 @@ const base44 = createClient({
 - Generate one image with default settings → `integrations.Core.GenerateImage()`
 - Several images, a specific model/aspect ratio/resolution, reference images, or edits → `aiGateway` images (see [ai-gateway.md](references/ai-gateway.md#generate-and-edit-images))
 - Generate a simple text-to-video → `integrations.Core.GenerateVideo()`; model choice, references, or frames → `aiGateway` videos, an async job (see [ai-gateway.md](references/ai-gateway.md#generate-videos))
-- Text-to-speech (TTS), read-aloud, or editing existing gateway speech code → [speech guide](references/ai-gateway.md#generate-speech) for browser/Core/gateway selection and usage
+- Text-to-speech (TTS) or read-aloud → [speech guide](references/ai-gateway.md#generate-speech) for browser/Core/gateway selection; read it before implementing model-specific controls or editing existing gateway speech code
 - Classify, score, or route a record against criteria → `aiGateway` with `provider: "typesafe"` (Jev), not `InvokeLLM` with a JSON schema (see [ai-gateway.md](references/ai-gateway.md#ai-decisions-jev))
 - Build a custom agent with tools (backend, agent SDK on the AI gateway) → `aiGateway` (see [ai-gateway.md](references/ai-gateway.md))
 

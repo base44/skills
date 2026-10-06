@@ -2,8 +2,7 @@
 
 Call Base44's managed AI models from your own backend code via `base44.asServiceRole.aiGateway`.
 
-> **Note:** Backend functions only, except [speech](#generate-speech) can also run in an
-> existing TanStack server function. It uses your app's models, billing, and credit
+> **Note:** Backend functions only. It uses your app's models, billing, and credit
 > quota — there is no API key to manage.
 
 ## Overview
@@ -30,11 +29,12 @@ Every call is metered against your app's credit quota, the same quota
 | **Gateway images** | Several images per request, a specific model, aspect ratio or resolution, reference images, or editing an existing image. |
 | **`integrations.Core.GenerateVideo`** | Straightforward text-to-video: `{ prompt, duration?: 4 \| 6 \| 8, aspect_ratio?: "16:9" \| "9:16", generate_audio? }` → `{ url }`. Waits for the result (30–60 s). |
 | **Gateway videos** | Model choice, image/video/audio references, first/last frames, or anything outside the `GenerateVideo` schema. It is an asynchronous job: create, then retrieve later. |
+| **`integrations.Core.GenerateSpeech`** | Straightforward stored MP3: `{ text, voice?: "river" \| "honey" \| "sunny" \| "storm" \| "spark", language_code?: "en" \| … }` → `{ url }`. Default voice `river`; up to 5,000 characters, 1 credit per 50 characters. |
 | **Gateway speech** | Model-specific text-to-speech controls. See [Generate speech](#generate-speech) for browser/Core/gateway selection and existing speech code. |
 | **AI decisions** (gateway `typesafe`) | Classify, score, or route a record against named criteria and get probabilities back — instead of `InvokeLLM` with a JSON schema. |
 
 Apps that restrict Core integrations (the default for new apps) also block frontend calls to
-`GenerateImage` and `GenerateVideo`; call them from a backend function as
+`GenerateImage`, `GenerateVideo`, and `GenerateSpeech`; call them from a backend function as
 `base44.asServiceRole.integrations.Core.*`.
 
 ## Methods
@@ -52,8 +52,7 @@ backend function always pass.
 
 ## Rules for every gateway call
 
-- **Use a backend function** (`createClientFromRequest(req)`); [speech](#generate-speech)
-  also supports existing TanStack server functions. For backend functions, all other
+- **Backend function only** (`createClientFromRequest(req)`). All other backend-function
   rules (deployment, secrets, error handling) apply — see [functions.md](functions.md).
   Never send the gateway `token` to the browser.
 - **Guard user-triggered functions** with `await base44.auth.me()` before the service-role
@@ -274,19 +273,24 @@ if (video.status === "failed") throw new Error(video.error?.message || "Video ge
 
 - **Browser-only read-aloud**, without stored audio or voice/style requirements: use
   the browser's TTS API. This option does not apply to native apps.
-- **Straightforward stored MP3**, within Core's voice and language options: use
-  `integrations.Core.GenerateSpeech`.
+- **Straightforward stored MP3** with a Core voice (`river` default, `honey`, `sunny`, `storm`,
+  `spark`), optional ISO-639-1 `language_code`, up to 5,000 characters: use
+  `integrations.Core.GenerateSpeech({ text, voice?, language_code? })` → `{ url }`.
 - **Model choice, delivery instructions, speed, other formats, or voices outside Core**:
   use the gateway. Follow this section when editing existing gateway speech code too.
 
 `POST /audio/speech` returns **completed audio bytes**. It does not store a file or return
 a URL or job ID; there is no polling step.
 
-Inside a backend function, use an `openai` client named `client`, configured with the
-[connection details](#methods) and [shared rules](#rules-for-every-gateway-call).
+Call it from a backend function, following the
+[shared rules](#rules-for-every-gateway-call) and [functions.md](functions.md).
 `text` is the supplied spoken text; `base44` is the function's request client:
 
 ```javascript
+import OpenAI from "npm:openai";
+
+const { baseURL, token, headers } = base44.asServiceRole.aiGateway.connection();
+const client = new OpenAI({ baseURL, apiKey: token, defaultHeaders: headers, maxRetries: 0 });
 const speechRequest = {
   model: "gpt_4o_mini_tts",
   input: text,
@@ -299,8 +303,11 @@ const { file_uri } = await base44.asServiceRole.integrations.Core.UploadPrivateF
 return Response.json({ file_uri, credits });
 ```
 
-This example stores private MP3 audio. For `file_uri`, use the existing
-[signed-URL flow](integrations.md#uploadprivatefile) to obtain a playback URL.
+This example stores private MP3 audio. To store public audio instead,
+`base44.asServiceRole.integrations.Core.UploadFile({ file })` returns `file_url`
+(see [UploadFile](integrations.md#uploadfile-public)).
+For private `file_uri`, call `base44.integrations.Core.CreateFileSignedUrl({ file_uri })`
+and use `signed_url` for playback (see the [signed-URL flow](integrations.md#uploadprivatefile)).
 Match the filename and content type when choosing another encoding. Prefer MP3 or WAV
 for playback; raw PCM requires decoding and cannot be played directly as an audio URL.
 
@@ -309,36 +316,16 @@ for playback; raw PCM requires decoding and cannot be played directly as an audi
   `Linking.openURL(signed_url)` to open saved audio externally. The native template has
   no audio-player package. Do not use HTML `<audio>`, `new Audio`, or `speechSynthesis`.
 
-**TanStack server functions:** follow the project's existing server-code instructions.
-Use `fetch` with `baseURL`, `token`, and `headers` from the same gateway connection:
-
-```javascript
-async function createSpeech(body) {
-  const response = await fetch(`${baseURL.replace(/\/$/, "")}/audio/speech`, {
-    method: "POST",
-    headers: { ...headers, Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  if (!response.ok) throw new Error(`Speech generation failed (${response.status})`);
-  return response;
-}
-```
-
-Use `createSpeech(speechRequest)` in place of `client.audio.speech.create(speechRequest)`
-and return `{ file_uri, credits }` from the server function.
-
 **Cost preview:** run this instead of the generation/upload block. `dry_run: true`
 returns **JSON**, without generating or charging; the estimate can differ from the final
 charge and contains no audio or file to play:
 
 ```javascript
-const estimateRequest = { ...speechRequest, dry_run: true };
-const response = await client.audio.speech.create(estimateRequest);
-const estimate = await response.json();
+const estimate = await client.post("/audio/speech", {
+  body: { ...speechRequest, dry_run: true },
+});
 const estimatedCredits = estimate.usage.base44_credits;
 ```
-
-On TanStack, use `createSpeech(estimateRequest)` for the estimate request.
 
 **Request fields:**
 
@@ -351,8 +338,27 @@ On TanStack, use `createSpeech(estimateRequest)` for the estimate request.
 | `speed` | Model-specific range; omit or use `1` for normal speed. |
 | `instructions` | Delivery/style guidance, only on supporting models; keep it out of the spoken `input`. |
 | `language` | Model-specific ISO-639 control, not Core's `language_code`; omit for automatic language handling. |
-| `stream_format` | Omit or use `"audio"`; SSE is unsupported. |
+| `stream_format` | Omit or use `"audio"`; SSE is unsupported and the endpoint returns completed audio. |
 | `dry_run` | Optional boolean; `true` returns the JSON credit estimate. |
+
+**Models and controls:** omitted `model` or `"automatic"` resolves to `gpt_4o_mini_tts`.
+
+| Model | Voice set (default) | Formats (default) | Instructions | Speed | Language control |
+|-------|---------------------|-------------------|--------------|-------|------------------|
+| `gpt_4o_mini_tts` | OpenAI extended (`nova`) | `aac`, `flac`, `mp3`, `opus`, `pcm`, `wav` (`mp3`) | Supported | 0.25–4.0 | ISO-639 code |
+| `tts_1`, `tts_1_hd` | OpenAI legacy (`nova`) | `aac`, `flac`, `mp3`, `opus`, `pcm`, `wav` (`mp3`) | Unsupported | 0.25–4.0 | Unsupported |
+| `eleven_flash_v2_5` | ElevenLabs (`river`) | `mp3`, `opus`, `pcm`, `wav` (`mp3`) | Unsupported | 0.7–1.2 | Codes below |
+| `eleven_multilingual_v2` | ElevenLabs (`river`) | `mp3`, `opus`, `pcm`, `wav` (`mp3`) | Unsupported | 0.7–1.2 | Unsupported |
+| `gemini_2_5_flash_tts` | Gemini (`Kore`) | `pcm`, `wav` (`wav`) | Unsupported | Omit or `1` | Unsupported |
+
+- **OpenAI legacy voices:** `alloy`, `ash`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`.
+  **OpenAI extended** adds `ballad`, `verse`, `marin`, `cedar`.
+- **ElevenLabs voices:** `honey`, `river`, `spark`, `storm`, `sunny`.
+- **Gemini voices:** `Kore`, `Puck`, `Zephyr`, `Charon`, `Leda`, `Fenrir` (case-sensitive).
+- **OpenAI input limit:** 4,096 characters for all three models.
+- **`eleven_flash_v2_5` language codes:** `ar`, `bg`, `cs`, `da`, `de`, `el`, `en`, `es`,
+  `fi`, `fil`, `fr`, `hi`, `hr`, `id`, `it`, `ja`, `ko`, `ms`, `nl`, `pl`, `pt`, `ro`,
+  `ru`, `sk`, `sv`, `ta`, `tr`, `uk`, `zh`.
 
 **Model discovery:** `GET /audio/speech/models` returns `{ items, next_cursor }`;
 `GET /audio/speech/models/{model}` returns one entry with its capabilities. Use these
