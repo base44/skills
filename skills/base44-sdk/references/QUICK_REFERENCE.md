@@ -63,6 +63,7 @@ fetch(path, init?) → Promise<Response>   // low-level, for streaming/custom me
 ```
 InvokeLLM({prompt, add_context_from_internet?, response_json_schema?, file_urls?}) → Promise<string | object>
 GenerateImage({prompt}) → Promise<{url}>
+GenerateSpeech({text, voice?, language_code?}) → Promise<{url}>   // stored MP3; voices river (default), honey, sunny, storm, spark; ≤5,000 chars
 SendEmail({to, subject, body, from_name?}) → Promise<any>
 UploadFile({file}) → Promise<{file_url}>
 UploadPrivateFile({file}) → Promise<{file_uri}>
@@ -70,7 +71,7 @@ CreateFileSignedUrl({file_uri, expires_in?}) → Promise<{signed_url}>
 ExtractDataFromUploadedFile({file_url, json_schema}) → Promise<object>
 ```
 
-**AI surface:** single call, no tools → `InvokeLLM`; chat product for users → `base44.agents`; task-with-tools agent (code) → `aiGateway`; one default image → `GenerateImage`; simple text-to-video → `GenerateVideo`; multiple/configured/edited images or advanced video → `aiGateway`; classify/score/route → `aiGateway` Jev (see below).
+**AI surface:** single call, no tools → `InvokeLLM`; chat product for users → `base44.agents`; task-with-tools agent (code) → `aiGateway`; one default image → `GenerateImage`; simple text-to-video → `GenerateVideo`; multiple/configured/edited images or advanced video → `aiGateway`; text-to-speech → [browser/Core/gateway selection](ai-gateway.md#generate-speech); classify/score/route → `aiGateway` Jev (see below).
 
 ### AI Gateway (`base44.asServiceRole.aiGateway.*`)
 
@@ -79,9 +80,9 @@ asServiceRole.aiGateway.connection({ provider?: "openai" | "typesafe" }) → { b
 aiGateway.connection(options?) → same, caller's token — 403 on public apps that restrict Core integrations (default)
 ```
 
-- `openai` (default): chat completions for **code agents** (model `automatic` by default), `images.generate` / `images.edit`, and async `videos.create` / `videos.retrieve` (specific model required).
+- `openai` (default): chat completions for **code agents** (model `automatic` by default), `images.generate` / `images.edit`, async `videos.create` / `videos.retrieve` (specific model required), and `audio.speech.create` (completed audio bytes; see [speech guide](ai-gateway.md#generate-speech)).
 - `typesafe`: `experimental_evaluate` (`ai` 7.0.105+) with `typesafe.evaluationModel("jev")` for classify/score/route decisions.
-- Set `maxRetries: 0` on image, video, and evaluation calls. See [ai-gateway.md](ai-gateway.md).
+- Set `maxRetries: 0` on image, video, speech, and evaluation calls. See [ai-gateway.md](ai-gateway.md).
 
 ### Custom Integrations (`base44.integrations.custom.*`)
 

@@ -12,7 +12,7 @@ library. Two providers sit behind it:
 
 | Provider | Endpoints | Client |
 |----------|-----------|--------|
-| `openai` (default) | Chat Completions, `/images/generations`, `/images/edits`, `/videos` | Any OpenAI-compatible client (Vercel AI SDK, Mastra, the `openai` SDK, …) |
+| `openai` (default) | Chat Completions, `/images/generations`, `/images/edits`, `/videos`, `/audio/speech` | Any OpenAI-compatible client (Vercel AI SDK, Mastra, the `openai` SDK, …) |
 | `typesafe` | Structured evaluations with the `jev` model | `@ai-sdk/typesafe-ai` + `ai`'s `experimental_evaluate` |
 
 Every call is metered against your app's credit quota, the same quota
@@ -29,10 +29,12 @@ Every call is metered against your app's credit quota, the same quota
 | **Gateway images** | Several images per request, a specific model, aspect ratio or resolution, reference images, or editing an existing image. |
 | **`integrations.Core.GenerateVideo`** | Straightforward text-to-video: `{ prompt, duration?: 4 \| 6 \| 8, aspect_ratio?: "16:9" \| "9:16", generate_audio? }` → `{ url }`. Waits for the result (30–60 s). |
 | **Gateway videos** | Model choice, image/video/audio references, first/last frames, or anything outside the `GenerateVideo` schema. It is an asynchronous job: create, then retrieve later. |
+| **`integrations.Core.GenerateSpeech`** | Straightforward stored MP3: `{ text, voice?: "river" \| "honey" \| "sunny" \| "storm" \| "spark", language_code?: "en" \| … }` → `{ url }`. Default voice `river`; up to 5,000 characters, 1 credit per 50 characters. |
+| **Gateway speech** | Model-specific text-to-speech controls. See [Generate speech](#generate-speech) for browser/Core/gateway selection and existing speech code. |
 | **AI decisions** (gateway `typesafe`) | Classify, score, or route a record against named criteria and get probabilities back — instead of `InvokeLLM` with a JSON schema. |
 
 Apps that restrict Core integrations (the default for new apps) also block frontend calls to
-`GenerateImage` and `GenerateVideo`; call them from a backend function as
+`GenerateImage`, `GenerateVideo`, and `GenerateSpeech`; call them from a backend function as
 `base44.asServiceRole.integrations.Core.*`.
 
 ## Methods
@@ -63,7 +65,7 @@ backend function always pass.
   for Vercel AI SDK providers). On a client from `createClientFromRequest()` it carries the
   signed `Base44-State` that a workspace IP allowlist requires; without it those
   workspaces reject the call.
-- **Set `maxRetries: 0` on image, video, and evaluation calls.** Client retries replay
+- **Set `maxRetries: 0` on image, video, speech, and evaluation calls.** Client retries replay
   billed requests.
 
 ## Build a code agent
@@ -267,6 +269,103 @@ if (video.status === "failed") throw new Error(video.error?.message || "Video ge
 - **Cost preview:** `videos.create({ ...request, dry_run: true })` returns HTTP 200 with
   `usage.base44_credits` and **no job id** — don't poll it, and don't return it as a 202.
 
+## Generate speech
+
+- **Browser-only read-aloud**, without stored audio or voice/style requirements: use
+  the browser's TTS API. This option does not apply to native apps.
+- **Straightforward stored MP3** with a Core voice (`river` default, `honey`, `sunny`, `storm`,
+  `spark`), optional ISO-639-1 `language_code`, up to 5,000 characters: use
+  `integrations.Core.GenerateSpeech({ text, voice?, language_code? })` → `{ url }`.
+- **Model choice, delivery instructions, speed, other formats, or voices outside Core**:
+  use the gateway. Follow this section when editing existing gateway speech code too.
+
+`POST /audio/speech` returns **completed audio bytes**. It does not store a file or return
+a URL or job ID; there is no polling step.
+
+Call it from a backend function, following the
+[shared rules](#rules-for-every-gateway-call) and [functions.md](functions.md).
+`text` is the supplied spoken text; `base44` is the function's request client:
+
+```javascript
+import OpenAI from "npm:openai";
+
+const { baseURL, token, headers } = base44.asServiceRole.aiGateway.connection();
+const client = new OpenAI({ baseURL, apiKey: token, defaultHeaders: headers, maxRetries: 0 });
+const speechRequest = {
+  model: "gpt_4o_mini_tts",
+  input: text,
+  voice: "nova",
+};
+const audio = await client.audio.speech.create(speechRequest);
+const credits = Number(audio.headers.get("x-base44-credits"));
+const file = new File([await audio.arrayBuffer()], "speech.mp3", { type: "audio/mpeg" });
+const { file_uri } = await base44.asServiceRole.integrations.Core.UploadPrivateFile({ file });
+return Response.json({ file_uri, credits });
+```
+
+This example stores private MP3 audio. To store public audio instead,
+`base44.asServiceRole.integrations.Core.UploadFile({ file })` returns `file_url`
+(see [UploadFile](integrations.md#uploadfile-public)).
+For private `file_uri`, call `base44.integrations.Core.CreateFileSignedUrl({ file_uri })`
+and use `signed_url` for playback (see the [signed-URL flow](integrations.md#uploadprivatefile)).
+Match the filename and content type when choosing another encoding. Prefer MP3 or WAV
+for playback; raw PCM requires decoding and cannot be played directly as an audio URL.
+
+- **Web:** render `<audio controls src={signed_url}>`; do not assume autoplay is allowed.
+- **Native:** use an installed React Native-compatible player or
+  `Linking.openURL(signed_url)` to open saved audio externally. The native template has
+  no audio-player package. Do not use HTML `<audio>`, `new Audio`, or `speechSynthesis`.
+
+**Cost preview:** run this instead of the generation/upload block. `dry_run: true`
+returns **JSON**, without generating or charging; the estimate can differ from the final
+charge and contains no audio or file to play:
+
+```javascript
+const estimate = await client.post("/audio/speech", {
+  body: { ...speechRequest, dry_run: true },
+});
+const estimatedCredits = estimate.usage.base44_credits;
+```
+
+**Request fields:**
+
+| Field | Meaning |
+|-------|---------|
+| `input` | Required spoken text; not `text` or `prompt`. |
+| `model` | Optional alias or vendor ID. Omitted or `"automatic"` selects a fixed default, not a model chosen to satisfy requested controls. |
+| `voice` | Model-specific, case-sensitive name; omitted uses the model's default. |
+| `response_format` | Audio encoding, not `"url"` or `"b64_json"`; omitted uses the model's default. |
+| `speed` | Model-specific range; omit or use `1` for normal speed. |
+| `instructions` | Delivery/style guidance, only on supporting models; keep it out of the spoken `input`. |
+| `language` | Model-specific ISO-639 control, not Core's `language_code`; omit for automatic language handling. |
+| `stream_format` | Omit or use `"audio"`; SSE is unsupported and the endpoint returns completed audio. |
+| `dry_run` | Optional boolean; `true` returns the JSON credit estimate. |
+
+**Models and controls:** omitted `model` or `"automatic"` resolves to `gpt_4o_mini_tts`.
+
+| Model | Voice set (default) | Formats (default) | Instructions | Speed | Language control |
+|-------|---------------------|-------------------|--------------|-------|------------------|
+| `gpt_4o_mini_tts` | OpenAI extended (`nova`) | `aac`, `flac`, `mp3`, `opus`, `pcm`, `wav` (`mp3`) | Supported | 0.25–4.0 | ISO-639 code |
+| `tts_1`, `tts_1_hd` | OpenAI legacy (`nova`) | `aac`, `flac`, `mp3`, `opus`, `pcm`, `wav` (`mp3`) | Unsupported | 0.25–4.0 | Unsupported |
+| `eleven_flash_v2_5` | ElevenLabs (`river`) | `mp3`, `opus`, `pcm`, `wav` (`mp3`) | Unsupported | 0.7–1.2 | Codes below |
+| `eleven_multilingual_v2` | ElevenLabs (`river`) | `mp3`, `opus`, `pcm`, `wav` (`mp3`) | Unsupported | 0.7–1.2 | Unsupported |
+| `gemini_2_5_flash_tts` | Gemini (`Kore`) | `pcm`, `wav` (`wav`) | Unsupported | Omit or `1` | Unsupported |
+
+- **OpenAI legacy voices:** `alloy`, `ash`, `coral`, `echo`, `fable`, `onyx`, `nova`, `sage`, `shimmer`.
+  **OpenAI extended** adds `ballad`, `verse`, `marin`, `cedar`.
+- **ElevenLabs voices:** `honey`, `river`, `spark`, `storm`, `sunny`.
+- **Gemini voices:** `Kore`, `Puck`, `Zephyr`, `Charon`, `Leda`, `Fenrir` (case-sensitive).
+- **OpenAI input limit:** 4,096 characters for all three models.
+- **`eleven_flash_v2_5` language codes:** `ar`, `bg`, `cs`, `da`, `de`, `el`, `en`, `es`,
+  `fi`, `fil`, `fr`, `hi`, `hr`, `id`, `it`, `ja`, `ko`, `ms`, `nl`, `pl`, `pt`, `ro`,
+  `ru`, `sk`, `sv`, `ta`, `tr`, `uk`, `zh`.
+
+**Model discovery:** `GET /audio/speech/models` returns `{ items, next_cursor }`;
+`GET /audio/speech/models/{model}` returns one entry with its capabilities. Use these
+gateway catalogs for voices, formats and their defaults, speed ranges, instruction and
+language support, and input-length limits. The `automatic` entry's `resolves_to` identifies
+the fixed default. Do not assume upstream provider features are exposed by the gateway.
+
 ## AI decisions (Jev)
 
 Structured evaluations: give the `jev` model some state and a set of questions, and get
@@ -336,6 +435,7 @@ export default async function (req) {
   code-agent rules above).
 - **Images:** `automatic` or a pinned image model — see [Generate and edit images](#generate-and-edit-images).
 - **Videos:** always a specific model — see [Generate videos](#generate-videos).
+- **Speech:** `automatic` is a fixed default; use the speech catalog for model-specific controls — see [Generate speech](#generate-speech).
 - **Evaluations:** `jev`.
 
 ## Notes
