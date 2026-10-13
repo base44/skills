@@ -4,9 +4,7 @@ description: >-
   Develop a Base44 app remotely from your own coding agent (Claude Code,
   claude.ai, or any MCP client) by connecting it to the Base44 sandbox. Cloud
   agents connect over MCP; local agents can connect over MCP or drive the same
-  sandbox with the `base44 sandbox` CLI subcommands (the CLI uses shorter
-  names — e.g. read_file is `sandbox read`, list_directory is `sandbox ls`,
-  run_command is `sandbox run`). Covers connecting/
+  sandbox with the `base44 sandbox` CLI subcommands. Covers connecting/
   authenticating, the available sandbox tools (run_command, read_file,
   write_file, edit_file, grep, list_directory, create_checkpoint,
   get_app_preview_url, get_app_status, list_user_apps, and the connector tools
