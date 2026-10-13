@@ -64,9 +64,6 @@ claude plugin install base44-sandbox@base44-skills
 # Codex CLI: register the marketplace, then /plugins → "Base44 Sandbox" → Install
 codex plugin marketplace add base44/skills
 
-# Antigravity
-agy plugin install https://github.com/base44/skills/tree/main/antigravity/base44-sandbox
-
 # Other agents (skills CLI)
 npx skills add base44/skills --skill base44-remote-dev --skill base44-sandbox --skill base44-sdk --skill base44-troubleshooter
 ```

@@ -19,8 +19,6 @@ Build and deploy [Base44](https://base44.com) full-stack apps from Antigravity. 
 - A [Base44 account](https://base44.com).
 - [Node.js](https://nodejs.org) and npm: the CLI runs as `npx base44 <command>` from your project.
 
-Developing inside Base44's cloud sandbox, with no local files? Install the **Base44 Sandbox** plugin instead.
-
 ## Learn more
 
 - [Base44 docs](https://docs.base44.com)
