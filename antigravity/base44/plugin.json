@@ -3,7 +3,7 @@
   "displayName": "Base44",
   "version": "1.0.0-beta.1",
   "description": "Build and deploy Base44 full-stack apps: CLI project management, JavaScript/TypeScript SDK development, and production troubleshooting skills.",
-  "logo": "https://media.base44.com/images/public/marketing-site-assets/branded/favicon-branded-v2.png",
+  "logo": "assets/logo.svg",
   "suggestedPrompts": [
     "Create a new Base44 app with a Task entity and deploy it",
     "Add a backend function to my Base44 app that sends a welcome email",
