@@ -35,10 +35,10 @@ Then in Codex CLI, run `/plugins`, select **Base44**, and choose **Install Plugi
 
 ### Antigravity
 
-In [Antigravity](https://antigravity.google), open **Customizations → Plugins**, click **+ Install from URL**, and enter `https://github.com/base44/skills`. Or, from a terminal:
+In [Antigravity](https://antigravity.google), open **Customizations → Plugins**, click **+ Install from URL**, and enter `https://github.com/base44/skills/tree/main/antigravity/base44`. Or, from a terminal:
 
 ```bash
-agy plugin install https://github.com/base44/skills
+agy plugin install https://github.com/base44/skills/tree/main/antigravity/base44
 ```
 
 ### Other Agents (via skills CLI)
@@ -64,7 +64,8 @@ claude plugin install base44-sandbox@base44-skills
 # Codex CLI: register the marketplace, then /plugins → "Base44 Sandbox" → Install
 codex plugin marketplace add base44/skills
 
-# Antigravity: Customizations → Plugins → Discover → "Base44 Sandbox"
+# Antigravity
+agy plugin install https://github.com/base44/skills/tree/main/antigravity/base44-sandbox
 
 # Other agents (skills CLI)
 npx skills add base44/skills --skill base44-remote-dev --skill base44-sandbox --skill base44-sdk --skill base44-troubleshooter

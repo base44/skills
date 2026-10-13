@@ -10,7 +10,14 @@
     "Find why my Base44 app's backend function is failing"
   ],
   "category": "Developer Tools",
-  "keywords": ["base44", "sandbox", "remote-dev", "mcp", "entities", "backend-functions"],
+  "keywords": [
+    "base44",
+    "sandbox",
+    "remote-dev",
+    "mcp",
+    "entities",
+    "backend-functions"
+  ],
   "author": {
     "name": "base44",
     "url": "https://base44.com"
@@ -18,6 +25,8 @@
   "homepage": "https://docs.base44.com",
   "repository": "https://github.com/base44/skills",
   "license": "MIT",
-  "skills": ["./skills/base44-remote-dev", "./skills/base44-sandbox", "./skills/base44-sdk", "./skills/base44-troubleshooter"],
+  "skills": [
+    "./skills"
+  ],
   "mcpServers": "./mcp_config.json"
 }
