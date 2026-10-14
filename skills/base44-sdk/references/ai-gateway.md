@@ -43,10 +43,11 @@ Apps that restrict Core integrations (the default for new apps) also block front
 |--------|-----------|-------------|
 | `connection(options?)` | `({ provider?: "openai" \| "typesafe" }) => AiGatewayConnection` | Returns `{ baseURL, token, headers }` for the selected provider. Defaults to `openai`. |
 
-Call it as **`base44.asServiceRole.aiGateway.connection()`**. `base44.aiGateway` (the
-caller's token) also exists, but new apps restrict Core integrations by default, and a
-public app then rejects user-token gateway calls with **403**. Service-role calls from a
-backend function always pass.
+- **`base44.asServiceRole.aiGateway`** — the app's service-role token. Use it server-side; the
+  gateway rejects other calls with **403** `ai_gateway_requires_service_role`. Works with no
+  signed-in user (e.g. scheduled automations).
+- **`base44.aiGateway`** — the signed-in app user's token. Accepted only on apps shared
+  privately or with the workspace.
 
 `headers` requires `@base44/sdk` 0.8.52+ and `provider` requires 0.8.50+.
 
@@ -441,7 +442,8 @@ export default async function (req) {
 ## Notes
 
 - **Token:** the service-role token for `base44.asServiceRole.aiGateway`; the caller's
-  token (or an empty string when unauthenticated) for `base44.aiGateway`.
+  token for `base44.aiGateway`. The gateway expects the service-role token; otherwise
+  **403** `ai_gateway_requires_service_role`.
 - **Billing:** metered per call against your app's credit quota (same as InvokeLLM). If
   the app is out of credits, calls are rejected before the model runs.
 
@@ -452,7 +454,7 @@ export default async function (req) {
 interface AiGatewayConnection {
   /** Base URL of the selected gateway provider. */
   baseURL: string;
-  /** Bearer token for the gateway. Empty string when the caller is unauthenticated. */
+  /** Bearer token for the gateway: the service-role token, or the signed-in user's token. The gateway expects the service-role token. */
   token: string;
   /**
    * Extra headers to send with every gateway request (`defaultHeaders` for the `openai`

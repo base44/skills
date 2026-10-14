@@ -77,7 +77,7 @@ ExtractDataFromUploadedFile({file_url, json_schema}) → Promise<object>
 
 ```
 asServiceRole.aiGateway.connection({ provider?: "openai" | "typesafe" }) → { baseURL, token, headers }   // backend only; always pass headers
-aiGateway.connection(options?) → same, caller's token — 403 on public apps that restrict Core integrations (default)
+aiGateway.connection(options?) → same, caller's token — browser/user-token calls get 403 ai_gateway_requires_service_role (private/workspace apps excepted)
 ```
 
 - `openai` (default): chat completions for **code agents** (model `automatic` by default), `images.generate` / `images.edit`, async `videos.create` / `videos.retrieve` (specific model required), and `audio.speech.create` (completed audio bytes; see [speech guide](ai-gateway.md#generate-speech)).
