@@ -43,12 +43,13 @@ Apps that restrict Core integrations (the default for new apps) also block front
 |--------|-----------|-------------|
 | `connection(options?)` | `({ provider?: "openai" \| "typesafe" }) => AiGatewayConnection` | Returns `{ baseURL, token, headers }` for the selected provider. Defaults to `openai`. |
 
-Call it as **`base44.asServiceRole.aiGateway.connection()`** from a backend function.
-`base44.aiGateway` (the caller's token) is accepted only on apps shared privately or with
-the workspace; anonymous calls and user-token calls on public apps get **403** with error
-code `ai_gateway_requires_service_role`. Service-role calls from a backend function always
-pass. Check the caller with `base44.auth.me()` inside the function and call it from the page
-with `base44.functions.invoke(...)`.
+Call it **server-side with the app's service role**: `base44.asServiceRole.aiGateway.connection()`.
+Calls from the browser or with a user's token get **403** `ai_gateway_requires_service_role`
+("AI gateway requests must be made server-side using the app's service role. Calls from the
+browser or with a user's token are not allowed."). In a backend function, for example, check
+the caller with `base44.auth.me()` and call the function from the page with
+`base44.functions.invoke(...)`. (`base44.aiGateway`, the caller's token, works only on apps
+shared privately or with the workspace.)
 
 `headers` requires `@base44/sdk` 0.8.52+ and `provider` requires 0.8.50+.
 
@@ -443,9 +444,8 @@ export default async function (req) {
 ## Notes
 
 - **Token:** the service-role token for `base44.asServiceRole.aiGateway`; the caller's
-  token for `base44.aiGateway` (empty when no one is signed in, and the gateway rejects it).
-  User tokens work only on apps shared privately or with the workspace; otherwise **403**
-  `ai_gateway_requires_service_role`.
+  token for `base44.aiGateway`. The gateway expects the service-role token; otherwise
+  **403** `ai_gateway_requires_service_role`.
 - **Billing:** metered per call against your app's credit quota (same as InvokeLLM). If
   the app is out of credits, calls are rejected before the model runs.
 
@@ -456,7 +456,7 @@ export default async function (req) {
 interface AiGatewayConnection {
   /** Base URL of the selected gateway provider. */
   baseURL: string;
-  /** Bearer token for the gateway: service-role token, or the signed-in user's token (empty when no one is signed in, which the gateway rejects). */
+  /** Bearer token for the gateway: the service-role token, or the signed-in user's token. The gateway expects the service-role token. */
   token: string;
   /**
    * Extra headers to send with every gateway request (`defaultHeaders` for the `openai`
