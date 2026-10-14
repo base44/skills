@@ -43,13 +43,11 @@ Apps that restrict Core integrations (the default for new apps) also block front
 |--------|-----------|-------------|
 | `connection(options?)` | `({ provider?: "openai" \| "typesafe" }) => AiGatewayConnection` | Returns `{ baseURL, token, headers }` for the selected provider. Defaults to `openai`. |
 
-Call it **server-side with the app's service role**: `base44.asServiceRole.aiGateway.connection()`.
-Calls from the browser or with a user's token get **403** `ai_gateway_requires_service_role`
-("AI gateway requests must be made server-side using the app's service role. Calls from the
-browser or with a user's token are not allowed."). In a backend function, for example, check
-the caller with `base44.auth.me()` and call the function from the page with
-`base44.functions.invoke(...)`. (`base44.aiGateway`, the caller's token, works only on apps
-shared privately or with the workspace.)
+- **`base44.asServiceRole.aiGateway`** — the app's service-role token. Use it server-side; the
+  gateway rejects other calls with **403** `ai_gateway_requires_service_role`. Works with no
+  signed-in user (e.g. scheduled automations).
+- **`base44.aiGateway`** — the signed-in app user's token. Accepted only on apps shared
+  privately or with the workspace.
 
 `headers` requires `@base44/sdk` 0.8.52+ and `provider` requires 0.8.50+.
 
