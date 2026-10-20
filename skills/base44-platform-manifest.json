@@ -17,7 +17,7 @@
     "skills/base44-platform-entities/SKILL.md": "c84de4b41d8d64b20e4a4522a97422f500eb3554e9ccc48075130fdb8ae90d06",
     "skills/base44-platform-entities/references/mobile-and-games.md": "559313916e24dcfb4cc9ba2e250d8c449ac8555ce8e5494d91d8075b86aa1b0d",
     "skills/base44-platform-entities/references/rls.md": "d70c3f6aee3f9d4bb4a771078cd70e1c2ddfffa84a4598627b36c13f490e77b0",
-    "skills/base44-platform-entities/references/web.md": "bd288ee846dedd4e908f93a03291a12a4d26dc4877db46c92d05758d7ef15934",
+    "skills/base44-platform-entities/references/web.md": "02f81b350c864455c722c13405cceabdb5b504de396f272aa1e51571a3cf8a01",
     "skills/base44-platform-frontend/SKILL.md": "40f9751943bcaac870313afa6b6335bd9d05908a7cee1f82be454f2ada38f8f0",
     "skills/base44-platform-frontend/references/mobile.md": "68d1983605b40f812ee6ed6374649763f469681fd8cfd5f198a3e39e26107957",
     "skills/base44-platform-frontend/references/web-spa.md": "a019c49df78cbd7f4b458992fc2a6483f10230c8a2f475dc34c035b3af38ae3e",
@@ -76,7 +76,7 @@
     "skills/base44-platform-workflows/SKILL.md": "55fb8de2004bbbcb4369ac58b91acd5613c8b750eed79e4dcc7b657e78891284",
     "skills/base44-platform-workflows/references/automations-legacy.md": "df52bfdc18a3e7b886c169224edb68479771efd2f71eebd2652f43482caf10bc",
     "skills/base44-platform-workflows/references/mobile-automations.md": "7ab2c859ac0ad6f531ae0918a7bf125e5611af76e7905693c0f78c8e2c83799e",
-    "skills/base44-platform-workflows/references/web-spa.md": "997a3deeb85374196289271a0586783779255811a3573a11dfc4fe45155a89bf",
-    "skills/base44-platform-workflows/references/web-tanstack.md": "75e7fd03e78a8615b99cd274fcb925cc36866dcd023fbd8cc5ce150ec3f35a3e"
+    "skills/base44-platform-workflows/references/web-spa.md": "ba6b6f4165cfbb9ce7297ed7568ac515112038f5a2eae38f3ab29b5a4557aed0",
+    "skills/base44-platform-workflows/references/web-tanstack.md": "a91a7cb530031380439ca2a8779069f70458efc32082c58fd01e54e3aaf2bb3c"
   }
 }

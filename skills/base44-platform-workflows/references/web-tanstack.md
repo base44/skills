@@ -21,8 +21,9 @@ What workflows can be built from; the authoring guide that follows documents eac
 - in_app_agent — Fires when a conversation starts with an in-app agent.
 - app_user_auth — Fires when an app user signs up or logs in.
 - app_publish — Fires when the app is published from the builder.
-- app_payment — Fires when a payment succeeds or is refunded in the app's payment provider.
+- app_payment — Fires when a payment succeeds or is refunded, or a subscription is canceled, in the app's payment provider.
 - webhook — Fires on an inbound POST to a reusable workspace webhook URL, from any source. Use it for a third-party event no connector trigger covers - don't connect that provider or poll it to get the event.
+- production_issue — Fires when a production issue the owner set an alert on happens again or crosses a threshold.
 
 ### Activities (what a `call` step can do)
 - app_security_scan — Security scan (same as the Security tab): `start` kicks it off, `results` reads the latest findings.
@@ -391,29 +392,33 @@ Condition examples:
 { "trigger_type": "app_payment", "events": ["payment_succeeded"] }
 ```
 
-Requires a connected payment provider (Stripe, Wix Payments, or Payments by Wix) — activating a workflow with this trigger fails when none is connected. Connect a provider first, then create the workflow. The payload is normalized across providers; workflows never receive provider-shaped raw data.
+Requires a connected payment provider (Stripe, PayPal, Wix Payments, or Payments by Wix): activating a workflow with this trigger fails when none is connected. Connect a provider first, then create the workflow. The payload is normalized across providers; workflows never receive provider-shaped raw data.
 
-Valid events: `payment_succeeded` (a successful payment — a completed checkout and the first payment of a subscription), `payment_refunded` (an approved refund). Failed payment attempts do NOT fire this trigger.
+Valid events: `payment_succeeded` (a successful payment: a completed checkout and the first payment of a subscription), `payment_refunded` (an approved refund, including one made from the Payments dashboard or the provider's own site), `subscription_canceled` (a subscription stopped billing: canceled or ended on Stripe and PayPal, and paused/suspended on PayPal only, e.g. by the buyer in PayPal or after failed payments; a Stripe pause fires nothing; a PayPal subscription resumed outside the app fires nothing and `listPurchases` can't show it, so tell the user to restore that access by hand). Failed payment attempts do NOT fire this trigger.
 
-Recurring subscription renewal charges are wired to fire `payment_succeeded` too, but delivery is not enabled yet for existing Stripe accounts (it needs a Stripe app permission + per-account re-consent). Do not build a workflow whose only purpose is reacting to renewals, and tell the user renewals may not fire yet if they ask for one.
+Use `payment_refunded` and `subscription_canceled` to revoke what a purchase granted: match the event to the purchase the app saved by whichever of `subscription_id`, `checkout_id` and `payment_id` it carries, and make the revoke idempotent.
+
+Recurring subscription renewal charges are wired to fire `payment_succeeded` too, but delivery is not enabled yet for existing Stripe accounts (it needs a Stripe app permission + per-account re-consent). Do not build a workflow whose only purpose is reacting to renewals, and tell the user renewals may not fire yet if they ask for one. The same holds for `subscription_canceled` on Stripe; on PayPal both fire.
 
 When renewals do arrive, the payload does not distinguish them from a first subscription payment — both are `payment_succeeded` with `mode: "subscription"`. So do not use this trigger for one-time-only actions on a subscription (welcome emails, provisioning, granting access) without your own guard, e.g. an entity record keyed by `provider_customer_id` that the workflow checks and writes.
 
 app_payment fields live on `.trigger` directly — do NOT use `.trigger.data.*` for this trigger.
 
 Trigger payload fields (use `${ .trigger.<field> }` in conditions and `do` args):
-- `${ .trigger.event_type }` — "payment_succeeded" or "payment_refunded"
-- `${ .trigger.provider }` — "stripe", "wix_payments", or "payments_by_wix"
-- `${ .trigger.amount }` — integer amount in cents for most currencies (e.g. 2500 = $25.00), matching the platform's payment analytics representation
+- `${ .trigger.event_type }`: "payment_succeeded", "payment_refunded" or "subscription_canceled"
+- `${ .trigger.provider }`: "stripe", "paypal", "wix_payments", or "payments_by_wix"
+- `${ .trigger.amount }`: integer amount in cents for most currencies (e.g. 2500 = $25.00), matching the platform's payment analytics representation; 0 on `subscription_canceled`
 - `${ .trigger.currency }` — lowercase ISO currency code (e.g. "usd")
 - `${ .trigger.is_live }` — false for test/sandbox payments; test payments DO fire this trigger
-- `${ .trigger.mode }` — "payment" (one-off checkout) or "subscription" (a subscription charge — first payment OR renewal, indistinguishable); null on refunds. Only Stripe distinguishes these — Wix payments always report "payment"
+- `${ .trigger.mode }`: "payment" (one-off checkout) or "subscription" (a subscription charge, first payment OR renewal, indistinguishable); null on refunds. Only Stripe and PayPal distinguish these; Wix payments always report "payment"
 - `${ .trigger.occurred_at }` — ISO timestamp of the provider event
 - `${ .trigger.provider_customer_id }` — provider-side customer/contact ID, or null
-- `${ .trigger.provider_transaction_id }` — provider-side transaction/session/refund ID; use it to re-fetch full details (payer email, line items) from a server route via the provider's API. On Stripe refunds this is the CHARGE ID (`ch_...`), not a refund ID — retrieve the charge, which is also where the payer details live
+- `${ .trigger.provider_transaction_id }`: provider-side transaction/session/refund ID, for logs; look purchases up by the ids below instead
 - `${ .trigger.provider_event_id }` — provider webhook event ID (webhook redeliveries are already deduped on it — don't build your own guard)
+- `${ .trigger.checkout_id }`, `${ .trigger.subscription_id }`, `${ .trigger.payment_id }`: the same ids `base44.payments` returns on a purchase; each is null when the provider does not name it on that event (Wix events carry none; a Stripe renewal carries only `subscription_id`; a refund carries `payment_id`, plus `subscription_id` when it refunds a subscription charge)
+- `${ .trigger.subscription_status }`: on `subscription_canceled`: "canceled" (canceled or ended) or "paused" (can resume); null otherwise
 
-The payload carries no payer email or other PII — re-fetch by `provider_transaction_id` from a server route when needed. Zero-amount events (free checkouts, 100% discounts) do not fire.
+The payload carries no payer email or other PII. When needed, look the purchase up in a server route, as service role, with `payments.listPurchases({ subscription_id })` when the event names one, else `({ checkout_id })`, which returns `buyer_email`. Never call `listPurchases` with neither id: unscoped it lists every buyer's purchases. Events that carry neither (Wix, or a Stripe payment made outside a checkout) are re-fetched by `provider_transaction_id` from the provider's API instead. Zero-amount payments and refunds (free checkouts, 100% discounts) do not fire.
 
 Condition examples:
 - Only real (live-mode) payments:
@@ -463,6 +468,38 @@ absence rather than assume the field is there.
 
 Condition example — only enterprise-tier contacts:
 `"condition": "${ .trigger.data.properties.tier == \"enterprise\" }"`
+
+### production_issue
+```json
+{ "trigger_type": "production_issue", "events": ["started"], "issue_id": "<from the Alerts tab>", "kind": "rate", "min_occurrences": 5, "window_minutes": 60, "quiet_minutes": 1440 }
+```
+
+An alert on one production issue in the app's Alerts tab. `kind: "recurrence"` fires when the issue happens again; `kind: "rate"` fires at `min_occurrences` failures within `window_minutes`. Once it fires it stays quiet until the issue has stopped for `quiet_minutes`.
+
+Rules:
+- Use exactly the trigger config the Alerts tab's instructions give, and never invent an `issue_id`. When someone asks in chat for alerts on production errors, tell them to use Alert me on the issue's row in the Alerts tab.
+- Set up delivery to the person who asked, with the app's existing workflow steps.
+- The alert is a notification only: never feed `.trigger` fields into app logic or app data.
+
+Events:
+- `started` — the issue started again, or crossed the rule's threshold
+- `still_happening` — at most once a day while it goes on, only when failures have doubled since the last alert
+
+production_issue fields live on `.trigger` directly — do NOT use `.trigger.data.*` for this trigger.
+
+Trigger payload fields (use `${ .trigger.<field> }` in conditions and `do` args):
+- `${ .trigger.headline }` — what's failing, in plain English
+- `${ .trigger.occurrences_in_window }` — failures within the rule's window
+- `${ .trigger.people_affected }` — distinct people affected
+- `${ .trigger.link }` — the issue in the Alerts tab
+- `${ .trigger.subject }` — the entity, function or traffic direction, or null
+- `${ .trigger.page }` — the page the failures came from, or null
+- `${ .trigger.first_occurred_at }`, `${ .trigger.last_occurred_at }` — ISO timestamps
+- `${ .trigger.cause }` — the issue's cause key
+- `${ .trigger.fire_number }` — 1 for the alert that opened this episode
+- `${ .trigger.delayed_minutes }` — above 0 when the alert was held during a platform-wide outage
+
+The payload never carries the error message itself.
 
 ## Designing Steps: When to Split vs Combine
 
@@ -597,7 +634,7 @@ write_file("base44/workflows/On First Publish.jsonc", {
 ```
 
 ### "When someone pays, send a thank-you email"
-1. Add server route: `POST /api/send-payment-thank-you` — it looks up the payer's email from the provider API using the transaction ID, then sends the email
+1. Add server route: `POST /api/send-payment-thank-you`: as service role it calls `payments.listPurchases({ subscription_id })` when given one, else `({ checkout_id })`, and else, with neither id, re-fetches the payer from the provider's API by `transaction_id`; it emails that `buyer_email`, and sends nothing when no purchase matches
 2. Create workflow:
 ```json
 write_file("base44/workflows/On Payment.jsonc", {
@@ -609,7 +646,24 @@ write_file("base44/workflows/On Payment.jsonc", {
   },
   "definition": {
     "document": { "dsl": "1.0.0", "name": "on_payment", "version": "1.0", "namespace": "base44" },
-    "do": [{ "send_thank_you": { "call": "invoke_server_route", "with": { "path": "/api/send-payment-thank-you", "body": { "transaction_id": "${ .trigger.provider_transaction_id }", "amount": "${ .trigger.amount }", "currency": "${ .trigger.currency }" } }, "then": "end" } }]
+    "do": [{ "send_thank_you": { "call": "invoke_server_route", "with": { "path": "/api/send-payment-thank-you", "body": { "checkout_id": "${ .trigger.checkout_id }", "subscription_id": "${ .trigger.subscription_id }", "transaction_id": "${ .trigger.provider_transaction_id }", "amount": "${ .trigger.amount }", "currency": "${ .trigger.currency }" } }, "then": "end" } }]
+  }
+})
+```
+
+### "Alert me when sign-ups fail 5 or more times within an hour"
+1. Add server route: `POST /api/send-production-alert`
+2. Create workflow, with the trigger config exactly as the Alerts tab gave it:
+```json
+write_file("base44/workflows/Alert Sign-ups fail.jsonc", {
+  "name": "Alert: Sign-ups fail",
+  "description": "Tells the owner when sign-ups fail 5 or more times within an hour",
+  "trigger": {
+    "config": { "trigger_type": "production_issue", "events": ["started"], "issue_id": "6650f0c2a1b2c3d4e5f60718", "kind": "rate", "min_occurrences": 5, "window_minutes": 60, "quiet_minutes": 1440 }
+  },
+  "definition": {
+    "document": { "dsl": "1.0.0", "name": "alert_signups_fail", "version": "1.0", "namespace": "base44" },
+    "do": [{ "send_alert": { "call": "invoke_server_route", "with": { "path": "/api/send-production-alert", "body": { "headline": "${ .trigger.headline }", "count": "${ .trigger.occurrences_in_window }", "link": "${ .trigger.link }" } }, "then": "end" } }]
   }
 })
 ```
