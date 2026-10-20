@@ -559,6 +559,16 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
 
+### Any Other API Operation
+
+For a Base44 platform task with no dedicated command above (custom domains, app users, SEO settings, and more), find and call the public API endpoint directly. Prefer a dedicated command when one exists.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 api search <text>` | Search every public API operation by what it does (also `api catalog [area]`, `api grep <regex>`) | [api.md](references/api.md) |
+| `base44 api fetch <METHOD> <path> --help` | Print an operation's contract: parameters, request and response schemas | [api.md](references/api.md) |
+| `base44 api fetch <METHOD> <path>` | Call the operation with your login; add `--read-only` while only looking | [api.md](references/api.md) |
+
 ## Quick Start
 
 1. Install the CLI in your project:
