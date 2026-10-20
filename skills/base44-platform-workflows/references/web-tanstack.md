@@ -22,10 +22,14 @@ What workflows can be built from; the authoring guide that follows documents eac
 - app_user_auth — Fires when an app user signs up or logs in.
 - app_publish — Fires when the app is published from the builder.
 - app_payment — Fires when a payment succeeds or is refunded in the app's payment provider.
+- webhook — Fires on an inbound POST to a reusable workspace webhook URL, from any source. Use it for a third-party event no connector trigger covers - don't connect that provider or poll it to get the event.
 
 ### Activities (what a `call` step can do)
+- app_security_scan — Security scan (same as the Security tab): `start` kicks it off, `results` reads the latest findings.
 - compute_seconds_until — Computes the seconds from now until a target datetime — feed the result into a dynamic wait.
 - invoke_server_route — Calls a route on the app's own server.
+- publish_social_post — Publishes a scheduled post to the app's connected LinkedIn, Instagram or Facebook account.
+- simulate_social_post — Simulate publishing a preview-only social post without contacting a social platform.
 
 ### Task Types (how steps are structured)
 - call — invoke a registered activity with `with` args, then transition via `then`.
@@ -127,6 +131,14 @@ When editing, preserve `x-base44` where the task's purpose is unchanged; update 
 
 ## Available Activities
 
+### app_security_scan
+The app's security scan — the same scan as the builder's Security tab (RLS, secrets, backend functions, dependencies, static code). `action: start` starts a scan and returns at once, without findings. `action: results` reads the latest completed scan.
+- When to use: Whenever a workflow needs the app's security posture or findings, on any trigger — to refresh them (`start`) or to read and act on them (`results`). A scan runs in the background for up to ~10 minutes, so `start` never returns findings: `wait` at least PT10M, then `results` passing `after: ${ .<start step>.requested_at }` so an older scan is reported as `pending`, not as ready. If `results` says `running`, wait PT5M and read once more. `results` alone is enough when the latest scan will do. Branch on `state` — only `ready` carries `scan`. Zero findings means clean only when `scan.status` is `up_to_date` and `scan.rls_scan_failed` is false. `scan.findings` is capped: severity-first, 50 by default — pass `max_findings` (up to 100) to raise it, check `findings_truncated`, and take the count from `total_findings`, never from the list length. If nothing changed since the last scan, `start` itself returns `ready` with that scan. Run now behaves like any other run: `start` really starts a scan.
+- `action`: `start` to start a scan, or `results` to read the latest completed scan. Required.
+- `after`: results only, optional. ISO-8601 datetime; a scan completed before it is reported as `pending` rather than `ready`. Pass the `requested_at` returned by the `start` step.
+- `max_findings`: results only, optional. How many findings to include in `scan.findings`, severity-first (default 50, max 100); `scan.findings_truncated` says whether any were left out.
+- Returns: {"action": "start" | "results", "state": str, "scan": {...} | null, "requested_at": str (start only; the `after` for a follow-up results — when state is "ready" it is the returned scan's own scanned_at, so results accepts it)}. start states: "started" (scan spawned), "running" (a scan is already in flight), "ready" (nothing changed since the last scan; `scan` is current). results states: "ready" (`scan` set), "running", "pending" (latest scan predates `after`), "failed" (last scan failed), "not_scanned". `scan` is set only when state is "ready": {"scanned_at": str, "status": "up_to_date" | "out_of_date" (as the Security tab shows it), "rls_scan_failed": bool (RLS section did not complete — empty RLS findings are not a clean result), "risk_level": str, "total_findings": int, "counts_by_severity": {severity: int}, "counts_by_category": {category: {severity: int}}, "finding_categories": [str], "findings": [{"category": "rls" | "secrets" | "backend_functions" | "dependencies" | "code" | "core_integration", "severity": str, "title": str, "description": str, "file_path"?: str, "line"?: int, "recommendation"?: str, "package_name"?: str, "current_version"?: str, "fixed_version"?: str, "vulnerability_id"?: str}], "findings_truncated": bool}. `start` never returns findings (its `scan.findings` is empty).
+
 ### compute_seconds_until
 Compute seconds from now until a target datetime.
 - `target_iso`: ISO 8601 datetime string
@@ -140,6 +152,21 @@ Call a route served by the app's own full-stack server.
 - `body`: Dict sent as the JSON request body (supports jq expressions)
 - `query`: Dict of query-string parameters (supports jq expressions)
 - Returns: Parsed JSON response from the route
+
+### publish_social_post
+Publish a scheduled social post to the app's connected LinkedIn, Instagram or Facebook account. Takes the post created by create_scheduled_social_post.
+- When to use: Posting to the app owner's connected social account on a schedule. Two steps, in order: call create_scheduled_social_post to store the content and get a scheduled_post_id, then author a workflow that passes that id here. The post is the source of truth for what gets published; the workflow's trigger decides when. Requires an active connector for the platform — create_scheduled_social_post checks and will tell you if the user needs to connect one first. Run now never publishes: it reports what would happen and leaves the post untouched.
+- `scheduled_post_id`: ID returned by create_scheduled_social_post. Must belong to this app.
+- Returns: {"scheduled_post_id": str, "status": str, "already_posted": bool, "external_post_id": str | null, "external_post_url": str | null, "dry_run": bool}
+
+### simulate_social_post
+Simulate publishing a preview-only social post without contacting a social platform.
+- `scheduled_post_id`: ID returned by create_scheduled_social_post. Must belong to this app.
+- Returns: {"scheduled_post_id": str, "status": str, "already_posted": bool, "external_post_id": str | null, "external_post_url": str | null, "dry_run": bool}
+
+## Choosing Between Activities
+
+See each activity's "When to use" line above for what it's best at.
 
 ## jq Expression Language
 
@@ -394,6 +421,49 @@ Condition examples:
 - Only large payments (over $100):
   `"condition": "${ .trigger.amount > 10000 }"`
 
+### webhook
+
+A workspace webhook must already exist — this trigger listens on one, it does
+not create one. Use `select_or_create_workflow_webhook` to pick an existing
+listener or make a new one, and write the id it returns here. Reuse an existing
+one where you can: many providers allow only a single webhook URL per account,
+so a second listener for the same provider usually cannot be wired up at all.
+
+```json
+{ "trigger_type": "webhook", "webhook_id": "<id from the tool>",
+  "webhook_name": "hubspot-events", "events": ["contact.creation"] }
+```
+
+`webhook_id` is the reference — never a URL and never a token. You cannot guess
+or invent it: it only exists once a tool hands it to you, and an id that is not
+in this workspace blocks activation with `WEBHOOK_NOT_FOUND`.
+
+`webhook_name` is the listener's display name at authoring time. It is carried for
+readability only and is never resolved against — the user may rename the
+listener, which changes the label and nothing else.
+
+One webhook URL commonly carries several event types. `events` filters which
+ones run this workflow; an empty list subscribes to all of them. Reusing a
+webhook across workflows is normal and preferred — many providers allow only
+one webhook URL per account. Only set `events` when the webhook classifies
+event types; otherwise activation fails with `WEBHOOK_HAS_NO_EVENT_TYPES`.
+
+Trigger payload (use `${ .trigger.* }` in conditions and `do` args):
+- `${ .trigger.data.<field> }` — the parsed request body, e.g. `${ .trigger.data.properties.email }`
+- `${ .trigger.event_type }` — the event type this request was classified as
+- `${ .trigger.webhook_name }` — the webhook's display name (may have changed since authoring)
+- `${ .trigger.webhook_id }` — the webhook's id, stable across renames
+- `${ .trigger.headers.<name> }` — request headers, lowercased, credentials removed
+- `${ .trigger.query.<name> }` — query-string params, credentials removed
+
+`${ .trigger.data }` arrives as `null` when the body was too large to forward.
+Unlike an entity trigger there is nothing to re-fetch — the body is never
+persisted — so a workflow that must tolerate big payloads should branch on the
+absence rather than assume the field is there.
+
+Condition example — only enterprise-tier contacts:
+`"condition": "${ .trigger.data.properties.tier == \"enterprise\" }"`
+
 ## Designing Steps: When to Split vs Combine
 
 **Split** into separate tasks when operations are independent (a failure shouldn't re-run the others), a delay sits between them, or you want per-step visibility and retry granularity in the run log. **Combine** into one step when operations share setup/auth/transaction, must be atomic, or the second needs the first's full in-memory result.
@@ -542,4 +612,30 @@ write_file("base44/workflows/On Payment.jsonc", {
     "do": [{ "send_thank_you": { "call": "invoke_server_route", "with": { "path": "/api/send-payment-thank-you", "body": { "transaction_id": "${ .trigger.provider_transaction_id }", "amount": "${ .trigger.amount }", "currency": "${ .trigger.currency }" } }, "then": "end" } }]
   }
 })
+```
+
+### Refresh, then act on the findings — the start / wait / results pattern (any trigger)
+Point the `ready` branch at whatever step consumes `${ .read.scan }` (its `findings`, `total_findings`, `risk_level`).
+```json
+"do": [
+  { "scan": { "call": "app_security_scan", "with": { "action": "start" }, "then": "settle" } },
+  { "settle": { "wait": "PT15M", "then": "read" } },
+  { "read": { "call": "app_security_scan", "with": { "action": "results", "after": "${ .scan.requested_at }" }, "then": "route" } },
+  { "route": { "switch": [
+      { "ready": { "when": "${ .read.state == \"ready\" }", "then": "end" } },
+      { "running": { "when": "${ .read.state == \"running\" }", "then": "settle_again" } },
+      { "other": { "then": "end" } }
+  ] } },
+  { "settle_again": { "wait": "PT5M", "then": "read_again" } },
+  { "read_again": { "call": "app_security_scan", "with": { "action": "results", "after": "${ .scan.requested_at }" }, "then": "end" } }
+]
+```
+
+### "Post our launch announcement to LinkedIn on Tuesday morning" — the two-step pattern
+1. Call `create_scheduled_social_post` with the platform, copy, and time. It verifies the LinkedIn connector and returns a `scheduled_post_id`.
+2. Author a workflow on a schedule trigger set to that time, passing the returned id:
+```json
+"do": [
+  { "publish": { "call": "publish_social_post", "with": { "scheduled_post_id": "sp_a1b2c3" }, "then": "end" } }
+]
 ```
