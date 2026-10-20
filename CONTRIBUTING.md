@@ -136,8 +136,8 @@ They describe the platform exactly as the in-editor AI learns it, one reference 
    checks that the PR carries exactly what the compiler emitted: the generated-file header on every
    file, sha256 hashes matching `skills/base44-platform-manifest.json`, frontmatter whose `name`
    equals the directory name, resolving links, and a 40-hex `APPER_COMMIT` pin.
-3. `Auto-merge compiled skill updates` enables squash auto-merge on a labeled PR opened by the sync
-   app whose diff is confined to `skills/base44-platform-*/**` and `APPER_COMMIT`. Everything else
+3. `Auto-merge compiled skill updates` enables squash auto-merge on a labeled PR opened by
+   `base44-github-actions[bot]` whose diff is confined to `skills/base44-platform-*/**` and `APPER_COMMIT`. Everything else
    waits for a human. The Slack notifier posts the PR like any other skill-sync PR.
 
 ### How to change a compiled skill
@@ -171,9 +171,9 @@ paths to read.
 
 ### Operating the pipeline (maintainers)
 
-- The sync PR is opened with a GitHub App installed on this repository (contents and pull requests,
-  write). Apper reads it from `vars.BASE44_SKILLS_APP_ID` and `secrets.BASE44_SKILLS_APP_PRIVATE_KEY`;
-  this repo needs `vars.SKILLS_SYNC_BOT_LOGIN` set to the app's login so auto-merge recognizes its PRs.
+- The sync PR is opened by the `base44-github-actions` GitHub App (id 2616622), the same app the
+  CLI and SDK release workflows use to dispatch here. Apper reads it from
+  `vars.BASE44_GITHUB_ACTIONS_APP_ID` and `secrets.BASE44_GITHUB_ACTIONS_APP_PRIVATE_KEY`.
 - Auto-merge must be enabled in the repository settings, with `Validate base44-platform skills` as
   a required check on `main`.
 - `.github/CODEOWNERS` routes the generated tree and the two workflows to the owning team.

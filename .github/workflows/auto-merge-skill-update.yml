@@ -1,13 +1,13 @@
 name: Auto-merge compiled skill updates
 
-# A nightly sync PR from base44-dev/apper (label `auto-skill-update`, opened by the sync app) that
+# A nightly sync PR from base44-dev/apper (label `auto-skill-update`, opened by the
+# base44-github-actions app, the same bot sync-cli-skill.yml / sync-sdk-skill.yml trust) that
 # touches only the compiled `skills/base44-platform-*` tree and the APPER_COMMIT pin is merged
 # automatically once `Validate base44-platform skills` passes. Anything else with the label (the
 # CLI / SDK sync PRs, a hand-made PR) is left for a human.
 #
-# Requires: GitHub auto-merge enabled on this repository, the validator as a required check on
-# main, and `vars.SKILLS_SYNC_BOT_LOGIN` set to the sync app's login (for example
-# `base44-skills-sync[bot]`). See CONTRIBUTING.md, "Compiled platform skills".
+# Requires: GitHub auto-merge enabled on this repository and the validator as a required check
+# on main. See CONTRIBUTING.md, "Compiled platform skills".
 
 on:
   pull_request:
@@ -19,7 +19,7 @@ permissions:
 
 jobs:
   enable-auto-merge:
-    if: contains(github.event.pull_request.labels.*.name, 'auto-skill-update') && github.event.pull_request.user.login == vars.SKILLS_SYNC_BOT_LOGIN
+    if: contains(github.event.pull_request.labels.*.name, 'auto-skill-update') && github.event.pull_request.user.login == 'base44-github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
