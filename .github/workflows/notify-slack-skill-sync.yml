@@ -1,11 +1,12 @@
 name: Notify Slack on skill-sync PRs
 
-# When an auto-generated base44-cli / base44-sdk skill-sync PR opens, post a
+# When an auto-generated skill-sync PR opens (base44-cli / base44-sdk, or the nightly
+# base44-platform-* tree compiled from base44-dev/apper), post a
 # message to the team Slack channel so someone remembers to review it. Fires
 # only for skill-update PRs; anything else is ignored.
 #
 # Discriminator: the `auto-skill-update` label. The sync workflows
-# (sync-cli-skill.yml / sync-sdk-skill.yml) create their PRs with this label,
+# (sync-cli-skill.yml / sync-sdk-skill.yml here, agent-skills-sync.yml in apper) create their PRs with this label,
 # so it is present in the `opened` event payload. This is a stable, explicit
 # contract — independent of the PR title wording or which bot authored it.
 #

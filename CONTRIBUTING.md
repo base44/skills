@@ -117,6 +117,68 @@ npx skills add . --skill your-skill-name -a cursor
 - Prefer modern JavaScript/TypeScript syntax
 - Follow Base44 SDK conventions
 
+## Compiled platform skills (`base44-platform-*`)
+
+The `skills/base44-platform-*` directories are **generated**. Their source is the Base44 builder's
+system prompt tree in [base44-dev/apper](https://github.com/base44-dev/apper)
+(`backend/app/prompts/`), rendered for an external coding agent by the compiler in
+`backend/scripts/agent_skills` and published here by apper's nightly `agent-skills-sync` workflow.
+They describe the platform exactly as the in-editor AI learns it, one reference per app shape.
+
+### How the pipeline works
+
+1. **Nightly, in apper**: the compiler renders every prompt partial in the capability matrix
+   (`backend/app/user_apps/agent_skills/matrix.py`) with `surface="external"`, validates the result
+   (deterministic output, no builder-tool vocabulary, manifest, links) and opens one PR here on the
+   branch `auto/base44-platform-skills`, labeled `auto-skill-update`. A night with no prompt change
+   opens nothing.
+2. **In this repo**: `Validate base44-platform skills` (`scripts/validate-base44-platform.mjs`)
+   checks that the PR carries exactly what the compiler emitted: the generated-file header on every
+   file, sha256 hashes matching `skills/base44-platform-manifest.json`, frontmatter whose `name`
+   equals the directory name, resolving links, and a 40-hex `APPER_COMMIT` pin.
+3. `Auto-merge compiled skill updates` enables squash auto-merge on a labeled PR opened by the sync
+   app whose diff is confined to `skills/base44-platform-*/**` and `APPER_COMMIT`. Everything else
+   waits for a human. The Slack notifier posts the PR like any other skill-sync PR.
+
+### How to change a compiled skill
+
+Do not edit these files here: the validator fails on a hand edit, and the next sync overwrites it.
+Change the source instead:
+
+- **Wording that is wrong for every agent** (builder and external alike): edit the prompt partial in
+  apper under `backend/app/prompts/`. The nightly sync carries it here.
+- **Wording that only an external agent needs** (a builder-tool instruction with no external
+  equivalent, a pointer to the MCP / CLI surface): use the `external` branch inside the partial,
+  `{% if external %}…{% else %}…{% endif %}`. The builder's render stays byte-identical and is
+  pinned by hash tests. The convention is documented in apper's `backend/app/prompts/CLAUDE.md`
+  (Rule 4).
+- **A new capability, app shape or reference file**: add it to the matrix in apper and classify the
+  partial there. Nothing in this repo needs to change; the sync adds the directory.
+- **A flag that reached 100%** but still gates prompt text: add it to
+  `backend/app/user_apps/agent_skills/shipped_overrides.json` in apper, so the skills describe the
+  shipped arm.
+
+`APPER_COMMIT` names the apper commit the current tree was compiled from; the sync PR body lists
+the prompt-source commits since the previous pin.
+
+### Which reference an agent should read
+
+Each `base44-platform-*` skill's `SKILL.md` routes by app profile (Vite SPA, TanStack Start, native
+mobile, 2D or 3D game). The platform answers that question directly:
+`GET /api/apps/{app_id}/agent-profile` (public API, also reachable through the Base44 MCP
+`execute_api` tool) returns the app's shape, the workspace's entitlements and the exact reference
+paths to read.
+
+### Operating the pipeline (maintainers)
+
+- The sync PR is opened with a GitHub App installed on this repository (contents and pull requests,
+  write). Apper reads it from `vars.BASE44_SKILLS_APP_ID` and `secrets.BASE44_SKILLS_APP_PRIVATE_KEY`;
+  this repo needs `vars.SKILLS_SYNC_BOT_LOGIN` set to the app's login so auto-merge recognizes its PRs.
+- Auto-merge must be enabled in the repository settings, with `Validate base44-platform skills` as
+  a required check on `main`.
+- `.github/CODEOWNERS` routes the generated tree and the two workflows to the owning team.
+- To rerun a sync by hand, dispatch apper's `Agent skills sync` workflow (it has a dry-run input).
+
 ## Questions?
 
 - Check existing skills for examples

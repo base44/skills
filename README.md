@@ -69,6 +69,20 @@ npx skills add base44/skills --skill base44-remote-dev --skill base44-sandbox --
 | [`base44-troubleshooter`](skills/base44-troubleshooter/SKILL.md) | Troubleshoot production issues using backend function logs. Use when investigating app errors or diagnosing production problems. |
 | [`base44-remote-dev`](skills/base44-remote-dev/SKILL.md) | Develop a Base44 app remotely from your own coding agent by connecting it to the Base44 sandbox over MCP or the `base44 sandbox` CLI. |
 | [`base44-sandbox`](skills/base44-sandbox/SKILL.md) | Author Base44 app code inside the cloud sandbox — no deploy/push; writing a resource file (function, actor, entity, agent) into the sandbox is what ships it. |
+| [`base44-platform-platform`](skills/base44-platform-platform/SKILL.md) | Platform concepts for a Base44 app: entities, functions or server code, workflows, file structure, authentication and user invites, per app type. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-entities`](skills/base44-platform-entities/SKILL.md) | Entity schemas, the entity SDK and row-level security rules, as the Base44 builder teaches them. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-backend-functions`](skills/base44-platform-backend-functions/SKILL.md) | Backend functions on Cloudflare (or TanStack Start server code): secrets, the SDK on the server, auth, webhooks, testing, the InvokeLLM model table. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-workflows`](skills/base44-platform-workflows/SKILL.md) | Workflows: trigger-driven `.jsonc` processes under `base44/workflows/` with the full authoring guide, plus the legacy automations pipeline. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-agents`](skills/base44-platform-agents/SKILL.md) | In-app AI agents: config files, tool permissions, channels, the agents SDK and code agents on the AI gateway. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-actors`](skills/base44-platform-actors/SKILL.md) | Realtime actors: stateful WebSocket rooms for multiplayer, presence, collaborative boards and chat. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-integrations-sdk`](skills/base44-platform-integrations-sdk/SKILL.md) | Built-in integrations (InvokeLLM, SendEmail, file uploads, data extraction) with every Core endpoint schema, plus analytics. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-connectors`](skills/base44-platform-connectors/SKILL.md) | App connectors: OAuth integrations in shared, app-user and BYO-shared modes, and how server code reads their tokens. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-frontend`](skills/base44-platform-frontend/SKILL.md) | Frontend coding standards: conventions, installed packages, routing, Tailwind and design tokens, npm installs, per framework. Compiled nightly from the Base44 builder's own prompt. |
+| [`base44-platform-games`](skills/base44-platform-games/SKILL.md) | Phaser 4 and Three.js game references: architecture, assets, analytics and per-topic engine guides. Compiled nightly from the Base44 builder's own prompt. |
+
+### Platform skills (compiled)
+
+The `base44-platform-*` skills are generated from the Base44 builder's own system prompt by [base44-dev/apper](https://github.com/base44-dev/apper) and synced here nightly, so they describe the platform exactly as the in-editor AI learns it: one reference per app shape (Vite SPA, TanStack Start, native mobile, 2D/3D game). Ask the platform which shape an app is with `GET /api/apps/{app_id}/agent-profile` (also reachable through the Base44 MCP `execute_api` tool); it returns the exact reference files to read. Do not edit these files by hand: the `APPER_COMMIT` file records the apper commit they were compiled from, and the next sync overwrites them. How the pipeline works and how to change the content: [CONTRIBUTING.md](CONTRIBUTING.md#compiled-platform-skills-base44-platform-).
 
 ## About Agent Skills
 
