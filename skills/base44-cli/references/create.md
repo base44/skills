@@ -22,10 +22,10 @@ npx base44 create [name] --path <path> [options]
 |--------|-------------|----------|
 | `name` | Project name (positional argument) | Yes* |
 | `-p, --path <path>` | Path where to create the project | Yes* |
-| `-t, --template <id>` | Template ID (see templates below) | No |
-| `--deploy` | Build and deploy the site (includes pushing entities) | No |
-| `--no-skills` | Skip AI agent skills installation (skills are added by default) | No |
-| `-w, --workspace <id>` | Workspace (organization) ID to create the app in (defaults to your personal workspace) | No |
+| `-t, --template <id>` | Template ID (see templates below) | Yes* |
+| `--deploy` | Build and deploy the site (includes pushing entities) | Yes* |
+| `--no-skills` | Skip AI agent skills installation (skills are added by default) | Yes* |
+| `-w, --workspace <id>` | Workspace (organization) ID to create the app in (defaults to your personal workspace) | Yes* |
 
 *Required for non-interactive mode. Both `name` and `--path` must be provided together.
 
