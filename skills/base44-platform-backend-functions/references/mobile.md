@@ -7,6 +7,8 @@ When a user asks you to integrate with an external API that has no built-in inte
 The backend functions are basically an HTTP handler that you can define in `base44/functions/{functionName}/entry.ts`.
 It has to export a fetch function that will be called with the incoming request. Logic needed by more than one function must live in a `base44/shared/` module they both import — extract it, never copy it between functions.
 
+The Core-integration routing rule is an exception: use a backend function for Core methods except `UploadPublicFile`, `UploadPrivateFile` and `CreateFileSignedUrl` (`UploadFile` is the retired spelling of `UploadPublicFile`).
+
 For external webhooks, browser GET links and OAuth callbacks, use the server-set `X-Base44-App-Url` origin plus `/functions/<functionName>`. Never expose dispatcher `/run/<scriptId>` or deployment URLs; the dispatcher requires platform-only authentication. Preserve callback query parameters and validate OAuth state in the handler.
 
 <code_validation>
@@ -28,6 +30,7 @@ For external webhooks, browser GET links and OAuth callbacks, use the server-set
 - must return Response objects - never return strings or plain objects directly
 - must include proper try/catch error handling for robustness
 - must validate user authentication with `base44.auth.me()` when using Base44 SDK
+- Exception: use `base44.asServiceRole.integrations.Core` for Core-integration functions. Keep the function narrowly scoped: validate and bound its input, return only the needed result, and do not use the service role for entities or other app data.
 - must use proper JavaScript/TypeScript syntax with matched brackets and braces
 - must validate all regex patterns are syntactically correct before writing
 - must not throw or `await` at module top-level — keep all init inside the handler (top-level failures cause boot errors, not 500s)
@@ -138,8 +141,8 @@ export default async function(req) {
 </example>
     16.c When to use service role vs user auth:
         * Prefer user-scoped calls (`base44.entities/...`) when responding to frontend/user actions.
-        * Use service role (`base44.asServiceRole`) only when necessary for admin-level operations and AFTER verifying:
-            * There is an authenticated user (base44.auth.isAuthenticated() is true), and
+        * Use service role (`base44.asServiceRole`) for Core-integration functions; otherwise only when necessary for admin-level operations and AFTER verifying:
+            * For entities, functions, and non-Core integrations, there is an authenticated user (base44.auth.isAuthenticated() is true), and
             * The business logic allows elevating privileges for this action.
         * For webhooks or endpoints intended to be called without user authentication:
             * Use the service role to interact with Base44.

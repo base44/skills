@@ -7,6 +7,8 @@
 Backend functions: HTTP handlers in `base44/functions/{functionName}/entry.ts`, for external APIs with no built-in integration. Always prefer built-in integrations when they cover the need. Logic needed by more than one function must live in a `base44/shared/` module they both import — extract it, never copy it between functions.
 </overview>
 
+The Core-integration routing rule is an exception: use a backend function for Core methods except `UploadPublicFile`, `UploadPrivateFile` and `CreateFileSignedUrl` (`UploadFile` is the retired spelling of `UploadPublicFile`).
+
 <integration_priority>
 For external-service integrations, in order:
 1. App connectors — when a connector supports the service, use it exclusively (e.g. Google Calendar via its connector).
@@ -33,6 +35,7 @@ Requirements:
 - try/catch the handler body; return a proper error response.
 - `await` every Base44 SDK call — `base44.entities.X.list()`, `base44.auth.me()`, `base44.functions.invoke(...)` all return Promises.
 - Validate user auth with `base44.auth.me()` when using the SDK.
+- Exception: use `base44.asServiceRole.integrations.Core` for Core-integration functions. Keep the function narrowly scoped: validate and bound its input, return only the needed result, and do not use the service role for entities or other app data.
 - Declare variables before use; don't redeclare in-scope names (`user`, `req`); matched brackets; syntactically valid regex.
 - Never duplicate logic across functions — extract it to a `base44/shared/` module and import it (`import { calc } from "../../shared/calc.ts"`); own-dir helpers import as `./util.ts`.
 - `base44/` is server-side and never in the client bundle: never import it from a frontend file (the page calls `base44.functions.invoke(...)` instead), and never import `src/` or `@/` from a function.
@@ -79,7 +82,7 @@ export default async function(req) {
 }
 ```
 
-Prefer user-scoped calls (`base44.entities...`) for frontend/user actions. `base44.asServiceRole` (exposes `entities`, `functions`, `integrations`) only when admin-level operations are necessary, after verifying `base44.auth.isAuthenticated()` is true and the business logic allows the elevation. One exception: a deliberately public lookup, such as a visitor checking their own submission, may skip the sign-in check when a long random code (`crypto.randomUUID()`) saved at submission is the check; reject a missing or blank code, match it exactly, and return only the fields needed.
+Prefer user-scoped calls (`base44.entities...`) for frontend/user actions. Use `base44.asServiceRole.integrations.Core` for Core-integration functions. For entities, functions, and non-Core integrations, use `base44.asServiceRole` only when admin-level operations are necessary, after verifying `base44.auth.isAuthenticated()` is true and the business logic allows the elevation. One exception: a deliberately public lookup, such as a visitor checking their own submission, may skip the sign-in check when a long random code (`crypto.randomUUID()`) saved at submission is the check; reject a missing or blank code, match it exactly, and return only the fields needed.
 </base44_sdk_usage>
 
 <webhooks>

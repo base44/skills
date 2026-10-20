@@ -7,7 +7,7 @@ description: "Base44 built-in integrations on the SDK client: InvokeLLM, SendEma
      Edits here are overwritten by the nightly sync; change the source partials in apper. -->
 # Base44 integrations sdk
 
-Core integrations are callable from the browser SDK and from server code; the endpoint schemas below are the ones the platform serves today.
+File uploads and signed URLs are called from the browser SDK; every other Core integration runs in server code on an app with core-integration control, the default for new apps (profile `core_integrations: backend_functions_only`). The endpoint schemas below are the ones the platform serves today.
 
 ## Pick the reference for this app
 
@@ -19,6 +19,6 @@ native mobile (Expo) app; `src/game/2d/` or `src/game/3d/` means a game; otherwi
 
 | Profile | Read |
 |---|---|
-| Web app, Vite SPA (the default web template) | [Integrations and analytics SDK (web apps)](references/web.md) |
-| Web app, TanStack Start | [Integrations and analytics SDK (web apps)](references/web.md) |
+| Web app, Vite SPA (the default web template) | [Integrations and analytics SDK (Vite SPA)](references/web-spa.md) |
+| Web app, TanStack Start | [Integrations and analytics SDK (TanStack Start)](references/web-tanstack.md) |
 | Native mobile app (Expo, React Native) | [Integrations SDK (mobile apps)](references/mobile.md) |

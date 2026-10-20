@@ -8,29 +8,32 @@ Integrations are packages of functions that are used to interact with external d
 You can use integration packages from the pre-initialized base44 sdk client.
 and call spefici integrations by with the relevant parameters.
 
-for example:
+<core_integrations_backend_functions>
+All `base44.integrations.Core` SDK methods except `UploadPublicFile`, `UploadPrivateFile` and `CreateFileSignedUrl` must run inside a backend function using `base44.asServiceRole.integrations.Core`. Check every Core Integration call in the client code. The restricted methods cannot remain there. `UploadFile` is the retired spelling of `UploadPublicFile` and is equally client-callable.
+
+Use a clearly named, narrow app operation, not a 1:1 Core proxy: hardcode the Core method, expose and validate only the bounded inputs the feature needs, keep privileged configuration server-side, and return only the required result. Never accept an integration name plus an arbitrary payload for forwarding.
+Limit each request's cost and scope (for example prompt/file size, item count, output count, or fixed recipients/destinations) and add feature-appropriate abuse controls when available.
+
+Upload files directly from the client with `UploadPublicFile` or `UploadPrivateFile`. Pass the resulting `file_url` or `file_uri` to a backend function for follow-on Core work such as transcription or extraction. Signing is not such work: call `CreateFileSignedUrl` from the client with the `file_uri`, rather than brokering it through a function of your own. This is the shipped default: the app profile reports `core_integrations: backend_functions_only`. Only on an app whose profile reports `client_allowed` may the client call the restricted Core methods directly.
+
+The `base44-platform-backend-functions` skill (mobile reference) covers file placement, the frontend invocation path and testing; use the Core service-role rule above for the function body.
+</core_integrations_backend_functions>
+
+```js
 import { base44 } from "@/api/base44Client";
-const res = await base44.integrations.Core.InvokeLLM({
-  prompt: "Give me data on Apple (the company)",
-  add_context_from_internet: true,
-  response_json_schema: {
-    type: "object",
-    properties: {
-      stock_price: {type: "number"},
-      news_headlines: {type: "array", items: {type: "string"}},
-    },
-  }
-});
+// private end-user uploads:
+const {file_uri} = await base44.integrations.Core.UploadPrivateFile({file});
+const {signed_url} = await base44.integrations.Core.CreateFileSignedUrl({file_uri});
+
+// public end-user uploads:
+const {file_url} = await base44.integrations.Core.UploadPublicFile({file});
+```
 
 InvokeLLM supports an optional `model` parameter for higher quality output on complex tasks (e.g. model: "claude-sonnet-5"). Non-default models use more integration credits, so only use them when the task requires it. When you use a non-default model, tell the user that it uses more integration credits. Only 'gemini_3_flash' and 'gemini_3_1_pro' support add_context_from_internet. Using an incompatible model will raise an error.
 
 <end_user_uploads>
 Default every end-user upload to `UploadPrivateFile`. Use `UploadPublicFile` only when the user asked for these files to be public, or when something outside the app must fetch the file later without signing in.
 </end_user_uploads>
-
-another example:
-import { base44 } from "@/api/base44Client";
-const {file_uri} = await base44.integrations.Core.UploadPrivateFile({file: file});
 
 `SendEmail` reaches registered app users normally. This app may ALSO email addresses that are not registered users, but only with a connected custom domain, on a paid plan, and subject to content screening, recipient-hygiene and anti-abuse limits that can refuse or pause sends — so never promise delivery to a non-registered address, and never route untrusted end-user input straight into the recipient. Invitations still use `base44.users.inviteUser`.
 
