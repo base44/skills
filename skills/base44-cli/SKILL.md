@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, realtime actors, ai agents), initialization and actions (resource creation, deployment), and any other platform operation through the public API (custom domains, SEO, app users, workspace members). This skill is the place for learning about how to configure resources, including actors — the realtime/WebSocket primitive behind multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
+description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, realtime actors, ai agents), initialization and actions (resource creation, deployment). This skill is the place for learning about how to configure resources, including actors — the realtime/WebSocket primitive behind multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
 metadata:
   sourcePackage:
     name: base44
@@ -22,14 +22,13 @@ This skill activates on ANY mention of "base44" or when a `base44/` folder exist
    - This skill only handles CLI commands (login, deploy, entities push)
    - **Except running the app locally** — stays here. Read [Running Local Development](#running-local-development)
      before starting a dev server: one way of running hits production data.
-3. If **NO**, decide which case applies:
+3. If **NO**, decide between two initialization paths:
    - **Provisioned app** — the Base44 app already exists because it was just provisioned through a Stripe Projects / projects.dev flow, OR `BASE44_APP_ID` (or `BASE44_PROJECTS_BASE44_APP_ID`) is present in the environment or a `.env`/`.env.local` file:
      - Run `npx base44 scaffold` to set up local files for that **existing** app
      - **DO NOT run `npx base44 create`** — that creates a second, duplicate app. See [scaffold.md](references/scaffold.md).
    - **New project** — no app exists yet and none was provisioned:
      - This skill (base44-cli) handles the request; guide the user through `npx base44 create`
      - Do NOT activate base44-sdk yet
-   - **Neither: a question or change about an existing app or workspace** (its domains, SEO, users, workspace members, and so on) — don't create or scaffold anything. Use a dedicated command or [`base44 api`](#any-other-api-operation) with `--app-id <id>`.
 
 ## Critical: Local Installation Only
 
@@ -226,7 +225,7 @@ cat ./script.ts | npx base44 exec --app-id app_123
 npx base44 logs --app-id app_123 --level error
 ```
 
-Use `--app-id` for app-scoped commands like `exec`, `logs` and `api fetch`.
+Use `--app-id` for app-scoped commands like `exec` and `logs`.
 
 Do **not** use `--app-id` for commands that need local project files:
 - `base44 create` creates a new app, so it rejects `--app-id`
@@ -259,7 +258,7 @@ npx base44 logs --app-id app_123 --json
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 scaffold` | Scaffold a local project for an existing Base44 app (by app ID) | [scaffold.md](references/scaffold.md) |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
-| `base44 eject` | Download the code for an existing Base44 project **as a new app** (creates "{Name} Copy"); to only download the code, use `base44 api fetch GET "/api/apps/{app_id}/coding/export-to-zip" --output app.zip` | [eject.md](references/eject.md) |
+| `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 | `base44 visibility <level>` | Set the app's visibility on the server (`public`, `private`, or `workspace`) | [visibility.md](references/visibility.md) |
 
@@ -294,8 +293,6 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 | Create Entities        | Define entities in `base44/entities` folder | [entities-create.md](references/entities-create.md) |
 | `base44 entities push` | Push local entities to Base44               | [entities-push.md](references/entities-push.md)     |
 | RLS Patterns           | Row-level security examples and operators   | [rls-examples.md](references/rls-examples.md) ⚠️ **READ FOR RLS** |
-
-Without a local project, read an app's entities with `base44 api fetch GET "/api/apps/{app_id}/entity-schemas" --read-only --app-id <id>`, and create one with `POST` on the same path (a later `entities push` or source sync can overwrite it, so prefer a local file when the app has a project). Don't run `entities push` from a folder that lacks the app's other entity files: it deletes every entity not present locally.
 
 #### Entity Schema (Quick Reference)
 
@@ -334,7 +331,6 @@ For complete documentation, see [entities-create.md](references/entities-create.
 | `base44 functions delete <names...>` | Delete one or more deployed functions from Base44 | [functions-delete.md](references/functions-delete.md) |
 | `base44 functions list`   | List all deployed functions on Base44 remote  | [functions-list.md](references/functions-list.md)       |
 | `base44 functions pull [name]` | Pull deployed functions from Base44 to local files | [functions-pull.md](references/functions-pull.md)  |
-| `base44 logs [--function <names>] [--level <l>] [--since <t>]` | Fetch deployed functions' logs; use it for "did a function error" instead of `base44 api` | [project-logs.md](../base44-troubleshooter/references/project-logs.md) |
 
 ### Workflow Runs
 
