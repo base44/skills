@@ -1,6 +1,6 @@
 # base44 api
 
-Search and call any public Base44 API operation. The commands read the server's OpenAPI spec, so they cover every public endpoint, including ones with no dedicated CLI command.
+Search and call any Apps API or Workspace API operation with your CLI login; no API key or personal access token is needed. The commands read the server's OpenAPI spec, so they cover every public endpoint, including ones with no dedicated CLI command.
 
 ## When to Use
 
@@ -76,16 +76,17 @@ Call an operation, or with `--help` print its contract. The path may include a q
 
 - `{app_id}` is filled from `--app-id` or the linked project, so an endpoint from `search` or `catalog` can be passed as is.
 - **Any other placeholder** (e.g. `{workflow_id}`) must be replaced with a real value by hand; `fetch` fails before sending otherwise.
+- **The workspace ID** is never filled in: Workspace API operations take it as a `workspaceId` query parameter or a `{workspace_id}` path placeholder. Get it from `base44 workspace list`.
 - `--help` accepts the path template as is.
 
 ## Read-Only Mode
 
-`--read-only` refuses, before sending, any operation the spec doesn't mark read-only. Use it whenever you are only looking, so a wrong endpoint can't change anything. On `search`, `catalog` and `grep` it lists only read-only operations.
+`--read-only` refuses, before sending, any operation the spec doesn't mark read-only. Use it whenever you are only looking, so a wrong endpoint can't change anything. It also refuses a path with an encoded `/`, `\` or `.` (`%2f`, `%5c`, `%2e`), which it can't check. On `search`, `catalog` and `grep` it lists only read-only operations.
 
 ## Request Bodies and Responses
 
 - **JSON body:** `--body '{"key":"value"}'`, `--body @payload.json`, or `--body @- < payload.json`. Stdin is read only with `@-`.
-- **Multipart body:** when the contract shows `requestBodyContentType: multipart/form-data`, use `--form name=value` and `--form name=@path` for files instead of `--body`. Don't combine `--body` and `--form`.
+- **Multipart body:** when the contract shows `requestBodyContentType: multipart/form-data`, use `--form name=value` and `--form name=@path` for files instead of `--body`; add `;type=<media type>` after the path to set the file's content type. Don't combine `--body` and `--form`.
 - **Binary responses** are not printed; add `--output <file>` to save them.
 - **Global `--json`** keeps stdout machine-readable: a non-JSON text response is wrapped as `{status, contentType, body}`.
 - The contract is JSON; cut it down with e.g. `| jq '.parameters, .requestBodySchema'`.
@@ -116,8 +117,11 @@ npx base44 api fetch GET "/api/apps/{app_id}/workflows/runs" --app-id app_123
 npx base44 api fetch POST "/api/apps/{app_id}/<path>" --body @payload.json
 cat payload.json | npx base44 api fetch POST "/api/apps/{app_id}/<path>" --body @-
 
-# Upload a file as multipart
-npx base44 api fetch POST "/api/apps/{app_id}/<path>" --form file=@./data.csv
+# A Workspace API call (find the ID with base44 workspace list)
+npx base44 api fetch GET "/api/workspace/groups?workspaceId=<workspace-id>"
+
+# Import entity records from a CSV file, sent as multipart
+npx base44 api fetch POST "/api/apps/{app_id}/entities/Task/import" --form "file=@tasks.csv;type=text/csv"
 
 # Save a binary response
 npx base44 api fetch GET "/api/apps/{app_id}/<path>" --output ./download.zip
@@ -132,4 +136,5 @@ npx base44 api fetch GET "/api/apps/{app_id}/<path>" --output ./download.zip
 ## Notes
 
 - `fetch` has no timeout: a call such as a deploy can take minutes
-- A failed call returns the server's own error
+- A failed call returns the server's own error and a request ID; on a rate limit it also says how long to wait
+- Quote the path so the shell doesn't read the braces or the `?`
