@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.7
+    version: 0.2.1
 ---
 
 # Base44 CLI
@@ -225,7 +225,7 @@ cat ./script.ts | npx base44 exec --app-id app_123
 npx base44 logs --app-id app_123 --level error
 ```
 
-Use `--app-id` for app-scoped commands like `exec` and `logs`.
+Use `--app-id` for app-scoped commands like `exec`, `logs`, `sandbox`, `branches list`, and `api fetch`.
 
 Do **not** use `--app-id` for commands that need local project files:
 - `base44 create` creates a new app, so it rejects `--app-id`
@@ -240,6 +240,20 @@ The CLI has a global `--json` option that makes commands emit a machine-readable
 npx base44 connectors list-available --json
 npx base44 logs --app-id app_123 --json
 ```
+
+## Global `--branch` Option
+
+The CLI has a global `--branch <name>` option that targets `sandbox` commands at a specific app branch instead of `main`. Pass the exact branch name — discover valid names with `base44 branches list --json` — and it is resolved to a branch ID on each call, so a missing or ambiguous name fails before anything else runs. Omitting `--branch`, or passing `--branch main`, targets `main`.
+
+```bash
+# Discover branch names
+npx base44 branches list --app-id app_123 --json
+
+# Read a file from a specific branch's sandbox
+npx base44 sandbox read src/index.ts --branch feature-x
+```
+
+`--branch` is **sandbox-only**: every other command rejects it explicitly (rather than silently ignoring it) if passed.
 
 ## Available Commands
 
@@ -283,7 +297,7 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 build` | Build the site with its app id injected — use instead of a bare `npm run build` | — |
+| `base44 build` | Build the site with its app id injected — use instead of a bare `npm run build` | [build.md](references/build.md) |
 | `base44 deploy` | Deploy all resources (entities, functions, actors, agents, agent skills, connectors, auth config, and site); asks whether to build first, or pass `--build` / `--no-build` | [deploy.md](references/deploy.md) |
 
 ### Entity Management
@@ -315,10 +329,10 @@ ALWAYS follow this exact structure when creating entity files:
 }
 ```
 
-**Field types:** `string`, `number`, `integer`, `boolean`, `array`, `object`, `binary`
+**Field types:** `string`, `number`, `integer`, `boolean`, `array`, `object`, `binary`, `null` — or an array of these for a union (e.g. `["string", "null"]`)
 **String formats:** `date`, `date-time`, `time`, `email`, `uri`, `hostname`, `ipv4`, `ipv6`, `uuid`, `file`, `regex`, `richtext`
 **For enums:** Add `"enum": ["value1", "value2"]` and optionally `"default": "value1"`
-**Entity names:** Must be alphanumeric only (pattern: `/^[a-zA-Z0-9]+$/`)
+**Entity names:** Letters, numbers, and underscores only (pattern: `/^\w+$/`)
 
 For complete documentation, see [entities-create.md](references/entities-create.md).
 
@@ -540,6 +554,17 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 |---------|-------------|-----------|
 | `base44 exec` | Run a script (via stdin) with the Base44 SDK pre-authenticated | [exec.md](references/exec.md) |
 
+### API Exploration
+
+The CLI can discover and call any operation in Base44's public REST API directly, driven by the server's own OpenAPI spec — useful when nothing else in the CLI exposes what you need. Start with `catalog` or `search` to find the right operation, fall back to `grep` when a keyword search misses, then use `fetch` to inspect its contract and call it.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 api catalog [area]` | List the API's areas, or every operation in one area | [api-catalog.md](references/api-catalog.md) |
+| `base44 api search <text...>` | Search every API operation by what it does | [api-search.md](references/api-search.md) |
+| `base44 api grep <pattern>` | Search the API spec with a regular expression, for when search misses | [api-grep.md](references/api-grep.md) |
+| `base44 api fetch [method] [path]` | Call an API operation directly; add `-h/--help` after a path for its contract | [api-fetch.md](references/api-fetch.md) |
+
 ### Type Generation
 
 | Command | Description | Reference |
@@ -552,12 +577,29 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 ### Site Management
 
-| Command              | Description                               | Reference                                   |
-| -------------------- | ----------------------------------------- | ------------------------------------------- |
-| `base44 site deploy` | Deploy built site files to Base44 hosting | [site-deploy.md](references/site-deploy.md) |
-| `base44 site open`   | Open the deployed site in your browser    | [site-open.md](references/site-open.md)     |
+| Command               | Description                                                | Reference                                     |
+| ---------------------- | ------------------------------------------------------------ | ------------------------------------------------ |
+| `base44 site deploy`  | Deploy built site files to Base44 hosting                  | [site-deploy.md](references/site-deploy.md)   |
+| `base44 site dev`     | Run the site's dev server, with no local backend            | [site-dev.md](references/site-dev.md)         |
+| `base44 site install` | Install the site's dependencies with its configured command | [site-install.md](references/site-install.md) |
+| `base44 site open`    | Open the deployed site in your browser                      | [site-open.md](references/site-open.md)       |
 
 **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
+
+### Remote Sandbox
+
+Sandbox commands develop an app through its server-side sandbox — a remote dev environment for the app, distinct from local `base44 dev`. They always print a JSON document to stdout (not gated by `--json`), and need an app context (`--app-id`, `BASE44_APP_ID`, or a linked project). Writes made via `write`/`edit`/`run` are committed but not checkpointed — see [sandbox-checkpoint.md](references/sandbox-checkpoint.md).
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 sandbox ls [path]` | List directory entries in the sandbox | [sandbox-list-directory.md](references/sandbox-list-directory.md) |
+| `base44 sandbox read <paths...>` | Read file contents from the sandbox | [sandbox-read-file.md](references/sandbox-read-file.md) |
+| `base44 sandbox write <path>` | Create or overwrite a file in the sandbox | [sandbox-write-file.md](references/sandbox-write-file.md) |
+| `base44 sandbox edit <path>` | Apply exact old→new string edits to a file | [sandbox-edit-file.md](references/sandbox-edit-file.md) |
+| `base44 sandbox grep <pattern>` | Search sandbox files for a pattern | [sandbox-grep.md](references/sandbox-grep.md) |
+| `base44 sandbox run <command...>` | Run a shell command in the sandbox | [sandbox-run-command.md](references/sandbox-run-command.md) |
+| `base44 sandbox checkpoint` | Save a restore point in the builder's version history (run after each unit of work) | [sandbox-checkpoint.md](references/sandbox-checkpoint.md) |
+| `base44 branches list` | List main and active branch names for use with `--branch` | [branches-list.md](references/branches-list.md) |
 
 ## Quick Start
 
@@ -601,6 +643,8 @@ Or deploy individual resources:
 - `npx base44 auth pull` - Pull auth config from Base44
 - `npx base44 auth push` - Push auth config only
 - `npx base44 site deploy -y` - Deploy site only
+- `npx base44 site install` - Install site dependencies only, no login required
+- `npx base44 site dev -- <args>` - Run only the frontend dev server, no local backend (for hosted sandboxes)
 
 ## Common Workflows
 

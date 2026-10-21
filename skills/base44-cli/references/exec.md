@@ -15,8 +15,8 @@ echo "<code>" | npx base44 exec [options]
 |--------|-------------|----------|---------|
 | `--local` | Run against the local `base44 dev` server instead of the deployed app | No | `false` |
 | `--port <number>` | Port the local dev server is on. Only valid with `--local` | No | `4400` |
-| `--privileged` | Run with admin privileges (bypass RLS). Requires app owner/editor role | No | `false` |
-| `--data-env <environment>` | Data environment to run against (e.g. `dev`, `prod`) | No | - |
+| `--privileged` | Run with admin privileges (bypass RLS). Requires app owner/editor role. Also settable via `BASE44_PRIVILEGED` | No | `false` |
+| `--data-env <environment>` | Data environment to run against (e.g. `dev`, `prod`). Also settable via `BASE44_DATA_ENV` | No | - |
 
 ## How It Works
 
@@ -65,13 +65,26 @@ echo "..." | npx base44 exec --data-env prod
 
 ## Requirements
 
-- Must be authenticated (`npx base44 login`)
+- Must be authenticated (`npx base44 login`) — **unless** an environment-supplied target is set (see below), in which case no platform login is required
 - Must run in one of these contexts:
   - from a linked Base44 project directory, or
   - with `--app-id <id>`, or
   - with `BASE44_APP_ID` set
 - Script must be piped via stdin (non-interactive mode)
 - `--port` requires `--local` to also be set
+
+## Environment-Supplied Target
+
+For running `exec` outside a developer's machine (e.g. a platform-hosted sandbox), set these environment variables instead of logging in:
+
+| Variable | Purpose |
+|----------|---------|
+| `BASE44_EXEC_ACCESS_TOKEN` | Access token the SDK authenticates with |
+| `BASE44_EXEC_SERVER_URL` | Server URL the SDK talks to |
+| `BASE44_EXEC_SERVICE_TOKEN` | Optional; enables `base44.asServiceRole` in the script |
+| `BASE44_EXEC_SDK_VERSION` | Optional; pins an exact `@base44/sdk` version (e.g. `0.8.52`) instead of the latest release |
+
+`BASE44_EXEC_ACCESS_TOKEN` and `BASE44_EXEC_SERVER_URL` must be set together. When either is set, `exec` skips the normal login requirement and `--local` cannot also be used.
 
 ## Running Against the Local Dev Server
 
@@ -88,3 +101,4 @@ echo "..." | npx base44 exec --data-env prod
 - `--privileged` bypasses row-level security (RLS); requires the app owner or editor role
 - Exit code from the script is forwarded as the CLI process exit code
 - This command requires stdin to be piped (it does not accept input in interactive TTY mode)
+- `exec` is exempt from Deno's default minimum-dependency-age cooldown for `@base44/sdk` specifically, so a release published within the last 24 hours is used immediately instead of Deno silently falling back to the previous version. Other npm packages a script imports are still subject to Deno's default cooldown (a version published in the last 24 hours is not used until it ages past that)

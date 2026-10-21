@@ -73,8 +73,10 @@ a healthy stream:
 - **Redeploying mid-follow is safe.** A deploy rotates the script in seconds and the
   same open stream delivers the new code's lines on the next invoke. Do not tear the
   stream down and rebuild it after every deploy.
-- **`--since` is rejected with `--follow`** (the stream starts from now), as are
-  `--until` and `--order`. For anything historical, use a one-shot fetch.
+- **`--until` and `--order` are rejected with `--follow`.** `--since` is allowed but
+  forces the run into polling instead of streaming (a live stream only carries events
+  from the moment it opens, so asking for the past has nothing to stream). For
+  anything historical, prefer a one-shot fetch.
 - **The mode is decided once, at startup.** If the first connection is refused or
   unreachable, the run polls for its whole life. If the stream opens, there is no
   polling fallback left.

@@ -4,8 +4,10 @@ Practical Row-Level Security patterns for common application types.
 
 **Important:** Base44 RLS supports:
 - **Logical operators:** `$or`, `$and`, `$nor` for combining conditions
-- **Field operators (for `data.*` fields):** `$in`, `$nin`, `$ne`, `$all`
+- **Field operators (for `data.*` fields, and `created_by`/`created_by_id`):** `$eq`, `$ne`, `$in`, `$nin`, `$gt`, `$gte`, `$lt`, `$lte`, `$exists`, `$all`, `$size`, `$elemMatch`
 - **user_condition:** Equality only (no operators)
+
+**Local dev caveat:** `npx base44 dev`'s local RLS emulator only evaluates `$in`, `$nin`, `$ne`, `$all` — a rule using `$eq`, `$gt`, `$gte`, `$lt`, `$lte`, `$exists`, `$size`, or `$elemMatch` pushes and validates fine, but denies every record locally (the condition always evaluates to false). Test rules that use these operators against a deployed app, not `base44 dev`.
 
 ## Contents
 - [Simple Patterns (JSON Schema)](#simple-patterns-json-schema)
@@ -229,7 +231,7 @@ Combine multiple conditions using `$or`, `$and`, or `$nor`:
 
 ### Field Operators for data.* Fields
 
-Use `$in`, `$nin`, `$ne`, `$all` for comparing entity data fields:
+Use `$eq`, `$ne`, `$in`, `$nin`, `$gt`, `$gte`, `$lt`, `$lte`, `$exists`, `$all`, `$size`, `$elemMatch` for comparing entity data fields. `$gt`/`$gte`/`$lt`/`$lte`/`$exists`/`$size`/`$elemMatch` are schema-validated but **not evaluated by `npx base44 dev`'s local RLS emulator** (see the caveat above) — verify these against a deployed app:
 
 **Access based on tags ($in):**
 ```jsonc
@@ -270,6 +272,28 @@ Use `$in`, `$nin`, `$ne`, `$all` for comparing entity data fields:
   "rls": {
     "read": {
       "data.required_tags": { "$all": ["approved", "reviewed"] }
+    }
+  }
+}
+```
+
+**Numeric/date comparison ($gt, $gte, $lt, $lte) — verify against a deployed app, not `base44 dev`:**
+```jsonc
+{
+  "rls": {
+    "read": {
+      "data.priority_score": { "$gte": 50 }
+    }
+  }
+}
+```
+
+**Field is present ($exists) — verify against a deployed app, not `base44 dev`:**
+```jsonc
+{
+  "rls": {
+    "read": {
+      "data.archived_at": { "$exists": false }
     }
   }
 }
@@ -427,7 +451,7 @@ Use a combination of entity-level RLS and field-level security:
 | Multiple OR/AND conditions | JSON Schema RLS with `$or`/`$and` |
 | Field value checks with `$in`/`$ne`/etc. | JSON Schema RLS for `data.*` fields |
 | Field-level access control | JSON Schema FLS (field-level `rls`) |
-| Complex comparison operators (`$gt`, `$lt`) | Backend functions |
+| Comparison operators (`$gt`, `$lt`, `$gte`, `$lte`) | JSON Schema RLS — schema-validated, but not emulated by `base44 dev`; test against a deployed app |
 | Very complex business logic | Backend functions |
 
 ### Common Role Patterns
@@ -446,11 +470,15 @@ Use a combination of entity-level RLS and field-level security:
 | `$or` | Yes | Combine multiple conditions |
 | `$and` | Yes | All conditions must match |
 | `$nor` | Yes | None of the conditions match |
-| `$in` | Yes | For `data.*` fields only |
-| `$nin` | Yes | For `data.*` fields only |
-| `$ne` | Yes | For `data.*` fields only |
-| `$all` | Yes | For `data.*` fields only |
-| `$gt`, `$lt`, `$gte`, `$lte` | No | Use backend functions |
+| `$eq` | Yes | For `data.*`/`created_by`/`created_by_id` fields |
+| `$in` | Yes | For `data.*`/`created_by`/`created_by_id` fields |
+| `$nin` | Yes | For `data.*`/`created_by`/`created_by_id` fields |
+| `$ne` | Yes | For `data.*`/`created_by`/`created_by_id` fields |
+| `$all` | Yes | For `data.*`/`created_by`/`created_by_id` fields |
+| `$gt`, `$lt`, `$gte`, `$lte` | Yes | Not emulated by `base44 dev` — verify against a deployed app |
+| `$exists` | Yes | Not emulated by `base44 dev` — verify against a deployed app |
+| `$size` | Yes | Not emulated by `base44 dev` — verify against a deployed app |
+| `$elemMatch` | Yes | Not emulated by `base44 dev` — verify against a deployed app |
 | `$regex` | No | Use backend functions |
 
 ### Limitations Summary
@@ -458,6 +486,5 @@ Use a combination of entity-level RLS and field-level security:
 | Not Supported | Alternative |
 |---------------|-------------|
 | Operators on `user_condition` | Use equality only for user checks |
-| Comparison operators (`$gt`, `$lt`) | Backend functions |
 | Regex matching (`$regex`) | Backend functions |
 | Cross-entity relationships | Backend functions |

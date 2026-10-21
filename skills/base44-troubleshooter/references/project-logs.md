@@ -14,14 +14,14 @@ This command can run from a linked project, or outside a project when you pass `
 
 | Option | Description | Required |
 |--------|-------------|----------|
-| `--function <names>` | Filter by function name(s), comma-separated. If omitted, fetches logs for all functions in the current app | No |
-| `--since <datetime>` | Show logs from this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`). Cannot be combined with `--follow` | No |
+| `--function <names>` | Filter by function name(s), comma-separated. If omitted, fetches logs for all functions currently **deployed** to this app (queried from the server, not local project config) | No |
+| `--since <datetime>` | Show logs from this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`). Combinable with `--follow`, but forces that run into polling (see Notes) | No |
 | `--until <datetime>` | Show logs until this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`). Cannot be combined with `--follow` | No |
 | `--level <level>` | Filter by log level: `info`, `warning`, `error`, `debug` | No |
-| `-n, --limit <n>` | Number of results to return. **No default** — the CLI sends a limit only when you pass one, and a value above 500 is clamped down to 500 | No |
+| `-n, --limit <n>` | Number of results to return (1-1000). **No default** — the CLI sends a limit only when you pass one; the server returns at most 500 regardless | No |
 | `--order <order>` | Sort order: `asc` or `desc`. Only affects a **multi-function** fetch (it orders the client-side merge); ignored when reading a single function. Cannot be combined with `--follow` | No |
-| `--env <env>` | Which deployment to read logs from: `preview` (current draft) or `prod` (published). Default: `preview` | No |
-| `-f, --follow` | Stream new logs as they arrive instead of a one-shot fetch. Realtime (sub-second) where the stream is available; where it cannot be opened the CLI polls instead (~20-30s lag). Cannot be combined with `--since`, `--until` or `--order` | No |
+| `--env <env>` | Which deployment to read logs from: `preview` (current draft) or `prod` (published). Omit to read **both** | No |
+| `-f, --follow` | Stream new logs as they arrive instead of a one-shot fetch. Realtime (sub-second) where the stream is available; where it cannot be opened the CLI polls instead (~20-30s lag). Cannot be combined with `--until` or `--order` | No |
 
 ## Examples
 
@@ -64,6 +64,9 @@ npx base44 logs --follow
 
 # Stream one function's logs live
 npx base44 logs --follow --function my-function
+
+# --since with --follow is allowed, but forces polling instead of streaming
+npx base44 logs --follow --since 10m
 ```
 
 ## Notes
@@ -71,14 +74,14 @@ npx base44 logs --follow --function my-function
 - **Authentication required.** You must be logged in before fetching logs.
 - **App context required.** Run from a linked project, or pass `--app-id` / set `BASE44_APP_ID`.
 - When multiple functions are specified, logs are merged and sorted by timestamp.
-- If `--function` is omitted, logs are fetched for **all functions** in the current app.
+- If `--function` is omitted, logs are fetched for **all functions currently deployed** to the app — the list comes from the server, not from `base44/functions/` in a local checkout. A function that exists locally but hasn't been deployed won't show up; one that was deployed and later removed locally still will, until it's undeployed.
 - The `--limit` applies after merging logs from all specified functions.
 - There is **no default page size**. The CLI sends a limit only when you pass one, and a `--limit` above 500 is clamped down to 500 — so do not plan on paging further back by raising the number. What you get when you omit it is not a fixed number: the runtime decides, and it may cap you at 500 anyway. Pass `--limit` when the count matters to you.
 - `--order` is only honored for the client-side merge of several functions. The server does not read it, so it is inert on a single-function fetch — the entries come back newest-first regardless.
 - The `--since` and `--until` values accept an ISO datetime, or a relative shorthand (e.g. `1h`, `30m`, `2d`) measured back from now. ISO values without a timezone are normalized to UTC (appends `Z`).
-- `--env` defaults to `preview`. If `prod` returns no logs, the app may not have been published yet — try `--env preview` to see draft logs.
+- **`--env` has no default.** Omit it to read logs from **both** `preview` and `prod`; pass `--env preview` or `--env prod` to restrict to one. If a `prod`-restricted fetch returns no logs, the app may not have been published yet.
 - **`No logs found matching the filters.` is ambiguous.** It means one of: the run has not been ingested yet (~20-30s; wait and re-run — *do not* change flags), there is no function by that name, or a `--function` filter dropped unstamped rows from a legacy per-function deployment. It never means "the app is healthy".
-- `--follow` streams logs indefinitely (oldest to newest) instead of a single fetch; it's incompatible with `--since`, `--until` and `--order`. A stream that is lost and cannot be re-established ends the command with an error rather than dropping to polling. See [Following logs live](#following-logs-live).
+- `--follow` streams logs indefinitely (oldest to newest) instead of a single fetch; it's incompatible with `--until` and `--order` (both are rejected). `--since` together with `--follow` is allowed, but forces the whole run into polling mode instead of streaming — a live stream only ever carries events from the moment it opens, so asking for the past has nothing to stream and the CLI warns and polls instead (~20-30s lag). A stream that is lost mid-run and cannot be re-established ends the command with an error rather than dropping to polling. See [Following logs live](#following-logs-live).
 - Pass the global `--json` flag to emit each log entry as JSON instead of the human-readable format.
 - **With `--follow`, `--json` output is one JSON object per line, not one JSON document.** Parse it line by line as it arrives; there is no closing bracket, because a live tail never ends normally. Nothing goes to stderr. If the stream is lost, the error arrives as one more object on its own line and the process exits 1:
 
@@ -96,7 +99,14 @@ does not wait on log ingestion.
 ### Streaming or polling is decided once, at startup
 
 `--follow` opens a realtime stream before it prints anything, and **that first attempt
-decides the mode for the whole run.**
+decides the mode for the whole run.** The one exception is `--since`: a stream only
+ever carries events from the moment it opens, so a run that also asks for the past
+never attempts one — it goes straight to polling, with a warning, regardless of
+whether a stream would otherwise have opened:
+
+```
+Warning: --since reads the past, so this run polls instead of streaming (lines may lag ~20-30s).
+```
 
 **The stream opens** — lines arrive **in under a second** of the invocation ending, and
 you stay in realtime for the rest of the run.

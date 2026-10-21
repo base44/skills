@@ -212,11 +212,26 @@ For file/blob data:
 }
 ```
 
+### Nullable / Union Field
+
+`type` can be an array of types, most commonly to allow `null` alongside a real type:
+```jsonc
+{
+  "cancelled_at": {
+    "type": ["string", "null"],
+    "format": "date-time",
+    "description": "When the task was cancelled, or null if still active"
+  }
+}
+```
+
+`type` is required on a top-level field, but optional on a property nested under `items` or another `properties` block.
+
 ## Field Properties
 
 | Property      | Description                                                                              |
 | ------------- | ---------------------------------------------------------------------------------------- |
-| `type`        | Data type: `string`, `number`, `integer`, `boolean`, `array`, `object`, `binary`         |
+| `type`        | Data type: `string`, `number`, `integer`, `boolean`, `array`, `object`, `binary`, `null` — or an array of these for a union (e.g. `["string", "null"]`). Required on top-level fields; optional on nested `items`/`properties` fields |
 | `description` | Human-readable description of the field                                                  |
 | `enum`        | Array of allowed values (for strings)                                                    |
 | `enumNames`   | Human-readable labels for enum values (same order as `enum`)                             |
@@ -286,10 +301,10 @@ Here's a complete entity definition for a Task:
 
 ## Naming Conventions
 
-- **Entity name**: Use PascalCase with alphanumeric characters only (e.g., `Task`, `TeamMember`, `ActivityLog`)
-  - Must match pattern: `/^[a-zA-Z0-9]+$/`
-  - Valid: `Task`, `TeamMember`, `Order123`
-  - Invalid: `Team_Member`, `Team-Member`, `Team Member`
+- **Entity name**: Use PascalCase (e.g., `Task`, `TeamMember`, `ActivityLog`)
+  - Must match pattern: `/^\w+$/` (letters, numbers, and underscores)
+  - Valid: `Task`, `TeamMember`, `Order123`, `Team_Member`
+  - Invalid: `Team-Member`, `Team Member`
 - **File name**: Use kebab-case matching the entity (e.g., `task.jsonc`, `team-member.jsonc`, `activity-log.jsonc`)
 - **Field names**: Use snake_case (e.g., `board_id`, `user_email`, `due_date`)
 
@@ -543,6 +558,7 @@ In this example, only users with the `hr` role can read or update the `salary` f
 - If no field-level RLS is defined, the field inherits the entity-level RLS rules
 - FLS rules follow the same condition format as entity-level RLS
 - Use FLS for sensitive fields like salary, SSN, or internal notes
+- A `create`/`update` that touches a field the current user isn't allowed to write is rejected outright — the whole request fails (`403`, naming the denied fields), not just that field silently dropped. `npx base44 dev` enforces this the same way the deployed app does, so a locally-tested write behaves the same after `deploy`.
 
 ## Pushing Entities
 

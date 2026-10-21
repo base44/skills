@@ -122,7 +122,7 @@ For the full authoring reference (naming, lifecycle, storage/hibernation, schedu
 One `.jsonc` file per entity in `base44/entities/`. Just write the file — it auto-syncs; **don't run `base44 entities push` or `deploy`.**
 
 - **File name:** `{kebab-case}.jsonc` — e.g. `team-member.jsonc` for an entity named `TeamMember`.
-- **Entity `name`:** PascalCase, alphanumeric only (`/^[a-zA-Z0-9]+$/`).
+- **Entity `name`:** PascalCase, letters/numbers/underscores only (`/^\w+$/`).
 - **Field names:** `snake_case`.
 
 ```jsonc

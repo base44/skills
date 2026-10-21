@@ -50,10 +50,10 @@ When you run `eject`:
 3. **Download**: The project code is downloaded to the specified path
 4. **New Project Creation**: A copy of the project is created in Base44 (e.g., "My App Copy")
 5. **Linking**: The local code is linked to the new project
-6. **Optional Deployment**: If the project has build commands configured, you'll be asked if you want to deploy
-   - Runs the install command (e.g., `npm install`)
-   - Runs the build command (e.g., `npm run build`)
-   - Deploys all resources with `base44 deploy`
+6. **Optional Deployment**: If the project has a `site` block configured (a backend-only project has nothing to build, so it's skipped), you'll be asked if you want to deploy
+   - Runs the install command (`site.installCommand`, defaults to `npm install`)
+   - Runs the build command (`site.buildCommand`, defaults to `npm run build`), with `VITE_BASE44_APP_ID` injected
+   - Deploys all resources with `base44 deploy` (without building again, since the build already ran)
 
 ## Requirements
 
@@ -76,6 +76,7 @@ When you run `eject`:
 - If the current directory has files, the default path is `./{kebab-case-project-name}`
 - Only projects with `isManagedSourceCode !== false` can be ejected
 - If no ejectable projects exist, the command exits with "No projects available to eject."
+- The optional install/build/deploy step is offered whenever a `site` block is declared, even a partial one — `installCommand` and `buildCommand` default to `npm install` / `npm run build` when the block doesn't name them
 
 ## Related Commands
 

@@ -14,7 +14,7 @@ npx base44 dev [options]
 
 | Option | Description | Required | Default |
 |--------|-------------|----------|---------|
-| `-p, --port <number>` | Port for the local Base44 backend | No | 4400 |
+| `-p, --port <number>` | Port for the local Base44 backend. Cannot be combined with `--remote` (it starts no local backend to bind a port for) | No | 4400 |
 | `--remote` | Serve only the frontend, against your app's production backend | No | — |
 
 ## Authentication
@@ -60,6 +60,12 @@ If `site.serveCommand` is missing, `base44 dev` still works, but it only starts 
 `npx base44 dev --remote` starts no local backend: it runs only your frontend (`site.serveCommand`),
 wired to your app's **production** backend — every read and write hits live data. Use it to develop
 the UI against real content; default to plain `base44 dev` otherwise.
+
+Requirements specific to `--remote`:
+
+- `site.serveCommand` must be configured in `base44/config.jsonc` — `--remote` fails immediately if it isn't (there's no local backend to fall back to)
+- The app must have a **published** URL — `--remote` fetches it and fails if the app has never been published
+- `--port` cannot be combined with `--remote`
 
 ## Examples
 
