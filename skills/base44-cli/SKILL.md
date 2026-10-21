@@ -259,7 +259,7 @@ npx base44 logs --app-id app_123 --json
 | `base44 create` | Create a new Base44 project from a template | [create.md](references/create.md) ⚠️ **MUST READ** |
 | `base44 scaffold` | Scaffold a local project for an existing Base44 app (by app ID) | [scaffold.md](references/scaffold.md) |
 | `base44 link` | Link an existing local project to Base44 | [link.md](references/link.md) |
-| `base44 eject` | Download the code for an existing Base44 project | [eject.md](references/eject.md) |
+| `base44 eject` | Download the code for an existing Base44 project **as a new app** (creates "{Name} Copy"); to only download the code, use `base44 api fetch GET "/api/apps/{app_id}/coding/export-to-zip" --output app.zip` | [eject.md](references/eject.md) |
 | `base44 dashboard open` | Open the app dashboard in your browser | [dashboard.md](references/dashboard.md) |
 | `base44 visibility <level>` | Set the app's visibility on the server (`public`, `private`, or `workspace`) | [visibility.md](references/visibility.md) |
 
@@ -334,6 +334,7 @@ For complete documentation, see [entities-create.md](references/entities-create.
 | `base44 functions delete <names...>` | Delete one or more deployed functions from Base44 | [functions-delete.md](references/functions-delete.md) |
 | `base44 functions list`   | List all deployed functions on Base44 remote  | [functions-list.md](references/functions-list.md)       |
 | `base44 functions pull [name]` | Pull deployed functions from Base44 to local files | [functions-pull.md](references/functions-pull.md)  |
+| `base44 logs [--function <names>] [--level <l>] [--since <t>]` | Fetch deployed functions' logs; use it for "did a function error" instead of `base44 api` | [project-logs.md](../base44-troubleshooter/references/project-logs.md) |
 
 ### Workflow Runs
 
@@ -564,7 +565,7 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 ### Any Other API Operation
 
-For a Base44 platform task with no dedicated command above (custom domains, app users, SEO settings, security scans, workspace members and groups, CSV imports, and more), find and call the public API endpoint directly. Prefer a dedicated command when one exists.
+For a Base44 platform task with no dedicated command above (custom domains, URL redirects, SEO settings, app users, collaborators and ownership, analytics, security scans, workspace members and groups, CSV imports, and more), find and call the public API endpoint directly. Prefer a dedicated command when one exists.
 
 | Command | Description | Reference |
 |---------|-------------|-----------|

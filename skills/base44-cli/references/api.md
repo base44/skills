@@ -6,7 +6,9 @@ Search and call any Apps API or Workspace API operation with your CLI login; no 
 
 Use `base44 api` for a Base44 platform task that no dedicated CLI command covers, such as custom domains, app users, SEO settings, and more.
 
-**Prefer a dedicated command when one exists** (`base44 secrets`, `base44 functions`, `base44 deploy`, and the rest of this skill). Use `base44 api` for everything else.
+**Prefer a dedicated command when one exists** (`base44 secrets`, `base44 functions`, `base44 logs`, `base44 deploy`, and the rest of this skill). Use `base44 api` for everything else.
+
+The API covers apps and workspaces, not your own Base44 account: there is no operation for your password, email or profile. Send the user to the Base44 web app for those.
 
 ## The Flow
 
@@ -52,7 +54,7 @@ Without an argument, list the API's areas (an area is the path segment after `{a
 
 ### `base44 api grep <pattern>`
 
-Search the spec with a regular expression, for when `search` misses. The pattern runs over each operation's contract as JSON text, so quotes and newlines appear escaped.
+Search the spec with a regular expression, for when `search` misses. The pattern runs over each operation's contract (including its `endpoint`, summary and schemas) as JSON text, so quotes and newlines appear escaped, and a common word also matches inside unrelated schemas.
 
 | Option | Description | Default |
 |--------|-------------|---------|
@@ -126,8 +128,8 @@ npx base44 api fetch GET "/api/workspace/groups?workspaceId=<workspace-id>"
 # Import entity records from a CSV file, sent as multipart (the entity must exist)
 npx base44 api fetch POST "/api/apps/{app_id}/entities/Task/import" --form "file=@tasks.csv;type=text/csv"
 
-# Save a binary response
-npx base44 api fetch GET "/api/apps/{app_id}/<path>" --output ./download.zip
+# Save a binary response: download the app's source code without creating a new app
+npx base44 api fetch GET "/api/apps/{app_id}/coding/export-to-zip" --read-only --output ./app.zip
 ```
 
 ## Requirements
