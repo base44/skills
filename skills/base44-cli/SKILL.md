@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, realtime actors, ai agents), initialization and actions (resource creation, deployment). This skill is the place for learning about how to configure resources, including actors — the realtime/WebSocket primitive behind multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
+description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, realtime actors, ai agents), initialization and actions (resource creation, deployment), and any other platform operation through the public API (custom domains, SEO, app users, workspace members). This skill is the place for learning about how to configure resources, including actors — the realtime/WebSocket primitive behind multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
 metadata:
   sourcePackage:
     name: base44
@@ -295,7 +295,7 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 | `base44 entities push` | Push local entities to Base44               | [entities-push.md](references/entities-push.md)     |
 | RLS Patterns           | Row-level security examples and operators   | [rls-examples.md](references/rls-examples.md) ⚠️ **READ FOR RLS** |
 
-Without a local project, read an app's entities with `base44 api fetch GET "/api/apps/{app_id}/entity-schemas" --read-only --app-id <id>`. Don't run `entities push` from a folder that lacks the app's other entity files: it deletes every entity not present locally.
+Without a local project, read an app's entities with `base44 api fetch GET "/api/apps/{app_id}/entity-schemas" --read-only --app-id <id>`, and create one with `POST` on the same path (a later `entities push` or source sync can overwrite it, so prefer a local file when the app has a project). Don't run `entities push` from a folder that lacks the app's other entity files: it deletes every entity not present locally.
 
 #### Entity Schema (Quick Reference)
 

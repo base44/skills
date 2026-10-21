@@ -17,9 +17,9 @@ Use `base44 api` for a Base44 platform task that no dedicated CLI command covers
    Or browse by area with `base44 api catalog [area]`, or match the spec with a regular expression with `base44 api grep <regex>` when search misses.
 2. **Read its contract.** Add `--help` after the method and path to print its description, parameters, request body schema and response schema. A contract can run to tens of KB, so select the parts you need:
    ```bash
-   npx base44 api fetch <METHOD> <path> --help | jq '.description, .parameters, .requestBodySchema'
+   npx base44 api fetch <METHOD> <path> --help | jq '.description, .parameters, .requestBodySchema, .responseSchema'
    ```
-   Read the `description` before calling: the top search result is not always the right operation, and the description often names the one to use instead or the steps that must follow (adding a custom domain, for example, is followed by linking it and setting DNS).
+   Read the `description` before calling: the top search result is not always the right operation, and the description often names the one to use instead or the other operations a task needs (a custom domain, for example, also needs DNS records and linking before it serves).
 3. **Call it** with the user's login:
    ```bash
    npx base44 api fetch <METHOD> <path> [--body <json>]
@@ -84,7 +84,7 @@ Call an operation, or with `--help` print its contract. The path may include a q
 
 ## Read-Only Mode
 
-`--read-only` refuses, before sending, any operation the spec doesn't mark read-only. Use it whenever you are only looking, so a wrong endpoint can't change anything. Read-only is the spec's mark, not the HTTP method: some list operations are a `POST` (e.g. `POST /api/workspace/members/list`) and still pass. On `search`, `catalog` and `grep` it lists only read-only operations.
+`--read-only` refuses, before sending, any operation the spec doesn't mark read-only. Use it whenever you are only looking, so a wrong endpoint can't change anything. Read-only is the spec's mark, not the HTTP method: some list operations are a `POST` (e.g. `POST /api/workspace/members/list`) and still pass. The contract doesn't show the mark; `api search <text> --read-only` lists only the operations that have it. On `search`, `catalog` and `grep` it lists only read-only operations.
 
 ## Request Bodies and Responses
 
@@ -111,7 +111,7 @@ npx base44 api fetch PUT "/api/apps/{app_id}/seo/settings" --help | jq '.descrip
 npx base44 api fetch GET "/api/apps/{app_id}/seo/settings" --read-only
 
 # Against a specific app without a linked project
-npx base44 api fetch GET "/api/apps/{app_id}/custom-domains" --app-id app_123
+npx base44 api fetch GET "/api/apps/{app_id}/custom-domains" --read-only --app-id app_123
 
 # Check which entities an app has, without a local project
 npx base44 api fetch GET "/api/apps/{app_id}/entity-schemas" --read-only --app-id app_123
