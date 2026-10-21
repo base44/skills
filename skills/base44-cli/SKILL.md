@@ -22,13 +22,14 @@ This skill activates on ANY mention of "base44" or when a `base44/` folder exist
    - This skill only handles CLI commands (login, deploy, entities push)
    - **Except running the app locally** — stays here. Read [Running Local Development](#running-local-development)
      before starting a dev server: one way of running hits production data.
-3. If **NO**, decide between two initialization paths:
+3. If **NO**, decide which case applies:
    - **Provisioned app** — the Base44 app already exists because it was just provisioned through a Stripe Projects / projects.dev flow, OR `BASE44_APP_ID` (or `BASE44_PROJECTS_BASE44_APP_ID`) is present in the environment or a `.env`/`.env.local` file:
      - Run `npx base44 scaffold` to set up local files for that **existing** app
      - **DO NOT run `npx base44 create`** — that creates a second, duplicate app. See [scaffold.md](references/scaffold.md).
    - **New project** — no app exists yet and none was provisioned:
      - This skill (base44-cli) handles the request; guide the user through `npx base44 create`
      - Do NOT activate base44-sdk yet
+   - **Neither: a question or change about an existing app or workspace** (its domains, SEO, users, workspace members, and so on) — don't create or scaffold anything. Use a dedicated command or [`base44 api`](#any-other-api-operation) with `--app-id <id>`.
 
 ## Critical: Local Installation Only
 
@@ -225,7 +226,7 @@ cat ./script.ts | npx base44 exec --app-id app_123
 npx base44 logs --app-id app_123 --level error
 ```
 
-Use `--app-id` for app-scoped commands like `exec` and `logs`.
+Use `--app-id` for app-scoped commands like `exec`, `logs` and `api fetch`.
 
 Do **not** use `--app-id` for commands that need local project files:
 - `base44 create` creates a new app, so it rejects `--app-id`
@@ -293,6 +294,8 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 | Create Entities        | Define entities in `base44/entities` folder | [entities-create.md](references/entities-create.md) |
 | `base44 entities push` | Push local entities to Base44               | [entities-push.md](references/entities-push.md)     |
 | RLS Patterns           | Row-level security examples and operators   | [rls-examples.md](references/rls-examples.md) ⚠️ **READ FOR RLS** |
+
+Without a local project, read an app's entities with `base44 api fetch GET "/api/apps/{app_id}/entity-schemas" --read-only --app-id <id>`. Don't run `entities push` from a folder that lacks the app's other entity files: it deletes every entity not present locally.
 
 #### Entity Schema (Quick Reference)
 
@@ -561,7 +564,7 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 ### Any Other API Operation
 
-For a Base44 platform task with no dedicated command above (custom domains, app users, SEO settings, and more), find and call the public API endpoint directly. Prefer a dedicated command when one exists.
+For a Base44 platform task with no dedicated command above (custom domains, app users, SEO settings, security scans, workspace members and groups, CSV imports, and more), find and call the public API endpoint directly. Prefer a dedicated command when one exists.
 
 | Command | Description | Reference |
 |---------|-------------|-----------|

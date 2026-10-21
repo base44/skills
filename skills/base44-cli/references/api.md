@@ -15,16 +15,19 @@ Use `base44 api` for a Base44 platform task that no dedicated CLI command covers
    npx base44 api search "<what you want to do>"
    ```
    Or browse by area with `base44 api catalog [area]`, or match the spec with a regular expression with `base44 api grep <regex>` when search misses.
-2. **Read its contract.** Add `--help` after the method and path to print its parameters, request body schema and response schema:
+2. **Read its contract.** Add `--help` after the method and path to print its description, parameters, request body schema and response schema. A contract can run to tens of KB, so select the parts you need:
    ```bash
-   npx base44 api fetch <METHOD> <path> --help
+   npx base44 api fetch <METHOD> <path> --help | jq '.description, .parameters, .requestBodySchema'
    ```
+   Read the `description` before calling: the top search result is not always the right operation, and the description often names the one to use instead or the steps that must follow (adding a custom domain, for example, is followed by linking it and setting DNS).
 3. **Call it** with the user's login:
    ```bash
    npx base44 api fetch <METHOD> <path> [--body <json>]
    ```
 
-Each result names its operation as `endpoint` (e.g. `"GET /api/apps/{app_id}/workflows/runs"`); pass that method and path to `fetch` as is.
+Each result names its operation as `endpoint` (e.g. `"GET /api/apps/{app_id}/custom-domains"`); pass that method and path to `fetch` as is.
+
+Progress lines ("Loading the API spec", "Calling ...") go to stderr and stdout carries only the response, so pipe stdout alone into `jq`. Don't use `2>&1`.
 
 ## Commands
 
@@ -34,7 +37,7 @@ Search every operation by what it does. Returns the best matches as `endpoint` a
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--limit <n>` | Most results to return | `5` |
+| `--limit <n>` | Most results to return; weak matches are dropped, so you may get fewer | `5` |
 | `--read-only` | Only read-only operations | - |
 | `--refresh` | Fetch the API spec again instead of using the cached copy | - |
 
@@ -81,7 +84,7 @@ Call an operation, or with `--help` print its contract. The path may include a q
 
 ## Read-Only Mode
 
-`--read-only` refuses, before sending, any operation the spec doesn't mark read-only. Use it whenever you are only looking, so a wrong endpoint can't change anything. It also refuses a path with an encoded `/`, `\` or `.` (`%2f`, `%5c`, `%2e`), which it can't check. On `search`, `catalog` and `grep` it lists only read-only operations.
+`--read-only` refuses, before sending, any operation the spec doesn't mark read-only. Use it whenever you are only looking, so a wrong endpoint can't change anything. Read-only is the spec's mark, not the HTTP method: some list operations are a `POST` (e.g. `POST /api/workspace/members/list`) and still pass. On `search`, `catalog` and `grep` it lists only read-only operations.
 
 ## Request Bodies and Responses
 
@@ -89,29 +92,29 @@ Call an operation, or with `--help` print its contract. The path may include a q
 - **Multipart body:** when the contract shows `requestBodyContentType: multipart/form-data`, use `--form name=value` and `--form name=@path` for files instead of `--body`; add `;type=<media type>` after the path to set the file's content type. Don't combine `--body` and `--form`.
 - **Binary responses** are not printed; add `--output <file>` to save them.
 - **Global `--json`** keeps stdout machine-readable: a non-JSON text response is wrapped as `{status, contentType, body}`.
-- The contract is JSON; cut it down with e.g. `| jq '.parameters, .requestBodySchema'`.
 
-## Spec Cache
-
-The spec is cached for 1 hour. Pass `--refresh` to download it again, for example when `--help` or `--read-only` reports that no operation matches a route that should exist.
+The spec is cached for 1 hour; `--refresh` downloads it again.
 
 ## Examples
 
 ```bash
 # Find the endpoint
-npx base44 api search "failed workflow runs"
+npx base44 api search "add a custom domain"
 npx base44 api catalog
-npx base44 api catalog workflows
-npx base44 api grep "runs.*status" --area workflows
+npx base44 api catalog seo
+npx base44 api grep "noindex" --area seo
 
 # Read its contract
-npx base44 api fetch GET "/api/apps/{app_id}/workflows/runs" --help
+npx base44 api fetch PUT "/api/apps/{app_id}/seo/settings" --help | jq '.description, .requestBodySchema'
 
 # Call it while only looking
-npx base44 api fetch GET "/api/apps/{app_id}/workflows/runs?status=failed" --read-only
+npx base44 api fetch GET "/api/apps/{app_id}/seo/settings" --read-only
 
 # Against a specific app without a linked project
-npx base44 api fetch GET "/api/apps/{app_id}/workflows/runs" --app-id app_123
+npx base44 api fetch GET "/api/apps/{app_id}/custom-domains" --app-id app_123
+
+# Check which entities an app has, without a local project
+npx base44 api fetch GET "/api/apps/{app_id}/entity-schemas" --read-only --app-id app_123
 
 # Send a JSON body from a file, or from stdin
 npx base44 api fetch POST "/api/apps/{app_id}/<path>" --body @payload.json
@@ -120,7 +123,7 @@ cat payload.json | npx base44 api fetch POST "/api/apps/{app_id}/<path>" --body 
 # A Workspace API call (find the ID with base44 workspace list)
 npx base44 api fetch GET "/api/workspace/groups?workspaceId=<workspace-id>"
 
-# Import entity records from a CSV file, sent as multipart
+# Import entity records from a CSV file, sent as multipart (the entity must exist)
 npx base44 api fetch POST "/api/apps/{app_id}/entities/Task/import" --form "file=@tasks.csv;type=text/csv"
 
 # Save a binary response
