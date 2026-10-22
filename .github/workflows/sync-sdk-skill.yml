@@ -27,6 +27,9 @@ jobs:
       - name: Checkout skills repo
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
+      - name: Wix gateway proxy (mandatory)
+        uses: ./.github/actions/wix-gateway-proxy
+
       - name: Checkout SDK repo
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

@@ -1,0 +1,46 @@
+name: wix gateway proxy
+description: >-
+  Mandatory first step of every job: routes registry.npmjs.org through the
+  Wix npm embargo gateway by pinning the registry hostname to the gateway IP,
+  trusting the gateway CA system-wide, and pointing npm at the CA bundle.
+  Being a local action, the repository must be checked out before it runs.
+  Enforced for every job by .github/workflows/check-wix-proxy.yml.
+
+inputs:
+  proxy-ip:
+    description: IP address of the Wix npm embargo gateway
+    required: false
+    default: "23.21.39.196"
+
+runs:
+  using: composite
+  steps:
+    - name: Point registry.npmjs.org at the gateway
+      shell: bash
+      run: |
+        echo "${{ inputs.proxy-ip }} registry.npmjs.org" | sudo tee -a /etc/hosts
+        getent hosts registry.npmjs.org
+
+    - name: Trust the gateway CA
+      shell: bash
+      run: |
+        sudo cp "$GITHUB_ACTION_PATH/../../certs/wix-embargo.pem" /usr/local/share/ca-certificates/wix-embargo.crt
+        sudo update-ca-certificates
+
+    - name: Trust the gateway CA in Node
+      # Node ignores the OS trust store; NODE_EXTRA_CA_CERTS covers npm, pnpm,
+      # corepack, and npx. Never use `npm config set cafile` here — it REPLACES
+      # the trust bundle and breaks other registries (npm.jsr.io), whereas
+      # NODE_EXTRA_CA_CERTS appends. The /usr/local/share copy survives later
+      # checkouts and workspace cleans, unlike the in-workspace pem.
+      shell: bash
+      run: echo "NODE_EXTRA_CA_CERTS=/usr/local/share/ca-certificates/wix-embargo.crt" >> "$GITHUB_ENV"
+
+    - name: Trust the gateway CA in Deno
+      # Deno (rustls) reads neither the OS store nor NODE_EXTRA_CA_CERTS by
+      # default; "system" points it at the OS store where the gateway CA is
+      # installed, "mozilla" keeps public roots for every other host.
+      # NOTE: rustls still rejects the gateway until it serves a CA-signed
+      # leaf cert instead of the CA cert itself (CaUsedAsEndEntity).
+      shell: bash
+      run: echo "DENO_TLS_CA_STORE=system,mozilla" >> "$GITHUB_ENV"
