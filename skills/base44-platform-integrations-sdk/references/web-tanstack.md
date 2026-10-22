@@ -30,6 +30,8 @@ InvokeLLM optional `model` (e.g. model: "claude-sonnet-5") for complex tasks —
 
 `SendEmail` reaches registered app users normally. This app may ALSO email addresses that are not registered users, but only with a connected custom domain, on a paid plan, and subject to content screening, recipient-hygiene and anti-abuse limits that can refuse or pause sends — so never promise delivery to a non-registered address, and never route untrusted end-user input straight into the recipient. Invitations still use `base44.users.inviteUser`.
 
+`SendEmail` optional `attachments`: `[{filename, file_url}]` for a file this app uploaded, or `[{filename, content}]` with base64 for one the function built. Max 5 per send, 5 MB each, 10 MB total; documents and images only (pdf, png, jpg, gif, webp, csv, txt, md, ics, xlsx, docx) — archives and executables are refused server-side, as is a payload whose bytes don't match its extension. `file_url` must be this app's own file. Never derive `attachments` from request input: a caller-chosen file plus a caller-chosen recipient mails the app's own data to a stranger.
+
 Integration packages in this app:
 
 <integration_package>
