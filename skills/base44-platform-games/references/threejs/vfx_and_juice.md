@@ -31,6 +31,6 @@ drei `<PositionalAudio>` attaches 3D sound to an object (`loop` for ambience; ca
 </win_moments>
 
 <postprocessing>
-For bloom (glowing projectiles/neon), vignette, or chromatic aberration, install `@react-three/postprocessing` with `install_npm_package`: one `<EffectComposer>` as the last child inside the Canvas, with effect components inside (all effects in the composer merge into a single pass). For selective glow, set `luminanceThreshold` to 1 on `<Bloom>` (with `mipmapBlur`) so only overbright objects bloom, and make materials overbright via `emissive` + `emissiveIntensity` above 1 (or `toneMapped={false}` on plain colors). Skip postprocessing on visibly low-end targets (pair with PerformanceMonitor).
+For bloom (glowing projectiles/neon), vignette, or chromatic aberration, install `@react-three/postprocessing` with `npm install`: one `<EffectComposer>` as the last child inside the Canvas, with effect components inside (all effects in the composer merge into a single pass). For selective glow, set `luminanceThreshold` to 1 on `<Bloom>` (with `mipmapBlur`) so only overbright objects bloom, and make materials overbright via `emissive` + `emissiveIntensity` above 1 (or `toneMapped={false}` on plain colors). Skip postprocessing on visibly low-end targets (pair with PerformanceMonitor).
 </postprocessing>
 </vfx_and_juice>

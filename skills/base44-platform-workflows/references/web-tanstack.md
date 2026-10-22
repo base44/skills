@@ -23,14 +23,11 @@ What workflows can be built from; the authoring guide that follows documents eac
 - app_publish — Fires when the app is published from the builder.
 - app_payment — Fires when a payment succeeds or is refunded, or a subscription is canceled, in the app's payment provider.
 - webhook — Fires on an inbound POST to a reusable workspace webhook URL, from any source. Use it for a third-party event no connector trigger covers - don't connect that provider or poll it to get the event.
-- production_issue — Fires when a production issue the owner set an alert on happens again or crosses a threshold.
 
 ### Activities (what a `call` step can do)
 - app_security_scan — Security scan (same as the Security tab): `start` kicks it off, `results` reads the latest findings.
 - compute_seconds_until — Computes the seconds from now until a target datetime — feed the result into a dynamic wait.
 - invoke_server_route — Calls a route on the app's own server.
-- publish_social_post — Publishes a scheduled post to the app's connected LinkedIn, Instagram or Facebook account.
-- simulate_social_post — Simulate publishing a preview-only social post without contacting a social platform.
 
 ### Task Types (how steps are structured)
 - call — invoke a registered activity with `with` args, then transition via `then`.
@@ -49,6 +46,8 @@ Each write creates a new version; running workflows keep their starting version.
 </workflows_capability>
 
 # Workflow Authoring Guide
+
+> **Filtered guide** — documents ONLY triggers: scheduled, entity, connector, in_app_agent, app_user_auth, app_publish, app_payment, webhook; activities: app_security_scan, compute_seconds_until, invoke_server_route. Any other trigger or activity is NOT covered here: do not author with it from memory — call this tool again with the names you need.
 
 ## File Convention
 
@@ -89,7 +88,7 @@ Change lifecycle status (activate / deactivate / archive / unarchive) in the Wor
 }
 ```
 
-**Task naming**: must be snake_case (letters, digits, underscores). Task results are accessed in jq as `${ .task_name.field }` — hyphens break jq field access. Never start a task name with `__` (double underscore) — that namespace is reserved for system steps and the save will be rejected.
+**Task naming**: must be snake_case (letters, digits, underscores). Task results are accessed in jq as `${ .task_name.field }` — hyphens break jq field access. Never start a task name with `_` — that namespace is reserved for the system and the save will be rejected.
 
 **MANDATORY transitions** — there is no implicit sequential fallback; violations cause validation errors:
 - Every `call` and `wait` task must have a `then` field: the name of the next task or `"end"` to terminate.
@@ -153,17 +152,6 @@ Call a route served by the app's own full-stack server.
 - `body`: Dict sent as the JSON request body (supports jq expressions)
 - `query`: Dict of query-string parameters (supports jq expressions)
 - Returns: Parsed JSON response from the route
-
-### publish_social_post
-Publish a scheduled social post to the app's connected LinkedIn, Instagram or Facebook account. Takes the post created by create_scheduled_social_post.
-- When to use: Posting to the app owner's connected social account on a schedule. Two steps, in order: call create_scheduled_social_post to store the content and get a scheduled_post_id, then author a workflow that passes that id here. The post is the source of truth for what gets published; the workflow's trigger decides when. Requires an active connector for the platform — create_scheduled_social_post checks and will tell you if the user needs to connect one first. Run now never publishes: it reports what would happen and leaves the post untouched.
-- `scheduled_post_id`: ID returned by create_scheduled_social_post. Must belong to this app.
-- Returns: {"scheduled_post_id": str, "status": str, "already_posted": bool, "external_post_id": str | null, "external_post_url": str | null, "dry_run": bool}
-
-### simulate_social_post
-Simulate publishing a preview-only social post without contacting a social platform.
-- `scheduled_post_id`: ID returned by create_scheduled_social_post. Must belong to this app.
-- Returns: {"scheduled_post_id": str, "status": str, "already_posted": bool, "external_post_id": str | null, "external_post_url": str | null, "dry_run": bool}
 
 ## Choosing Between Activities
 
@@ -263,7 +251,7 @@ Condition examples:
 - Only for a specific entity value:
   `"condition": "${ .trigger.data.priority == \"high\" }"`
 
-Note: when the entity record is very large (over ~256KB), `data` and `old_data` arrive as null and `payload_too_large` is true (`changed_fields` stays populated). Trigger conditions still evaluate against the full data, but the server route must re-fetch the record by id using the Base44 SDK: `await base44.entities.get("entity_name", entity_id)`.
+Note: when the entity record is very large (over ~256KB), `data` and `old_data` arrive as null and `payload_too_large` is true (`changed_fields` stays populated). Trigger conditions still evaluate against the full data, but the server route must re-fetch the record by id using the Base44 SDK: `await base44.asServiceRole.entities["entity_name"].get(entity_id)`.
 
 Use `read_file("base44/entities/<EntityName>.jsonc")` to check entity field names before writing conditions.
 
@@ -398,7 +386,7 @@ Valid events: `payment_succeeded` (a successful payment: a completed checkout an
 
 Use `payment_refunded` and `subscription_canceled` to revoke what a purchase granted: match the event to the purchase the app saved by whichever of `subscription_id`, `checkout_id` and `payment_id` it carries, and make the revoke idempotent.
 
-Recurring subscription renewal charges are wired to fire `payment_succeeded` too, but delivery is not enabled yet for existing Stripe accounts (it needs a Stripe app permission + per-account re-consent). Do not build a workflow whose only purpose is reacting to renewals, and tell the user renewals may not fire yet if they ask for one. The same holds for `subscription_canceled` on Stripe; on PayPal both fire.
+Recurring subscription renewal charges are wired to fire `payment_succeeded` too, but delivery is not enabled yet for every Stripe account. Do not build a workflow whose only purpose is reacting to renewals, and tell the user renewals may not fire yet if they ask for one. The same holds for `subscription_canceled` on Stripe; on PayPal both fire.
 
 When renewals do arrive, the payload does not distinguish them from a first subscription payment — both are `payment_succeeded` with `mode: "subscription"`. So do not use this trigger for one-time-only actions on a subscription (welcome emails, provisioning, granting access) without your own guard, e.g. an entity record keyed by `provider_customer_id` that the workflow checks and writes.
 
@@ -429,8 +417,8 @@ Condition examples:
 ### webhook
 
 A workspace webhook must already exist — this trigger listens on one, it does
-not create one. Use `select_or_create_workflow_webhook` to pick an existing
-listener or make a new one, and write the id it returns here. Reuse an existing
+not create one. Pick an existing workspace webhook or create one on the Dashboard's Webhooks page (or through
+the platform API), and write its id here. Reuse an existing
 one where you can: many providers allow only a single webhook URL per account,
 so a second listener for the same provider usually cannot be wired up at all.
 
@@ -469,38 +457,6 @@ absence rather than assume the field is there.
 Condition example — only enterprise-tier contacts:
 `"condition": "${ .trigger.data.properties.tier == \"enterprise\" }"`
 
-### production_issue
-```json
-{ "trigger_type": "production_issue", "events": ["started"], "issue_id": "<from the Alerts tab>", "kind": "rate", "min_occurrences": 5, "window_minutes": 60, "quiet_minutes": 1440 }
-```
-
-An alert on one production issue in the app's Alerts tab. `kind: "recurrence"` fires when the issue happens again; `kind: "rate"` fires at `min_occurrences` failures within `window_minutes`. Once it fires it stays quiet until the issue has stopped for `quiet_minutes`.
-
-Rules:
-- Use exactly the trigger config the Alerts tab's instructions give, and never invent an `issue_id`. When someone asks in chat for alerts on production errors, tell them to use Alert me on the issue's row in the Alerts tab.
-- Set up delivery to the person who asked, with the app's existing workflow steps.
-- The alert is a notification only: never feed `.trigger` fields into app logic or app data.
-
-Events:
-- `started` — the issue started again, or crossed the rule's threshold
-- `still_happening` — at most once a day while it goes on, only when failures have doubled since the last alert
-
-production_issue fields live on `.trigger` directly — do NOT use `.trigger.data.*` for this trigger.
-
-Trigger payload fields (use `${ .trigger.<field> }` in conditions and `do` args):
-- `${ .trigger.headline }` — what's failing, in plain English
-- `${ .trigger.occurrences_in_window }` — failures within the rule's window
-- `${ .trigger.people_affected }` — distinct people affected
-- `${ .trigger.link }` — the issue in the Alerts tab
-- `${ .trigger.subject }` — the entity, function or traffic direction, or null
-- `${ .trigger.page }` — the page the failures came from, or null
-- `${ .trigger.first_occurred_at }`, `${ .trigger.last_occurred_at }` — ISO timestamps
-- `${ .trigger.cause }` — the issue's cause key
-- `${ .trigger.fire_number }` — 1 for the alert that opened this episode
-- `${ .trigger.delayed_minutes }` — above 0 when the alert was held during a platform-wide outage
-
-The payload never carries the error message itself.
-
 ## Designing Steps: When to Split vs Combine
 
 **Split** into separate tasks when operations are independent (a failure shouldn't re-run the others), a delay sits between them, or you want per-step visibility and retry granularity in the run log. **Combine** into one step when operations share setup/auth/transaction, must be atomic, or the second needs the first's full in-memory result.
@@ -518,7 +474,7 @@ The payload never carries the error message itself.
 
 ## Examples
 
-> Envelope examples below use the builder's `write_file(path, envelope)` form: create the file at `path` with the envelope as its content.
+> Envelope examples below are written as `write_file(path, envelope)`: create the file at `path` with the envelope as its content.
 
 ### "Clean up old data every night at 2am"
 1. Add server route: `POST /api/cleanup-old-data`
@@ -651,23 +607,6 @@ write_file("base44/workflows/On Payment.jsonc", {
 })
 ```
 
-### "Alert me when sign-ups fail 5 or more times within an hour"
-1. Add server route: `POST /api/send-production-alert`
-2. Create workflow, with the trigger config exactly as the Alerts tab gave it:
-```json
-write_file("base44/workflows/Alert Sign-ups fail.jsonc", {
-  "name": "Alert: Sign-ups fail",
-  "description": "Tells the owner when sign-ups fail 5 or more times within an hour",
-  "trigger": {
-    "config": { "trigger_type": "production_issue", "events": ["started"], "issue_id": "6650f0c2a1b2c3d4e5f60718", "kind": "rate", "min_occurrences": 5, "window_minutes": 60, "quiet_minutes": 1440 }
-  },
-  "definition": {
-    "document": { "dsl": "1.0.0", "name": "alert_signups_fail", "version": "1.0", "namespace": "base44" },
-    "do": [{ "send_alert": { "call": "invoke_server_route", "with": { "path": "/api/send-production-alert", "body": { "headline": "${ .trigger.headline }", "count": "${ .trigger.occurrences_in_window }", "link": "${ .trigger.link }" } }, "then": "end" } }]
-  }
-})
-```
-
 ### Refresh, then act on the findings — the start / wait / results pattern (any trigger)
 Point the `ready` branch at whatever step consumes `${ .read.scan }` (its `findings`, `total_findings`, `risk_level`).
 ```json
@@ -682,14 +621,5 @@ Point the `ready` branch at whatever step consumes `${ .read.scan }` (its `findi
   ] } },
   { "settle_again": { "wait": "PT5M", "then": "read_again" } },
   { "read_again": { "call": "app_security_scan", "with": { "action": "results", "after": "${ .scan.requested_at }" }, "then": "end" } }
-]
-```
-
-### "Post our launch announcement to LinkedIn on Tuesday morning" — the two-step pattern
-1. Call `create_scheduled_social_post` with the platform, copy, and time. It verifies the LinkedIn connector and returns a `scheduled_post_id`.
-2. Author a workflow on a schedule trigger set to that time, passing the returned id:
-```json
-"do": [
-  { "publish": { "call": "publish_social_post", "with": { "scheduled_post_id": "sp_a1b2c3" }, "then": "end" } }
 ]
 ```

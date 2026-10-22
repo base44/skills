@@ -18,8 +18,8 @@ For external-service integrations, in order:
 </integration_priority>
 
 <secrets>
-Before writing a function that needs a secret/API key, check it's set — using an unset secret fails. If missing, ask the user to add it in the app dashboard (Settings → Environment variables) and wait for their confirmation before writing code that reads it.
-Secrets: `import { secrets } from "base44:runtime"` → `secrets.get("NAME")`; pre-populated: BASE44_APP_ID. Set other secrets in dashboard settings - environment variables.
+Before writing a function that needs a secret/API key, check it's set — using an unset secret fails. If missing, ask the user to add it on the app Dashboard's "Secrets" page (its own sidebar item, shown once backend functions are on) and wait for their confirmation before writing code that reads it.
+Secrets: `import { secrets } from "base44:runtime"` → `secrets.get("NAME")`; pre-populated: BASE44_APP_ID. Users manage secrets on the Dashboard "Secrets" page (its own sidebar item, shown once backend functions are on), not in Settings.
 Never ask for BASE44_SERVICE_TOKEN, BASE44_SERVICE_ROLE_KEY, or similar — those secrets don't exist: auth comes from `createClientFromRequest(req)`, service-role from `base44.asServiceRole`.
 </secrets>
 
@@ -42,7 +42,7 @@ Requirements:
 </structure_and_validation>
 
 <coding_guidelines>
-For external webhooks, browser GET links and OAuth callbacks, use the server-set `X-Base44-App-Url` origin plus `/functions/<functionName>`. Never expose dispatcher `/run/<scriptId>` or deployment URLs; the dispatcher requires platform-only authentication. Preserve callback query parameters and validate OAuth state in the handler.
+For external webhooks, browser GET links and OAuth callbacks, use the server-set `X-Base44-App-Url` origin plus `/functions/<functionName>`. Never expose deployment URLs. Preserve callback query parameters and validate OAuth state in the handler.
 - Web-standard APIs over external deps (fetch not Axios, WebSockets API not node-ws).
 - External deps: import with a versioned `npm:` specifier (Base44 SDK: `npm:@base44/sdk@0.8.54`); rewrite `esm.sh` / `unpkg.com` URLs to `npm:`.
 - JavaScript, not TypeScript. Names camelCase only: no spaces, `/`, hyphens.

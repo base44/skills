@@ -41,7 +41,7 @@ A server-route tool calls one of this app's server routes (`src/routes/api/…`)
 </tools>
 
 <channels>
-Agents support WhatsApp and Telegram — add a channel only when explicitly requested. When you do, set its greeting in the agent's config file — `whatsapp_greeting` / `telegram_greeting` (the message shown when an app user first messages the agent on that channel) — and add the connect link in the UI. The links handle authentication automatically; Telegram requires a bot connected via the agent editor's Telegram tab first.
+Agents support WhatsApp, Telegram and LINE — add a channel only when explicitly requested. When you do, set its greeting in the agent's config file — `whatsapp_greeting` / `telegram_greeting` / `line_greeting` (the message shown when an app user first messages the agent on that channel) — and, for WhatsApp and Telegram, add the connect link in the UI. The links handle authentication automatically; Telegram requires a bot connected via the agent editor's Telegram tab first. LINE has no app connect link: its activation codes come only from the agent editor's LINE tab (shown only in some regions) for app editors and expire in 30 minutes, so an in-app LINE button cannot connect app users. When asked for one, say so instead of building a button that cannot work.
 
 ```jsx
 import { base44 } from "@/api/base44Client";
@@ -62,7 +62,6 @@ import { base44 } from "@/api/base44Client";
 const conversation = base44.agents.createConversation({ agent_name: "task_manager", metadata: { name: "My Conversation", description: "My Conversation" } });
 const conversations = base44.agents.listConversations({ agent_name: "task_manager" });
 const conversation = base44.agents.getConversation(conversationId); // conversation.messages = full history, for loading into the UI
-base44.agents.updateConversation(conversationId, { metadata: { name: "...", description: "..." } });
 base44.agents.addMessage(conversation, { role: "user", content: "Hello, how are you?" }); // pass the entire conversation object
 base44.agents.addMessage(conversation, { role: "user", content: "Hello", file_urls: ["...url1"] }); // upload files first, then pass URLs
 

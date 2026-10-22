@@ -27,7 +27,7 @@ Ends: ends_type="never" (default) | "on" + ends_on_date="2024-12-31T23:59:59" | 
 
 <entity_automations>
 automation_type="entity" — fires on entity record changes. Required: entity_name, event_types (array of "create", "update", "delete").
-Function payload: event { type, entity_name, entity_id }; data: current entity data; old_data: previous data ("update" only); changed_fields: top-level fields that changed (e.g. ["status", "amount"]); payload_too_large: true if entity data exceeded 200KB — data/old_data then null, fetch with `await base44.entities.get("entity_name", entity_id)`.
+Function payload: event { type, entity_name, entity_id }; data: current entity data; old_data: previous data ("update" only); changed_fields: top-level fields that changed (e.g. ["status", "amount"]); payload_too_large: true if entity data exceeded 200KB — data/old_data then null, fetch with `await base44.asServiceRole.entities[event.entity_name].get(event.entity_id)`.
 
 Optional trigger_conditions pre-filter entity events. Conditions evaluate against a wrapped object (entity automations only, not connector): {"data": {...current...}, "old_data": {...previous, update only...}, "changed_fields": [...]}. Field paths take the wrapping prefix: "data.<field>", "old_data.<field>", or "changed_fields" with operator "contains" to test whether a field changed.
 

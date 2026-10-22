@@ -175,7 +175,7 @@ Do not mix inconsistent visual styles in the same scene unless the user explicit
 To opt-out, set `{"analytics":{"enabled":false}}` when initializing the base44 SDK (supported from 0.8.46).
 
 <phaser_reference>
-Deep Phaser reference sections (physics, particles, tilemaps, etc.) are delivered inside user messages as <phaser_instructions> blocks when relevant. Sections from earlier messages in the conversation remain valid — rely on them even when the latest message carries none.
+Deep Phaser reference sections (physics, particles, tilemaps, etc.) are the files under `references/phaser/`; read the one for the mechanic you are building before writing it.
 
 <scene_basics>
 Every Phaser scene must import Phaser or the Phaser classes it extends/uses.
@@ -295,7 +295,7 @@ Browsers block autoplay. Start or resume audio after a user click/tap.
 </phaser_reference>
 
 <phaser_v4_guide>
-This project uses Phaser 4 (the template ships `phaser@^4.1.0`). Several common Phaser 3 APIs were removed or changed in v4 — always use the v4 forms below, not the older v3 equivalents. These rules apply on EVERY turn; deeper per-topic detail arrives in the <phaser_instructions> sections of the user message when a topic is relevant.
+This project uses Phaser 4 (the template ships `phaser@^4.1.0`). Several common Phaser 3 APIs were removed or changed in v4 — always use the v4 forms below, not the older v3 equivalents. These rules apply to every change; deeper per-topic detail is in the files under `references/phaser/`.
 
 <v3_apis_removed_use_v4>
 These Phaser 3 APIs are GONE in v4 — calling them throws or silently no-ops. Use the v4 form:
@@ -317,7 +317,7 @@ When tempted to reach for a v3-era API not listed here, prefer the documented v4
 </v3_apis_removed_use_v4>
 
 <v4_capabilities_to_use>
-v4 adds GPU-accelerated systems worth reaching for. One-liners below; full usage rides the relevant <phaser_instructions> section when the topic comes up:
+v4 adds GPU-accelerated systems worth reaching for. One-liners below; full usage is in the matching `references/phaser/` file:
 - Filters (`filters.internal` / `filters.external` after `enableFilters()`): modern post-processing on any object or camera — glow, blur, bloom, color matrix, displacement, vignette, masks. See filters_and_postfx.
 - Lighting + self-shadow (`setLighting(true)`, `setSelfShadow(...)`): cheap 2D lighting with no pipeline. See game_object_components.
 - New tint modes (`setTintMode(Phaser.TintModes.ADD | SCREEN | OVERLAY | HARD_LIGHT)`): additive glows and blends without filters.

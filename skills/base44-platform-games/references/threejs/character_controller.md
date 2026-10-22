@@ -18,7 +18,7 @@ A dynamic RigidBody with `colliders={false}` plus an explicit `<CapsuleCollider>
 </capsule_recipe>
 
 <ecctrl_fast_path>
-For a full-featured third-person character (slopes, steps, moving platforms, camera follow modes) skip hand-rolling: install `ecctrl` with `install_npm_package` — the official pmndrs floating-capsule controller built on this exact stack. Wrap the character model in `<Ecctrl>` inside `<Physics>`; it expects the drei `KeyboardControls` action names `forward/backward/leftward/rightward/jump/run`, and its `<EcctrlJoystick />` (rendered OUTSIDE the Canvas, before it) adds mobile touch controls automatically.
+For a full-featured third-person character (slopes, steps, moving platforms, camera follow modes) skip hand-rolling: install `ecctrl` with `npm install` — the official pmndrs floating-capsule controller built on this exact stack. Wrap the character model in `<Ecctrl>` inside `<Physics>`; it expects the drei `KeyboardControls` action names `forward/backward/leftward/rightward/jump/run`, and its `<EcctrlJoystick />` (rendered OUTSIDE the Canvas, before it) adds mobile touch controls automatically.
 
 Prefer ecctrl when the request is a real third-person game; prefer the capsule recipe for simple arcade movement or side-view platformers where its camera rig is unwanted.
 </ecctrl_fast_path>

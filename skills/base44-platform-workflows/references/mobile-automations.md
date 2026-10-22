@@ -58,7 +58,7 @@ The function receives a payload with:
 - data: current entity data (null if payload_too_large is true)
 - old_data: previous data (only for "update" events, null if payload_too_large is true)
 - changed_fields: array of top-level field names that changed between old_data and data (e.g. ["status", "amount"])
-- payload_too_large: true if entity data exceeded 200KB and was omitted. Use Base44 SDK to fetch: `await base44.entities.get("entity_name", entity_id)`
+- payload_too_large: true if entity data exceeded 200KB and was omitted. Use Base44 SDK to fetch: `await base44.asServiceRole.entities[event.entity_name].get(event.entity_id)`
 
 Optional: trigger_conditions — pre-filter which entity events actually trigger execution.
 Use when the user only wants to act on specific changes (e.g., only when status becomes "completed", or only when a specific field changed).

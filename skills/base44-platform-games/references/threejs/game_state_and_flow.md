@@ -10,7 +10,7 @@ Use this when structuring game phases (menu → playing → game over), score/he
 Two kinds of state, two homes:
 - Discrete/UI state (phase, score, lives, unlocks) — React state in the overlay, updated via EventBus events from gameplay. Low frequency, drives DOM.
 - Per-frame gameplay state — refs and module objects read inside `useFrame`. This covers scalars (positions, velocities, timers, mid-run combo counters) AND entity collections with their mutable fields: the live arrays of enemies/towers/projectiles and each entity's hp/target/cooldown. Never React state — beyond re-render stutter, `useFrame` callbacks capture the array from the render that created them, so a tower reading a useState `enemies` list targets a STALE snapshot: damage lands on ghosts and kills never register. Writing game logic as `setState(prev => ...)` updaters (or nesting one setState inside another) is the same failure.
-- When state must be BOTH (read every frame in gameplay AND shown reactively in UI), install `zustand` with `install_npm_package`: components subscribe with the hook selector, `useFrame` reads via `getState()` without re-rendering. For simple games, EventBus + a module object is enough — don't add zustand for a single score counter.
+- When state must be BOTH (read every frame in gameplay AND shown reactively in UI), install `zustand` with `npm install`: components subscribe with the hook selector, `useFrame` reads via `getState()` without re-rendering. For simple games, EventBus + a module object is enough — don't add zustand for a single score counter.
 - Systems that iterate many entities each frame share ONE live registry, mutated in place:
 ```js
 // src/game/3d/world.js — module scope (or one useRef/context at the scene root)

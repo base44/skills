@@ -9,7 +9,7 @@ It has to export a fetch function that will be called with the incoming request.
 
 The Core-integration routing rule is an exception: use a backend function for Core methods except `UploadPublicFile`, `UploadPrivateFile` and `CreateFileSignedUrl` (`UploadFile` is the retired spelling of `UploadPublicFile`).
 
-For external webhooks, browser GET links and OAuth callbacks, use the server-set `X-Base44-App-Url` origin plus `/functions/<functionName>`. Never expose dispatcher `/run/<scriptId>` or deployment URLs; the dispatcher requires platform-only authentication. Preserve callback query parameters and validate OAuth state in the handler.
+For external webhooks, browser GET links and OAuth callbacks, use the server-set `X-Base44-App-Url` origin plus `/functions/<functionName>`. Never expose deployment URLs. Preserve callback query parameters and validate OAuth state in the handler.
 
 <code_validation>
 **Validation Flow**: After you generate the function code, it automatically goes through lint validation before deployment.
@@ -99,7 +99,7 @@ The response is an Axios response object with structure: `{data, status, headers
 3. Pin a version on every external import. For the Base44 SDK use exactly `npm:@base44/sdk@0.8.54`.
 4. Already have an `esm.sh` or `unpkg.com` URL? Replace the CDN hostname with the `npm:` specifier.
 5. Export a default request handler: `export default async function(req) { ... }`.
-6. Secrets: `import { secrets } from "base44:runtime"` → `secrets.get("NAME")`; pre-populated: BASE44_APP_ID. Set other secrets in dashboard environment variables.
+6. Secrets: `import { secrets } from "base44:runtime"` → `secrets.get("NAME")`; pre-populated: BASE44_APP_ID. Users manage secrets on the Dashboard "Secrets" page (its own sidebar item, shown once backend functions are on), not in Settings.
 7. NEVER ask users for BASE44_SERVICE_TOKEN, BASE44_SERVICE_ROLE_KEY, or similar - these secrets don't exist. Use `createClientFromRequest(req)` for auth, and `base44.asServiceRole` for service role level operations.
 8. Naming: USE ONLY camelCase for function names. No spaces, no /, no hyphens.
    **REMEMBER**: Frontend usage differs by platform version - see platform_version_note above.
