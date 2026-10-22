@@ -48,7 +48,7 @@ interface LoginResponse {
 interface RegisterParams {
   email: string;                    // Required
   password: string;                 // Required
-  turnstile_token?: string | null;  // Optional: Cloudflare Turnstile for bot protection
+  turnstile_token?: string | null;  // Optional: has no effect for app users
   referral_code?: string | null;    // Optional: Referral code
 }
 ```
@@ -159,7 +159,7 @@ try {
     email: "user@example.com",
     password: "securePassword123",
     referral_code: "OPTIONAL_CODE",    // optional
-    turnstile_token: "CAPTCHA_TOKEN"   // optional, for bot protection
+    turnstile_token: "CAPTCHA_TOKEN"   // optional, has no effect for app users
   });
   console.log('Registration successful. Check email for OTP code.');
 
@@ -194,7 +194,7 @@ try {
   const response = await base44.auth.loginViaEmailPassword(
     "user@example.com",
     "password123",
-    turnstileToken  // optional: for bot protection
+    turnstileToken  // optional: has no effect for app users
   );
 
   console.log('Login successful');
@@ -673,14 +673,10 @@ Control who can access your app in the app settings:
 - ⚠️ **Note:** Prefer building custom login UI for better user experience
 
 ### Password Requirements
-- Minimum length and complexity requirements enforced
-- Requirements not exposed via API
-- Validation errors returned when requirements not met
+Passwords must be at least 8 characters and at most 72 bytes. Emoji and non-English letters count as more than one byte. There's no complexity requirement, so a password of only lowercase letters is accepted. If a password breaks either rule, the request fails with a validation error that says which one.
 
 ### Rate Limiting
-- OTP requests are rate-limited to prevent abuse
-- Password reset requests are rate-limited
-- Login attempts may be rate-limited with Turnstile protection
+Registration, OTP, login, and password reset requests share one rate limit for each IP address. Requests over the limit fail with a rate-limit error. There's no per-account lockout, so repeated failed logins for one account aren't blocked unless they come from the same IP address. Each OTP code allows 5 attempts. The `turnstileToken` and `turnstile_token` parameters have no effect, because Base44 doesn't verify Turnstile tokens for app users.
 
 ### Token Management
 - JWTs are automatically stored in localStorage by default

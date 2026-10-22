@@ -250,6 +250,6 @@ https://app.base44.com/api/sandbox/<APP_ID>/local-agent/readme.md
 
 1. **Orient** — `list_directory` / `read_file` / `grep` (`sandbox ls` / `sandbox read` / `sandbox grep` in the CLI) to understand the app before changing anything.
 2. **Author** — create or edit resource files (backend functions, actors, entities, agents) and frontend code following the conventions above; set up connectors via the connect flow.
-3. **Verify** — optionally `run_command` (`sandbox run`) `npm run build` / `npx tsc --noEmit`, and use `get_app_preview_url` to eyeball changes (see `base44-remote-dev`).
+3. **Verify** — optionally `run_command` (`sandbox run`) `npm run build` / `npx tsc --noEmit`, and open the preview URL from `GET /api/apps/{app_id}/sandbox/preview-url` to eyeball changes (see `base44-remote-dev`).
 4. **Let it ship** — do **nothing** to deploy. Writing the file is the deploy; the auto-commit (~5s) persists and ships it. Pause a moment after your last edit before disconnecting so the commit lands.
 5. **Checkpoint** — when you finish a unit of work, and always before you stop, call `create_checkpoint` (`base44 sandbox checkpoint --name "..."` in the CLI). The auto-commit persists your files but is **not** a checkpoint: only checkpoints appear in the builder's version history, and a Restore or Revert there rolls the app back to the last checkpoint and discards everything written after it. The checkpoint flushes pending changes first, so it captures your latest code. See `base44-remote-dev` for details.
