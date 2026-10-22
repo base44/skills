@@ -6,7 +6,7 @@ Search and call any Apps API or Workspace API operation with your CLI login; no 
 
 Use `base44 api` for a Base44 platform task that no dedicated CLI command covers, such as custom domains, app users, SEO settings, and more.
 
-**Prefer a dedicated command when one exists** (`base44 secrets`, `base44 functions`, `base44 logs`, `base44 deploy`, and the rest of this skill). Use `base44 api` for everything else.
+**Prefer a dedicated command when it does exactly what was asked** (`base44 secrets`, `base44 functions`, `base44 logs`, `base44 deploy`, and the rest of this skill). If it also does something the user didn't ask for (read its reference first), use `base44 api` instead. Use `base44 api` for everything else.
 
 The API covers apps and workspaces, not your own Base44 account: there is no operation for your password, email or profile. Send the user to the Base44 web app for those.
 

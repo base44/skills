@@ -1,6 +1,6 @@
 ---
 name: base44-cli
-description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, realtime actors, ai agents), initialization and actions (resource creation, deployment). This skill is the place for learning about how to configure resources, including actors — the realtime/WebSocket primitive behind multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
+description: "The base44 CLI is used for EVERYTHING related to base44 projects: resource configuration (entities, backend functions, realtime actors, ai agents), initialization and actions (resource creation, deployment), and any other operation on an existing app or workspace through the Base44 public API (settings, domains, users, members, source export). This skill is the place for learning about how to configure resources, including actors — the realtime/WebSocket primitive behind multiplayer, collaborative boards, presence and live cursors, in-room chat, and live auctions. When you plan or implement a feature, you must learn this skill"
 metadata:
   sourcePackage:
     name: base44
@@ -561,7 +561,7 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 ### Any Other API Operation
 
-For a Base44 platform task with no dedicated command above (custom domains, URL redirects, SEO settings, app users, collaborators and ownership, analytics, security scans, workspace members and groups, CSV imports, and more), find and call the public API endpoint directly. Prefer a dedicated command when one exists.
+For a Base44 platform task with no dedicated command above (custom domains, URL redirects, SEO settings, app users, collaborators and ownership, analytics, security scans, workspace members and groups, CSV imports, and more), find and call the public API endpoint directly. Prefer a dedicated command only when it does exactly what was asked; if it also does something the user didn't ask for (read its reference first), use `base44 api` instead.
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
