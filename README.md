@@ -69,6 +69,7 @@ npx skills add base44/skills --skill base44-remote-dev --skill base44-sandbox --
 | [`base44-troubleshooter`](skills/base44-troubleshooter/SKILL.md) | Troubleshoot production issues using backend function logs. Use when investigating app errors or diagnosing production problems. |
 | [`base44-remote-dev`](skills/base44-remote-dev/SKILL.md) | Develop a Base44 app remotely from your own coding agent by connecting it to the Base44 sandbox over MCP or the `base44 sandbox` CLI. |
 | [`base44-sandbox`](skills/base44-sandbox/SKILL.md) | Author Base44 app code inside the cloud sandbox — no deploy/push; writing a resource file (function, actor, entity, agent) into the sandbox is what ships it. |
+| [`continue`](skills/continue/SKILL.md) | Continue the current Claude Code or Codex session in a Base Code branch of an imported Base44 app. Run it as `/base44:continue`. |
 
 ## About Agent Skills
 
