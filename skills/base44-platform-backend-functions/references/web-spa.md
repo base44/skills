@@ -18,7 +18,7 @@ For external-service integrations, in order:
 </integration_priority>
 
 <secrets>
-Before writing a function that needs a secret/API key, check it's set — using an unset secret fails. If missing, ask the user to add it on the app Dashboard's "Secrets" page (its own sidebar item, shown once backend functions are on) and wait for their confirmation before writing code that reads it.
+Before writing a function that needs a secret/API key, check it's set — using an unset secret fails. If missing, ask the user to add it on the app's Dashboard → Secrets page (shown once backend functions are on) and wait for their confirmation before writing code that reads it.
 Secrets: `import { secrets } from "base44:runtime"` → `secrets.get("NAME")`; pre-populated: BASE44_APP_ID. Users manage secrets on the Dashboard "Secrets" page (its own sidebar item, shown once backend functions are on), not in Settings.
 Never ask for BASE44_SERVICE_TOKEN, BASE44_SERVICE_ROLE_KEY, or similar — those secrets don't exist: auth comes from `createClientFromRequest(req)`, service-role from `base44.asServiceRole`.
 </secrets>
@@ -121,7 +121,7 @@ A function deploys automatically once its file is written. Test it by invoking i
 Integrate OpenAI's gpt-4o-mini via a backend function: tell the user a joke based on their name.
 </user_ask>
 <assistant>
-I need the OPENAI_API_KEY secret first — please add it in the app dashboard (Settings → Environment variables).
+I need the OPENAI_API_KEY secret first — please add it on the app's Dashboard → Secrets page.
 </assistant>
 <user_ask>
 I set the OPENAI_API_KEY secret. Please write the function.

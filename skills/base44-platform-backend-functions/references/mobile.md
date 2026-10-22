@@ -42,13 +42,13 @@ For external webhooks, browser GET links and OAuth callbacks, use the server-set
 
 <guidelines>
 <main_guidelines>
-1. CRITICAL: before writing any function, if you need to use a secret / api key, make sure to check if it's already set. If it is missing, ask the user to add it in the app dashboard (Settings → Environment variables).
+1. CRITICAL: before writing any function, if you need to use a secret / api key, make sure to check if it's already set. If it is missing, ask the user to add it on the app's Dashboard → Secrets page.
 2. ADMIN-ONLY FUNCTIONS: If a function should only be invoked by admin (e.g., scheduled tasks, functions a workflow or automation calls, admin dashboard operations, system maintenance), it MUST verify the authenticated user is an admin by checking `user.role === 'admin'` and return 403 Forbidden if not.
 3.
 
-If the secrets you need are not set, ask the user to add them in the app dashboard (Settings → Environment variables) and wait for their confirmation before writing the function code.
+If the secrets you need are not set, ask the user to add them on the app's Dashboard → Secrets page (shown once backend functions are on) and wait for their confirmation before writing the function code.
 
-CRITICAL: a function that reads a secret / api key that is not set fails at runtime.
+A function that reads an unset secret or API key fails at runtime.
 
 For example, if the user asks for a WeatherAPI.com integration, you should request the WEATHER_API_KEY secret.
 

@@ -24,7 +24,7 @@ Server functions and server routes are public endpoints: anyone can call them, w
 </caller_auth>
 
 <secrets>
-Before writing server code that needs an API key or secret, check it is set — an unset secret fails. If missing, ask the user to add it in the app dashboard (Settings → Environment variables) and wait for their confirmation before writing code that reads it. Read it with `import { secrets } from "base44:runtime"` → `secrets.get("NAME")` (`undefined` if unset) only in server functions, server routes and `*.server.js` files; never `process.env` or a `VITE_*` var (build-time, client-visible). A set or rotated secret reaches the dev preview and the latest commit's worker within seconds — no redeploy; a published app behind the latest commit picks it up on its next publish.
+Before writing server code that needs an API key or secret, check it is set — an unset secret fails. If missing, ask the user to add it on the app's Dashboard → Secrets page and wait for their confirmation before writing code that reads it. Read it with `import { secrets } from "base44:runtime"` → `secrets.get("NAME")` (`undefined` if unset) only in server functions, server routes and `*.server.js` files; never `process.env` or a `VITE_*` var (build-time, client-visible). A set or rotated secret reaches the dev preview and the latest commit's worker within seconds — no redeploy; a published app behind the latest commit picks it up on its next publish.
 </secrets>
 
 <runtime>

@@ -267,7 +267,7 @@ Optional: `resource_id` — for Google Calendar (calendar ID, e.g. "primary" or 
 
 Prerequisites:
 - The connector must be authorized (use the Base44 MCP connector tools `list_connectors` and `initiate_connector_connection`, or `base44 connectors`). The webhook registration is set up automatically when the workflow is saved.
-- Each provider has a different payload structure and auth model. Always read the connector's usage guide (`list_connectors` with the integration type) for the provider-specific webhook handler guide BEFORE writing the server route.
+- Each provider has a different payload structure and auth model. Read the provider's own webhook documentation for its payload and auth model (`list_connectors` gives the integration type, scopes and connection state, not a handler guide) BEFORE writing the server route.
 
 Trigger payload:
 - `${ .trigger.integration_type }` — e.g. "slack", "googlecalendar"
@@ -286,7 +286,16 @@ High-volume connectors (e.g. Slack) require conditions — validation will rejec
 If activation fails with `MISSING_WEBHOOK_SCOPES`, re-connect that connector (`initiate_connector_connection`, or `base44 connectors initiate`) with the union of its granted and missing scopes (re-authorization replaces the grant, so omitting the granted ones drops them), then save the workflow again.
 
 Available connectors:
-  (no connectors with webhook support)
+  - gmail: mailbox
+  - googlecalendar: events
+  - googledrive: changes, file, file.update, file.trash, file.untrash, file.delete
+  - microsoft_teams: created, updated, deleted
+  - one_drive: updated
+  - outlook: created, updated, deleted
+  - share_point: updated
+  - slack: message, message.im, message.groups, message.channels, message.mpim, reaction_added, reaction_removed, member_joined_channel, member_left_channel, file_shared
+  - slackbot: app_mention, message.im, message.mpim, message.channels, message.groups
+  - wix: wix.forms.v4.submission_created, wix.contacts.v4.contact_created, wix.contacts.v4.contact_updated, wix.contacts.v4.contact_deleted, wix.ecom.v1.order_created, wix.ecom.v1.order_updated, wix.ecom.v1.order_canceled, wix.ecom.v1.checkout_created, wix.data.v2.data_item_created, wix.data.v2.data_item_updated, wix.data.v2.data_item_deleted
 
 ### in_app_agent
 ```json

@@ -7,13 +7,13 @@
     "skills/base44-platform-agents/references/web-spa.md": "d429d967bd32996e597ce1386a8d255972f79080545536b8e9a5bca2322048c0",
     "skills/base44-platform-agents/references/web-tanstack.md": "e48e0c5e2373ddcad47c02722b4b5dc5971640536b30e99896ef5113f97f4d74",
     "skills/base44-platform-backend-functions/SKILL.md": "0b1034eb6965a723fd10b5b70fa4616e2297938087a019fc8fce30d10e27f794",
-    "skills/base44-platform-backend-functions/references/mobile.md": "5ab98bac2e9d8056aba236d51f3965eb3f402b4306c0225b7f96fba28a8507a0",
-    "skills/base44-platform-backend-functions/references/web-spa.md": "dda2db002f201d15f5374820231524dc503ed3a4b9560e7833236c4c857eda9d",
-    "skills/base44-platform-backend-functions/references/web-tanstack.md": "ad209a49e50b5668b479b98f13ec903da5554d9b540e3b10c12d4851898309c6",
+    "skills/base44-platform-backend-functions/references/mobile.md": "034fe28f812897363b91242078a1092943e319fdee0fc28ea8d2fd779deb8498",
+    "skills/base44-platform-backend-functions/references/web-spa.md": "43620240a07f0e0b776ebb7c38945fddecd806a23a963b7b3ec5fd2feeecbfaa",
+    "skills/base44-platform-backend-functions/references/web-tanstack.md": "960f4fede0d0c878e8e98b23c196ac9fcc99a7b9e2ef8f46cf005d607e73f0cd",
     "skills/base44-platform-connectors/SKILL.md": "278579146b5e422f11cb15a9b33e5955cd9cbb62f0791c4cd40ca49535492a51",
-    "skills/base44-platform-connectors/references/mobile.md": "cc30ab45866ebb4952fd8ec45954a756d7b82985dc12704cd8ff3118d330afb3",
-    "skills/base44-platform-connectors/references/web-spa.md": "7ef4ae7afc1c5b00d55fdfc1330fefad226411c0065c0d82a263e9a198aae482",
-    "skills/base44-platform-connectors/references/web-tanstack.md": "64ddd48bc69e877038d677ea666fecab6c37d8103f1f1acea61a00ff6111e1f8",
+    "skills/base44-platform-connectors/references/mobile.md": "7cb1dbad4829a203a0dc44bde8646410e3484c9fb45c64de0f7201d870e5aefd",
+    "skills/base44-platform-connectors/references/web-spa.md": "aa905eab8a95f97c85e4755123eae2b38c5e4e62a09c516d481519b51d04734c",
+    "skills/base44-platform-connectors/references/web-tanstack.md": "cec2fb0c272335ccb605f774bd3f8b621b37d3f8985c1e9ff4c56857a3d6b209",
     "skills/base44-platform-entities/SKILL.md": "5e40879dbb791b271953e8decc5b80ed63e950668b9522b65b45eb9c3647ad62",
     "skills/base44-platform-entities/references/mobile-and-games.md": "180accec4af5547da524e09fed6ed36414ea3d64f24cf622e40654a51565bb8a",
     "skills/base44-platform-entities/references/rls.md": "a87a71751bb63c28a0629c2ca65019c726c3b549149a029f74f5a84cb86b8dcf",
@@ -77,7 +77,7 @@
     "skills/base44-platform-workflows/SKILL.md": "c48b355ef3298ac81c662c4bb5bffb40486ede2ea42405d8ff00d3a01d46fae9",
     "skills/base44-platform-workflows/references/automations-legacy.md": "0518e4aaab82d2e2ff842fce5eb7daeb140900eb48a952a3528e7cc84e2db502",
     "skills/base44-platform-workflows/references/mobile-automations.md": "c122edd2de022cd63bffa54272ffd32d0d893544cdf82db216ea8b39f15a0a15",
-    "skills/base44-platform-workflows/references/web-spa.md": "1fa9695d74b1f5909eecea49dfaa75580e6d458528cbada64a9bca7830dba139",
-    "skills/base44-platform-workflows/references/web-tanstack.md": "5c72259395539dfc93628677d1ed0b00a5a886d85524d4e128318a6066ee155a"
+    "skills/base44-platform-workflows/references/web-spa.md": "20666c624bcd735ff88e0fba5dd09ed98c68c80ff9e0edf50061d92d9fb3fc6e",
+    "skills/base44-platform-workflows/references/web-tanstack.md": "679d1a60b5854952426f08f71001dd8e962ffd1a15e2c514a2f88c4045b848f7"
   }
 }

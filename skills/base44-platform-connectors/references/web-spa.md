@@ -13,7 +13,7 @@ App connectors integrate the app with external services via OAuth.
 </connector_types>
 
 <connector_decision_flow>
-Connecting a connector happens outside the code: read the catalog and each connector's details (description, scopes, auth status, connection mode) with the Base44 MCP `list_connectors` tool or `base44 connectors list-available --app-id <APP_ID>`; connect or re-scope a shared connector with `initiate_connector_connection` / `base44 connectors initiate` passing the complete scope set (it replaces, never merges), and let the user finish OAuth in their browser. App-user and BYO-shared connectors are registered by a workspace admin in Settings → OAuth Connectors.
+Connecting a connector happens outside the code: read the catalog and each connector's details (description, scopes, auth status, connection mode) with the Base44 MCP `list_connectors` tool or `base44 connectors list-available --app-id <APP_ID>`; connect or re-scope a shared connector with `initiate_connector_connection` / `base44 connectors initiate` passing the complete scope set (it replaces, never merges), and let the user finish OAuth in their browser. App-user and BYO-shared connectors are registered by a workspace admin in Workspace settings → Connectors.
 </connector_decision_flow>
 
 <supported_connectors>

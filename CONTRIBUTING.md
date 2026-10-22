@@ -129,17 +129,17 @@ the in-editor AI learns it, one reference per app shape.
 1. **At Base44**: the compiler renders every prompt partial in its capability matrix for the
    external surface, drops passages marked internal, and validates the result (deterministic output,
    no builder-tool vocabulary, no internal names, manifest, links). An IP review then reads the tree
-   that would be published; only a tree it clears, or one a Base44 engineer has settled, is synced.
-   The sync opens one PR here on the branch `auto/base44-platform-skills`, labeled
-   `auto-skill-update`, with the review's report in its body. No change, no PR.
+   that would be published; a tree it flags stays inside Base44 until an engineer has read the
+   findings and approved it. The sync opens one PR here on the branch `auto/base44-platform-skills`,
+   labeled `auto-skill-update`, with the review's report in its body. No change, no PR.
 2. **In this repo**: `Validate base44-platform skills` (`scripts/validate-base44-platform.mjs`)
    checks that the PR carries exactly what the compiler emitted: the generated-file header on every
    file, sha256 hashes matching `skills/base44-platform-manifest.json`, frontmatter whose `name`
    equals the directory name, resolving links, and a 40-hex `SOURCE_COMMIT` pin.
 3. `Auto-merge compiled skill updates` enables squash auto-merge on a labeled PR opened by
    `base44-github-actions[bot]` whose diff is confined to `skills/base44-platform-*/**` and
-   `SOURCE_COMMIT`. A PR the review opened as a draft waits for a human; so does everything else.
-   The Slack notifier posts the PR like any other skill-sync PR.
+   `SOURCE_COMMIT`. A PR published on an engineer's approval after review findings waits for a
+   human merge; so does everything else. The Slack notifier posts the PR like any other skill-sync PR.
 
 ### How to change a compiled skill
 
