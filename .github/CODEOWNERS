@@ -1,9 +1,9 @@
 # The compiled platform skills are generated from the Base44 builder's prompt tree in
-# base44-dev/apper and synced here nightly (CONTRIBUTING.md, "Compiled platform skills").
+# the Base44 builder prompt and synced here by Base44 (CONTRIBUTING.md, "Compiled platform skills").
 # A hand edit here is overwritten by the next sync and fails the validator's manifest check,
-# so the owners review the sync PRs and route content changes to the apper prompt partials.
+# so the owners review the sync PRs and route content changes to the source prompt.
 /skills/base44-platform-*/ @base44/devs
-/APPER_COMMIT @base44/devs
+/SOURCE_COMMIT @base44/devs
 /scripts/validate-base44-platform.mjs @base44/devs
 /.github/workflows/validate-base44-platform.yml @base44/devs
 /.github/workflows/auto-merge-skill-update.yml @base44/devs

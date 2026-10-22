@@ -2,9 +2,9 @@
 name: base44-platform-entities
 description: "Base44 entities: the JSON-schema data models under base44/entities/, the entity SDK, and row-level security (RLS) rules. Use when adding or changing stored data, queries, or per-user access rules in a Base44 app."
 ---
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 entities
 
 Entities are JSON-schema objects stored as `base44/entities/<Name>.jsonc`; writing the file is what defines the data model. The platform applies each entity's `rls` rules on every app-user request.

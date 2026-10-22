@@ -1,6 +1,6 @@
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 agents: Agents (Vite SPA: tools are backend functions)
 
 <base44_agents_introduction>
@@ -49,7 +49,7 @@ import { base44 } from "@/api/base44Client";
 </channels>
 
 <agent_ui>
-Without an in-app UI, an agent is only usable from the dashboard/backoffice — so when you build an agent, also build the UI for its conversations in the app.
+Without an in-app UI, an agent is only usable from the dashboard — so when you build an agent, also build the UI for its conversations in the app.
 
 <agents_sdk>
 Manage conversations, add messages, and subscribe to updates:

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Validates the compiled `skills/base44-platform-*` tree that base44-dev/apper publishes nightly.
-// The compiler (apper: backend/scripts/agent_skills) owns the content; this proves a PR carries
+// Validates the compiled `skills/base44-platform-*` tree that Base44 publishes from its builder prompt.
+// The compiler at Base44 owns the content; this proves a PR carries
 // exactly what it emitted: every generated file bears the header, is listed in the manifest with
 // a matching sha256, has valid frontmatter, and links only to files that exist.
 
@@ -74,8 +74,8 @@ async function main() {
     }
   }
 
-  const pin = (await fs.readFile(path.join(repoRoot, "APPER_COMMIT"), "utf8").catch(() => "")).trim();
-  if (!/^[0-9a-f]{40}$/.test(pin)) errors.push("APPER_COMMIT must hold the 40-hex apper commit the tree was compiled from");
+  const pin = (await fs.readFile(path.join(repoRoot, "SOURCE_COMMIT"), "utf8").catch(() => "")).trim();
+  if (!/^[0-9a-f]{40}$/.test(pin)) errors.push("SOURCE_COMMIT must hold the 40-hex source commit the tree was compiled from");
 
   if (errors.length) {
     console.error("Validation failed:");

@@ -2,9 +2,9 @@
 name: base44-platform-connectors
 description: "Base44 app connectors: OAuth integrations with external services (Google, Slack, GitHub and more) in shared, app-user and BYO-shared modes, how to connect one from an external agent, and how server code reads the token with getConnection. Use when the app must act on a user's or the builder's account at a third-party service."
 ---
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 connectors
 
 Connectors are configured against the app, not authored as files: list the catalog, connect with the complete scope set, then read tokens in server code.

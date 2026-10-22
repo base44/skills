@@ -1,15 +1,15 @@
 name: Validate base44-platform skills
 
-# The `skills/base44-platform-*` tree is compiled by base44-dev/apper (backend/scripts/agent_skills)
+# The `skills/base44-platform-*` tree is compiled from the Base44 builder prompt
 # and synced here nightly. This check proves a PR carries exactly what the compiler emitted:
-# headers, manifest hashes, frontmatter, links and the APPER_COMMIT pin. Make it a required check
+# headers, manifest hashes, frontmatter, links and the SOURCE_COMMIT pin. Make it a required check
 # on main, so the auto-merge workflow only merges a tree that passed it.
 
 on:
   pull_request:
     paths:
       - "skills/base44-platform-*/**"
-      - "APPER_COMMIT"
+      - "SOURCE_COMMIT"
       - "scripts/validate-base44-platform.mjs"
       - ".github/workflows/validate-base44-platform.yml"
 

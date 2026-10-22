@@ -2,9 +2,9 @@
 name: base44-platform-workflows
 description: "Base44 workflows: trigger-driven automated processes defined as CNCF Serverless Workflow files under base44/workflows/ (scheduled, entity, connector, in-app agent, auth, publish and payment triggers; call, wait and switch steps; jq expressions), with the full authoring guide, plus the legacy automations pipeline for apps that predate workflows. Use for any 'when X happens, do Y' or 'every N hours, do Y'."
 ---
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 workflows
 
 Workflows is the default pipeline: a `.jsonc` envelope under `base44/workflows/` is live once written. An app whose profile says `automation_pipeline: legacy_automations` uses the automations reference instead.

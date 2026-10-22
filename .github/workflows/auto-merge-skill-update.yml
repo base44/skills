@@ -1,8 +1,8 @@
 name: Auto-merge compiled skill updates
 
-# A nightly sync PR from base44-dev/apper (label `auto-skill-update`, opened by the
+# A sync PR from the Base44 skills compiler (label `auto-skill-update`, opened by the
 # base44-github-actions app, the same bot sync-cli-skill.yml / sync-sdk-skill.yml trust) that
-# touches only the compiled `skills/base44-platform-*` tree and the APPER_COMMIT pin is merged
+# touches only the compiled `skills/base44-platform-*` tree and the SOURCE_COMMIT pin is merged
 # automatically once `Validate base44-platform skills` passes. Anything else with the label (the
 # CLI / SDK sync PRs, a hand-made PR) is left for a human.
 #
@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --name-only "$BASE" "$HEAD" > changed.txt
-          if grep -vE '^(skills/base44-platform-[^/]+/|APPER_COMMIT$)' changed.txt; then
+          if grep -vE '^(skills/base44-platform-[^/]+/|SOURCE_COMMIT$)' changed.txt; then
             echo "::error::the PR changes files outside the compiled tree; leaving it for a human"; exit 1
           fi
           echo "$(wc -l < changed.txt) generated files changed"

@@ -2,9 +2,9 @@
 name: base44-platform-integrations-sdk
 description: "Base44 built-in integrations on the SDK client: InvokeLLM, SendEmail, file uploads (public and private), signed URLs, data extraction and image generation, with every Core endpoint's input schema, plus analytics event tracking. Use when a feature needs AI, email, files or analytics without a third-party service."
 ---
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 integrations sdk
 
 File uploads and signed URLs are called from the browser SDK; every other Core integration runs in server code on an app with core-integration control, the default for new apps (profile `core_integrations: backend_functions_only`). The endpoint schemas below are the ones the platform serves today.

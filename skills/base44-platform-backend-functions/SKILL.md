@@ -2,9 +2,9 @@
 name: base44-platform-backend-functions
 description: "Base44 server-side code: backend functions (HTTP handlers in base44/functions/<name>/entry.ts on Cloudflare Workers) for Vite SPA apps, or TanStack Start server functions and server routes. Secrets, the Base44 SDK on the server, auth and service role, webhooks, admin-only handlers, frontend invocation, testing, and the InvokeLLM model table. Use when the app needs external APIs, privileged logic or scheduled work."
 ---
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 backend functions
 
 A Vite SPA app runs server code as backend functions; a TanStack Start app runs it as server functions and server routes inside its own project. Writing the file deploys it.

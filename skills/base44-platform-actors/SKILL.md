@@ -2,9 +2,9 @@
 name: base44-platform-actors
 description: "Base44 realtime actors: stateful server rooms over WebSockets (Durable Objects) under base44/actors/<Name>/entry.ts for multiplayer, collaborative boards, presence, live cursors, chat rooms and auctions, with the actor contract, rules and the React client. Use when users interact live in one shared session."
 ---
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 actors
 
 One actor instance per room id; the actor is authoritative, clients send operations. Writing the entry file deploys the actor.

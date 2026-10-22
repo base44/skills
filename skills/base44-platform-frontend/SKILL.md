@@ -2,9 +2,9 @@
 name: base44-platform-frontend
 description: "Frontend coding standards for Base44 web apps: code conventions, the installed packages, routing (React Router in the Vite SPA, file routes in TanStack Start), Tailwind and design tokens, styling and componentization rules, npm installs, and how files are edited in the sandbox. Use when writing or changing pages, components or routes."
 ---
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 frontend
 
 The builder's own frontend rules for Base44 web apps. Pick the reference for the app's framework; the TanStack reference ends with a worked example.

@@ -2,9 +2,9 @@
 name: base44-platform-games
 description: "Base44 games: Phaser 4 (2D) and Three.js via React Three Fiber (3D) reference material for game apps built on Base44. Use when implementing scenes, physics, input, cameras, assets, HUD or game state in a Base44 game."
 ---
-<!-- GENERATED FILE. DO NOT EDIT. Compiled by apper `backend/scripts/agent_skills` from the
-     builder prompt sources; the apper commit is in /APPER_COMMIT at the repository root.
-     Edits here are overwritten by the nightly sync; change the source partials in apper. -->
+<!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
+     source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
+     the next sync; change the source instead. -->
 # Base44 games
 
 A Base44 game is a React app with the game layer under `src/game/`; React owns the screen-space overlay and the Base44 SDK, the engine owns gameplay. Each topic reference covers one engine area.
