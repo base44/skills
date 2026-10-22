@@ -135,13 +135,13 @@ Generate temporary access links for private files.
 ```javascript
 const { signed_url } = await base44.integrations.Core.CreateFileSignedUrl({
   file_uri: "private/user123/document.pdf",
-  expires_in: 7200  // 2 hours
+  expires_in: 1800  // 30 minutes
 });
 ```
 
 **Parameters:**
 - `file_uri` (string, required): URI from UploadPrivateFile
-- `expires_in` (number, optional): Expiration time in seconds (default: 300)
+- `expires_in` (number, optional): Expiration time in seconds, from 60 to 3600 (default: 300)
 
 ### ExtractDataFromUploadedFile
 
@@ -301,7 +301,7 @@ interface UploadPrivateFileResult {
 interface CreateFileSignedUrlParams {
   /** URI from UploadPrivateFile. */
   file_uri: string;
-  /** Expiration time in seconds (default: 300). */
+  /** Expiration time in seconds, from 60 to 3600 (default: 300). */
   expires_in?: number;
 }
 
