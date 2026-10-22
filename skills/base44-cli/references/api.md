@@ -94,6 +94,10 @@ Call an operation, or with `--help` print its contract. The path may include a q
 - **Multipart body:** when the contract shows `requestBodyContentType: multipart/form-data`, use `--form name=value` and `--form name=@path` for files instead of `--body`; add `;type=<media type>` after the path to set the file's content type. Don't combine `--body` and `--form`.
 - **Binary responses** are not printed; add `--output <file>` to save them.
 - **Global `--json`** keeps stdout machine-readable: a non-JSON text response is wrapped as `{status, contentType, body}`.
+- **An empty response** (e.g. a delete) prints `{"status":204}`.
+- **Exit code** is 0 on success and 1 on failure. A failure prints the server's error to stderr; with `--json`, stdout gets `{error, code, details}`.
+- **IDs for the next call:** a create returns the new resource, including its `id`; put that into the next path's placeholder.
+- **Undoing a write** is up to the API: read the `description` before writing, since some changes can't be fully reverted.
 
 The spec is cached for 1 hour; `--refresh` downloads it again.
 
@@ -142,4 +146,5 @@ npx base44 api fetch GET "/api/apps/{app_id}/coding/export-to-zip" --read-only -
 
 - `fetch` has no timeout: a call such as a deploy can take minutes
 - A failed call returns the server's own error and a request ID; on a rate limit it also says how long to wait
+- A 403 isn't always about permissions: read the response body's `reason` (some operations need a published app, for example)
 - Quote the path so the shell doesn't read the braces or the `?`
