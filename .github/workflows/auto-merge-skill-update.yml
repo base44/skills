@@ -1,0 +1,43 @@
+name: Auto-merge compiled skill updates
+
+# A sync PR from the Base44 skills compiler (label `auto-skill-update`, opened by the
+# base44-github-actions app, the same bot sync-cli-skill.yml / sync-sdk-skill.yml trust) that
+# touches only the compiled `skills/base44-platform-*` tree and the SOURCE_COMMIT pin is merged
+# automatically once `Validate base44-platform skills` passes. Anything else with the label (the
+# CLI / SDK sync PRs, a hand-made PR) is left for a human.
+#
+# Requires: GitHub auto-merge enabled on this repository and the validator as a required check
+# on main. See CONTRIBUTING.md, "Compiled platform skills".
+
+on:
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enable-auto-merge:
+    if: contains(github.event.pull_request.labels.*.name, 'auto-skill-update') && github.event.pull_request.user.login == 'base44-github-actions[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Only the compiled tree and the pin may change
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          git diff --name-only "$BASE" "$HEAD" > changed.txt
+          if grep -vE '^(skills/base44-platform-[^/]+/|SOURCE_COMMIT$)' changed.txt; then
+            echo "::error::the PR changes files outside the compiled tree; leaving it for a human"; exit 1
+          fi
+          echo "$(wc -l < changed.txt) generated files changed"
+      - name: Enable auto-merge
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge "${{ github.event.pull_request.number }}" --squash --auto
