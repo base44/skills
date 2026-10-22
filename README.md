@@ -33,6 +33,14 @@ codex plugin marketplace add base44/skills
 
 Then in Codex CLI, run `/plugins`, select **Base44**, and choose **Install Plugin**.
 
+### Antigravity
+
+In [Antigravity](https://antigravity.google), open **Customizations → Plugins**, click **+ Install from URL**, and enter `https://github.com/base44/skills/tree/main/antigravity/base44`. Or, from a terminal:
+
+```bash
+agy plugin install https://github.com/base44/skills/tree/main/antigravity/base44
+```
+
 ### Other Agents (via skills CLI)
 
 Install skills using [`skills`](https://github.com/vercel-labs/skills):
