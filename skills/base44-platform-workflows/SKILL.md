@@ -21,6 +21,6 @@ native mobile (Expo) app; `src/game/2d/` or `src/game/3d/` means a game; otherwi
 
 | Profile | Read |
 |---|---|
-| Web app, Vite SPA (the default web template) | [Workflows (Vite SPA: steps call backend functions)](references/web-spa.md), [Legacy automations (apps that predate workflows)](references/automations-legacy.md) |
+| Web app, Vite SPA (the default web template) | [Workflows (Vite SPA and mobile: steps call backend functions)](references/backend-functions.md), [Legacy automations (apps that predate workflows)](references/automations-legacy.md) |
 | Web app, TanStack Start | [Workflows (TanStack Start: steps call server routes)](references/web-tanstack.md) |
-| Native mobile app (Expo, React Native) | [Automations (mobile apps)](references/mobile-automations.md) |
+| Native mobile app (Expo, React Native) | [Workflows (Vite SPA and mobile: steps call backend functions)](references/backend-functions.md), [Legacy automations (mobile apps that predate workflows)](references/mobile-automations.md) |

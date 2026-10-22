@@ -1,7 +1,7 @@
 <!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
      source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
      the next sync; change the source instead. -->
-# Base44 workflows: Workflows (Vite SPA: steps call backend functions)
+# Base44 workflows: Workflows (Vite SPA and mobile: steps call backend functions)
 
 <workflows_capability>
 Workflows: trigger-driven automated processes — one step (e.g. a scheduled function call) or complex (multi-step, `switch` branching, durable waits across hours/days, data threading, chained backend functions). For any "when X happens, do Y" / "every N hours/days, do Y", however many actions Y involves.

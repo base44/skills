@@ -1,7 +1,7 @@
 <!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
      source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
      the next sync; change the source instead. -->
-# Base44 workflows: Automations (mobile apps)
+# Base44 workflows: Legacy automations (mobile apps that predate workflows)
 
 <automations_capability>
 You can manage automations to run backend functions automatically - on a schedule, when entity records change, when external services send webhook events, or when app users start in-app agent conversations.
