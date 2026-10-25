@@ -561,13 +561,23 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 ### Any Other API Operation
 
-For a Base44 platform task with no dedicated command above (custom domains, URL redirects, SEO settings, app users, collaborators and ownership, analytics, security scans, workspace members and groups, CSV imports, and more), find and call the public API endpoint directly. Prefer a dedicated command only when it does exactly what was asked; if it also does something the user didn't ask for (read its reference first), use `base44 api` instead.
+For a Base44 platform task with no dedicated command above (custom domains, URL redirects, SEO settings, app users, collaborators and ownership, analytics, security scans, workspace members and groups, CSV imports, and more), find and call the public API endpoint directly with `base44 api`. It covers the Apps API and Workspace API with your CLI login, through the server's OpenAPI spec.
+
+**Prefer a dedicated command only when it does exactly what was asked** (`base44 secrets`, `base44 functions`, `base44 logs`, `base44 deploy`, and the rest of this skill). If it also does something the user didn't ask for (read its reference first), use `base44 api` instead.
+
+The API covers apps and workspaces, not your own Base44 account: there is no operation for your password, email or profile. Send the user to the Base44 web app for those.
+
+**The flow:**
+1. **Find the endpoint:** `npx base44 api search "<what you want to do>"`, or browse with `api catalog [area]`, or `api grep <regex>` when search misses. Each result's `endpoint` (e.g. `"GET /api/apps/{app_id}/custom-domains"`) is the method and path to pass on as is.
+2. **Read its contract:** `npx base44 api fetch <METHOD> <path> --help | jq '.description, .parameters, .requestBodySchema, .responseSchema'`. Read the `description` before calling: the top search result is not always the right operation.
+3. **Call it:** `npx base44 api fetch <METHOD> <path> [--body <json>]`. Add `--read-only` while only looking.
 
 | Command | Description | Reference |
 |---------|-------------|-----------|
-| `base44 api search <text>` | Search every public API operation by what it does (also `api catalog [area]`, `api grep <regex>`) | [api.md](references/api.md) |
-| `base44 api fetch <METHOD> <path> --help` | Print an operation's contract: parameters, request and response schemas | [api.md](references/api.md) |
-| `base44 api fetch <METHOD> <path>` | Call the operation with your login; add `--read-only` while only looking | [api.md](references/api.md) |
+| `base44 api search <text...>` | Search every public API operation by what it does | [api-search.md](references/api-search.md) |
+| `base44 api catalog [area]` | List the API's areas, or every operation in one area | [api-catalog.md](references/api-catalog.md) |
+| `base44 api grep <pattern>` | Search the API spec with a regular expression, for when search misses | [api-grep.md](references/api-grep.md) |
+| `base44 api fetch <METHOD> <path>` | Call an operation with your login; add `--help` after the path for its contract | [api-fetch.md](references/api-fetch.md) ⚠️ **READ BEFORE CALLING** |
 
 ## Quick Start
 
