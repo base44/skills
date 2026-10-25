@@ -408,7 +408,9 @@ Agents are conversational AI assistants that can interact with users, access you
     // Entity tool - gives agent access to entity operations
     { "entity_name": "tasks", "allowed_operations": ["read", "create", "update", "delete"] },
     // Backend function tool - gives agent access to a function
-    { "function_name": "send_email", "description": "Send an email notification" }
+    { "function_name": "send_email", "description": "Send an email notification" },
+    // Server route tool - gives agent access to one of a full-stack app's server routes
+    { "tool_name": "order_summary", "route_path": "/api/orders/summary", "method": "get", "description": "Summarize the user's recent orders" }
   ],
   "memory_config": {                 // Optional: lets the agent remember facts across conversations
     "enabled": true,
@@ -431,6 +433,7 @@ Agents are conversational AI assistants that can interact with users, access you
 **Tool config types:**
 - **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
 - **Backend function tools**: `function_name` + `description`
+- **Server route tools** (full-stack apps): `tool_name` (1-64 chars of letters, digits, `_`, `-`) + `route_path` (app-relative, starts with a single `/`, no query string) + `method` (`get`\|`post`\|`put`\|`patch`\|`delete`, default `post`) + `description` (default `"agent server route"`)
 
 **Memory config fields** (all optional, see [agents-push.md](references/agents-push.md#memory-configuration) for details): `enabled` (bool, default `true`), `scope` (`global`\|`user`\|`both`, default `both`), `include_other_conversation_context` (bool, default `false`), `instructions` (string\|null, default `null`)
 
