@@ -15,14 +15,16 @@ echo "<code>" | npx base44 exec [options]
 |--------|-------------|----------|---------|
 | `--local` | Run against the local `base44 dev` server instead of the deployed app | No | `false` |
 | `--port <number>` | Port the local dev server is on. Only valid with `--local` | No | `4400` |
-| `--privileged` | Run with admin privileges (bypass RLS). Requires app owner/editor role | No | `false` |
-| `--data-env <environment>` | Data environment to run against (e.g. `dev`, `prod`) | No | - |
+| `--privileged` | Run with admin privileges (bypass RLS). Requires app owner/editor role. Env: `BASE44_PRIVILEGED` | No | `false` |
+| `--data-env <environment>` | Data environment to run against (e.g. `dev`, `prod`). Env: `BASE44_DATA_ENV` | No | - |
 
 ## How It Works
 
 The `exec` command reads a script from stdin and runs it server-side with the Base44 SDK pre-authenticated as the currently logged-in user. This allows you to run one-off scripts against your app's data without writing a full function.
 
 By default the script runs against your deployed app. Pass `--local` to run it against a `base44 dev` server running on your machine instead — useful for testing scripts before they touch production data.
+
+`exec` loads an SDK version released within the last 24 hours, rather than holding back on Deno's default minimum-dependency-age window the way other imported npm packages do — so a script always gets a current SDK. Pin an exact version with `BASE44_EXEC_SDK_VERSION` (e.g. `0.8.52`) if you need reproducibility.
 
 ## Available Globals
 
@@ -80,6 +82,10 @@ echo "..." | npx base44 exec --data-env prod
 - The SDK authenticates as your current user via a locally-minted token — the dev server decodes it and seeds your user as an admin, so this matches your local session
 - Defaults to port `4400` (the same default `base44 dev` binds to); pass `--port` if you started `base44 dev` on a different port
 - `base44 dev` must already be running in another terminal — `exec --local` does not start it for you
+
+## Environment-Supplied Target (Advanced)
+
+Setting both `BASE44_EXEC_ACCESS_TOKEN` and `BASE44_EXEC_SERVER_URL` points `exec` at that server with that token directly, skipping the platform login entirely (`BASE44_EXEC_SERVICE_TOKEN` is forwarded alongside, if set). This is for a host that already has credentials of its own to hand the script — e.g. a platform-managed sandbox — not something to set for ordinary interactive use. The two required vars must be set together; setting only one is an error. This target cannot be combined with `--local`.
 
 ## Notes
 

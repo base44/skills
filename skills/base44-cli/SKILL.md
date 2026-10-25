@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.7
+    version: 0.2.2
 ---
 
 # Base44 CLI
@@ -231,6 +231,14 @@ Do **not** use `--app-id` for commands that need local project files:
 - `base44 create` creates a new app, so it rejects `--app-id`
 - `base44 dev` runs from a linked local project, so it rejects `--app-id`
 - `base44 deploy` still requires a local project directory because it reads local resources
+
+## Global `--branch` Option
+
+`--branch <name>` targets a sandbox command (`sandbox read/write/edit/grep/ls/run/checkpoint`) at one of the app's branches by exact name, instead of `main`. Every other command rejects it outright — it is not a general way to read another branch's data. Run `npx base44 branches list --app-id <id> --json` to discover the names a given app has (`main` plus any active branch). Sandbox commands are documented in the base44-sandbox skill; this skill only owns `branches list`.
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 branches list` | List main and active branch names for use with `--branch` | [branches-list.md](references/branches-list.md) |
 
 ## Global `--json` Option
 
@@ -552,12 +560,16 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 ### Site Management
 
-| Command              | Description                               | Reference                                   |
-| -------------------- | ----------------------------------------- | ------------------------------------------- |
-| `base44 site deploy` | Deploy built site files to Base44 hosting | [site-deploy.md](references/site-deploy.md) |
-| `base44 site open`   | Open the deployed site in your browser    | [site-open.md](references/site-open.md)     |
+| Command               | Description                                                              | Reference                                     |
+| --------------------- | ------------------------------------------------------------------------- | ---------------------------------------------- |
+| `base44 site deploy`  | Deploy built site files to Base44 hosting                                 | [site-deploy.md](references/site-deploy.md)   |
+| `base44 site install` | Install the site's dependencies with its configured command, nothing else | [site-install.md](references/site-install.md) |
+| `base44 site dev`     | Run only the site's dev server, with no local backend                     | [site-dev.md](references/site-dev.md)         |
+| `base44 site open`    | Open the deployed site in your browser                                    | [site-open.md](references/site-open.md)       |
 
 **SPA only**: Base44 hosting supports Single Page Applications with a single `index.html` entry point. All routes are served from `index.html` (client-side routing).
+
+`site install` and `site dev` are local-only (no login, no app id) — the shape a hosted build/dev sandbox needs. Use plain `base44 dev` for ordinary local development (it also runs the backend); use `site dev` only when something else is already serving the backend and you need the frontend alone.
 
 ### Any Other API Operation
 
