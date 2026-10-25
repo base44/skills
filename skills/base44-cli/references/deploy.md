@@ -13,6 +13,17 @@ npx base44 deploy [options]
 | Option | Description |
 |--------|-------------|
 | `-y, --yes` | Skip confirmation prompt |
+| `--build` | Build the site before deploying (skips the interactive prompt) |
+| `--no-build` | Deploy without building (skips the interactive prompt) |
+| `--git-hash <hash>` | Deploy the site by the commit the build came from, through the deployments API, and publish it |
+
+## Building First
+
+Interactive runs ask "Build the site first?" before deploying (only when the project has a `site.buildCommand`). `--build` / `--no-build` pre-answer that prompt — non-interactive mode defaults to upload-only when neither flag is passed, so existing CI pipelines are unchanged. Building runs the project's own `buildCommand` with `VITE_BASE44_APP_ID` injected, the same as `npx base44 build`.
+
+## `--git-hash`
+
+Without `--git-hash`, the site deploys through the archive upload and goes live immediately, as it always has. With `--git-hash <hash>`, the site ships through the deployments API instead — the same lane `base44 site deploy --git-hash` uses — addressed by that commit, and is published, so a full-stack build's worker (which the archive upload cannot carry) ships too. A full-stack build deployed without `--git-hash` fails, asking for the flag, instead of silently dropping its worker.
 
 ## What It Deploys
 
@@ -36,6 +47,12 @@ npx base44 deploy
 
 # Non-interactive - skip confirmation (for CI/CD or agent use)
 npx base44 deploy -y
+
+# Build the site first, then deploy everything
+npx base44 deploy --build -y
+
+# Deploy a full-stack build by commit, through the deployments API
+npx base44 deploy --git-hash $(git rev-parse HEAD) -y
 ```
 
 ## Typical Workflow
@@ -43,12 +60,11 @@ npx base44 deploy -y
 ```bash
 # 1. Make your changes (entities, functions, frontend code)
 
-# 2. Build the frontend (if you have one)
-npm run build
-
-# 3. Deploy everything
-npx base44 deploy -y
+# 2. Deploy everything, building the site first
+npx base44 deploy --build -y
 ```
+
+Build through the CLI (`--build`), not a bare `npm run build` beforehand: the CLI's build injects `VITE_BASE44_APP_ID`, which a bare `npm run build` leaves unset.
 
 ## What It Does
 
@@ -81,7 +97,7 @@ Some connectors still require authorization. Run 'base44 connectors push' or ope
 
 - Must be run from a linked Base44 project directory
 - Must be authenticated (run `npx base44 login` first)
-- For site deployment, must run `npm run build` first
+- For site deployment, the site must be built first — pass `--build` to have `deploy` build it, or run `npx base44 build` beforehand
 
 ## Output
 
@@ -93,12 +109,13 @@ After successful deployment:
 
 - If no resources are found, the command exits with a message
 - Use individual commands (`entities push`, `functions deploy`, `actors deploy`, `agents push`, `agent-skills push`, `connectors push`, `site deploy`) if you only want to deploy specific resources
-- The site must be built before deployment - this command does not run `npm run build` for you
+- The site must be built before deployment — pass `--build`/`--no-build` to pre-answer the build prompt, or build beforehand with `npx base44 build`
 
 ## Related Commands
 
 | Command | Description |
 |---------|-------------|
+| `base44 build` | Build the site with its app id injected, without deploying |
 | `base44 entities push` | Push only entities |
 | `base44 functions deploy` | Deploy only functions |
 | `base44 actors deploy` | Deploy only actors |

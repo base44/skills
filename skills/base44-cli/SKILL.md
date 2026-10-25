@@ -4,7 +4,7 @@ description: "The base44 CLI is used for EVERYTHING related to base44 projects: 
 metadata:
   sourcePackage:
     name: base44
-    version: 0.1.7
+    version: 0.2.3
 ---
 
 # Base44 CLI
@@ -232,6 +232,18 @@ Do **not** use `--app-id` for commands that need local project files:
 - `base44 dev` runs from a linked local project, so it rejects `--app-id`
 - `base44 deploy` still requires a local project directory because it reads local resources
 
+Passing `--app-id` (or `BASE44_APP_ID`) from inside a linked project directory no longer discards that project — commands that need both an app and local project files (`site dev`, `connectors pull`/`push`) keep working instead of refusing as if there were none. This matters for a checkout with `base44/config.jsonc` but no `.app.jsonc`, such as a hosted sandbox.
+
+## Global `--branch` Option
+
+The CLI has a global `--branch <name>` option that targets `base44 sandbox` commands at a specific app branch instead of `main`. The name is resolved within the selected app; a missing or ambiguous name fails.
+
+```bash
+npx base44 sandbox read --app-id app_123 --branch feature-x base44/entities/task.jsonc
+```
+
+Only `base44 sandbox` subcommands accept `--branch` — every other command rejects it explicitly. Omit it, or pass `--branch main`, to target `main`. Use `base44 branches list` to discover available branch names — see [branches-list.md](references/branches-list.md).
+
 ## Global `--json` Option
 
 The CLI has a global `--json` option that makes commands emit a machine-readable JSON document on stdout instead of human-oriented output. It also forces non-interactive mode (spinners/status messages/logs move to stderr), so stdout stays pure JSON — safe to pipe into `jq` or another program.
@@ -271,6 +283,12 @@ Workspaces (a.k.a. organizations) group apps under shared membership. By default
 | `base44 workspace list` | List the workspaces you belong to | [workspace-list.md](references/workspace-list.md) |
 | `base44 workspace get <workspace-id>` | Show details for a single workspace by ID | [workspace-get.md](references/workspace-get.md) |
 | `base44 workspace move [workspace-id]` | Move the current app to another workspace | [workspace-move.md](references/workspace-move.md) |
+
+### Branch Management
+
+| Command | Description | Reference |
+|---------|-------------|-----------|
+| `base44 branches list --app-id <id>` | List main and active branch names, for use with the global `--branch` option | [branches-list.md](references/branches-list.md) |
 
 ### Development
 
@@ -408,7 +426,9 @@ Agents are conversational AI assistants that can interact with users, access you
     // Entity tool - gives agent access to entity operations
     { "entity_name": "tasks", "allowed_operations": ["read", "create", "update", "delete"] },
     // Backend function tool - gives agent access to a function
-    { "function_name": "send_email", "description": "Send an email notification" }
+    { "function_name": "send_email", "description": "Send an email notification" },
+    // Server route tool - gives agent access to one of the app's own server routes
+    { "tool_name": "get_orders", "route_path": "/api/orders", "method": "get", "description": "List orders" }
   ],
   "memory_config": {                 // Optional: lets the agent remember facts across conversations
     "enabled": true,
@@ -431,6 +451,7 @@ Agents are conversational AI assistants that can interact with users, access you
 **Tool config types:**
 - **Entity tools**: `entity_name` + `allowed_operations` (array of: `read`, `create`, `update`, `delete`)
 - **Backend function tools**: `function_name` + `description`
+- **Server route tools**: `tool_name` + `route_path` (an app-relative path like `/api/orders`) + optional `method` (`get`\|`post`\|`put`\|`patch`\|`delete`, default `post`) + optional `description` (default `"agent server route"`) — lets the agent call one of the full-stack app's own server routes
 
 **Memory config fields** (all optional, see [agents-push.md](references/agents-push.md#memory-configuration) for details): `enabled` (bool, default `true`), `scope` (`global`\|`user`\|`both`, default `both`), `include_other_conversation_context` (bool, default `false`), `instructions` (string\|null, default `null`)
 
@@ -554,6 +575,8 @@ Run one-off scripts against your app with the Base44 SDK pre-authenticated. Use 
 
 | Command              | Description                               | Reference                                   |
 | -------------------- | ----------------------------------------- | ------------------------------------------- |
+| `base44 site install` | Install the site's dependencies with its configured `installCommand`; local only, no login or app id required | [site-install.md](references/site-install.md) |
+| `base44 site dev`    | Run the site's `serveCommand` exactly as written, with no local backend | [site-dev.md](references/site-dev.md) |
 | `base44 site deploy` | Deploy built site files to Base44 hosting | [site-deploy.md](references/site-deploy.md) |
 | `base44 site open`   | Open the deployed site in your browser    | [site-open.md](references/site-open.md)     |
 

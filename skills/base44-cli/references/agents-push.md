@@ -98,7 +98,9 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
     // Entity tool - gives agent access to entity operations
     { "entity_name": "Task", "allowed_operations": ["read", "create", "update", "delete"] },
     // Backend function tool - gives agent access to a function
-    { "function_name": "send_email", "description": "Send an email notification" }
+    { "function_name": "send_email", "description": "Send an email notification" },
+    // Server route tool - gives agent access to one of the app's own server routes
+    { "tool_name": "get_orders", "route_path": "/api/orders", "method": "get", "description": "List orders" }
   ],
   "memory_config": {                 // Optional: lets the agent remember facts across conversations
     "enabled": true,                 // Optional: defaults to true
@@ -128,6 +130,8 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 - `tool_configs`: Optional, defaults to empty array
 - `memory_config`: Optional, see [Memory Configuration](#memory-configuration) below
 - `whatsapp_greeting`: Optional
+
+**Server route tool fields** — `tool_name` (1-64 letters, digits, `_` or `-`), `route_path` (an app-relative path like `/api/orders`; no second host, backslash, `?`, or `#`), optional `method` (`get`\|`post`\|`put`\|`patch`\|`delete`, defaults to `post`), optional `description` (defaults to `"agent server route"`). `base44 agents pull` writes these when present on the server; push, deploy, and every other command that reads agent files accept them back.
 
 ### Memory Configuration
 

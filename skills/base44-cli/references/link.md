@@ -73,7 +73,9 @@ npx base44 link --create --name my-app --workspace 507f1f77bcf86cd799439011
    - Links to an existing app (with `--app-id` or interactive selection)
 4. Writes the app ID to `base44/.app.jsonc`
 
-The interactive selection (and `--app-id`) lists **all** of your existing Base44 apps, including ones originally built in the Base44 editor — not just apps previously created via the CLI.
+`--app-id` links directly — it does not list or verify against your apps first, so it also works with a workspace API key (`BASE44_API_KEY`), which cannot list apps at all. A wrong ID fails on the first request that addresses the app, not at link time.
+
+The interactive selection (no `--app-id`) lists **all** of your existing Base44 apps, including ones originally built in the Base44 editor — not just apps previously created via the CLI, but capped to the 50 most recently updated.
 
 ## Requirements
 

@@ -88,3 +88,4 @@ echo "..." | npx base44 exec --data-env prod
 - `--privileged` bypasses row-level security (RLS); requires the app owner or editor role
 - Exit code from the script is forwarded as the CLI process exit code
 - This command requires stdin to be piped (it does not accept input in interactive TTY mode)
+- The `@base44/sdk` your script runs against is loaded fresh — released in the last 24 hours — rather than held back by Deno's default minimum-dependency-age cooldown. Any other npm package your script imports still uses that default cooldown.
