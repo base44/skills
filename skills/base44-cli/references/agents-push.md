@@ -98,7 +98,9 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
     // Entity tool - gives agent access to entity operations
     { "entity_name": "Task", "allowed_operations": ["read", "create", "update", "delete"] },
     // Backend function tool - gives agent access to a function
-    { "function_name": "send_email", "description": "Send an email notification" }
+    { "function_name": "send_email", "description": "Send an email notification" },
+    // Server route tool - gives agent access to one of a full-stack app's server routes
+    { "tool_name": "order_summary", "route_path": "/api/orders/summary", "method": "get", "description": "Summarize the user's recent orders" }
   ],
   "memory_config": {                 // Optional: lets the agent remember facts across conversations
     "enabled": true,                 // Optional: defaults to true
@@ -128,6 +130,25 @@ Each agent file should be a `.jsonc` file in `base44/agents/` with this structur
 - `tool_configs`: Optional, defaults to empty array
 - `memory_config`: Optional, see [Memory Configuration](#memory-configuration) below
 - `whatsapp_greeting`: Optional
+
+### Server Route Tools
+
+In a full-stack app, an agent can call one of the app's own server routes as a tool:
+
+| Field | Type | Default | Description |
+|-------|------|---------|-------------|
+| `tool_name` | string | required | Name the agent calls the tool by: 1-64 letters, digits, `_` or `-` |
+| `route_path` | string | required | App-relative route path, e.g. `/api/orders/summary`. Must start with a single `/` (no `//`), at most 2000 characters, no query string or fragment |
+| `method` | `"get"` \| `"post"` \| `"put"` \| `"patch"` \| `"delete"` | `"post"` | HTTP method used to call the route |
+| `description` | string | `"agent server route"` | What the route does, when to use it, and the input it expects |
+
+```jsonc
+"tool_configs": [
+  { "tool_name": "order_summary", "route_path": "/api/orders/summary", "method": "get", "description": "Summarize the user's recent orders" }
+]
+```
+
+The agent passes query parameters (and, for methods other than `get`, a JSON body) when it calls the tool, so keep them out of `route_path`.
 
 ### Memory Configuration
 
