@@ -1,7 +1,7 @@
 <!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
      source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
      the next sync; change the source instead. -->
-# Base44 entities: Entities and the entity SDK (mobile and game apps)
+# Base44 entities: Entities and the entity SDK (mobile apps)
 
 Entities are defined as json schema objects that define the shape of the data that is stored in the app.
 

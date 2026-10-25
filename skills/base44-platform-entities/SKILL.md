@@ -15,7 +15,7 @@ Determine the app profile first. Call `GET /api/apps/{app_id}/agent-profile` (ov
 tool, or with your Base44 CLI token); it returns the framework, app type, runtime,
 entitlements and the exact reference files to read. Without it, detect from the project files:
 `src/routes/__root.*` and `src/routeTree.gen.ts` mean TanStack Start; `app/_layout.*` means a
-native mobile (Expo) app; `src/game/2d/` or `src/game/3d/` means a game; otherwise it is a Vite SPA.
+native mobile (Expo) app; otherwise it is a Vite SPA.
 
 ## For every app
 
@@ -25,6 +25,4 @@ native mobile (Expo) app; `src/game/2d/` or `src/game/3d/` means a game; otherwi
 |---|---|
 | Web app, Vite SPA (the default web template) | [Entities and the entity SDK (web apps)](references/web.md) |
 | Web app, TanStack Start | [Entities and the entity SDK (web apps)](references/web.md) |
-| Native mobile app (Expo, React Native) | [Entities and the entity SDK (mobile and game apps)](references/mobile-and-games.md) |
-| Game, 2D (Phaser 4) | [Entities and the entity SDK (mobile and game apps)](references/mobile-and-games.md) |
-| Game, 3D (Three.js) | [Entities and the entity SDK (mobile and game apps)](references/mobile-and-games.md) |
+| Native mobile app (Expo, React Native) | [Entities and the entity SDK (mobile apps)](references/mobile.md) |

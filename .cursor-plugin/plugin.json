@@ -34,7 +34,6 @@
         "./skills/base44-platform-actors/",
         "./skills/base44-platform-integrations-sdk/",
         "./skills/base44-platform-connectors/",
-        "./skills/base44-platform-frontend/",
-        "./skills/base44-platform-games/"
+        "./skills/base44-platform-frontend/"
     ]
 }

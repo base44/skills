@@ -154,7 +154,7 @@ matrix; a passage that must not be public is marked internal. The next sync carr
 ### Which reference an agent should read
 
 Each `base44-platform-*` skill's `SKILL.md` routes by app profile (Vite SPA, TanStack Start, native
-mobile, 2D or 3D game). The platform answers that question directly:
+mobile). The platform answers that question directly:
 `GET /api/apps/{app_id}/agent-profile` (public API, also reachable through the Base44 MCP
 `execute_api` tool) returns the app's shape, the workspace's entitlements and the exact reference
 paths to read.
