@@ -13,6 +13,9 @@ npx base44 deploy [options]
 | Option | Description |
 |--------|-------------|
 | `-y, --yes` | Skip confirmation prompt |
+| `--build` | Build the site first (skips the interactive "build first?" prompt) |
+| `--no-build` | Deploy without building (skips the prompt) |
+| `--git-hash <hash>` | Deploy the site by the commit the build came from, through the deployments API (advanced — see [Deploying by Commit](site-deploy.md#deploying-by-commit---git-hash)) |
 
 ## What It Deploys
 
@@ -56,7 +59,8 @@ npx base44 deploy -y
 2. Detects available resources (entities, functions, actors, agents, agent skills, connectors, site)
 3. Shows a summary of what will be deployed
 4. Asks for confirmation (unless `-y` flag is used)
-5. Deploys all resources in sequence:
+5. If the project has a `site.buildCommand`, asks whether to build first (interactive), or builds/skips immediately per `--build`/`--no-build` (non-interactive-safe)
+6. Deploys all resources in sequence:
    - Sets app visibility (if configured)
    - Pushes entity schemas
    - Deploys functions
@@ -66,8 +70,8 @@ npx base44 deploy -y
    - Pushes auth configuration
    - Pushes connector configurations
    - Uploads site files
-6. Handles OAuth authorization for any new connectors that require it
-7. Displays the dashboard URL and app URL (if site was deployed)
+7. Handles OAuth authorization for any new connectors that require it
+8. Displays the dashboard URL and app URL (if site was deployed)
 
 ## Connector OAuth Flow
 
@@ -81,7 +85,7 @@ Some connectors still require authorization. Run 'base44 connectors push' or ope
 
 - Must be run from a linked Base44 project directory
 - Must be authenticated (run `npx base44 login` first)
-- For site deployment, must run `npm run build` first
+- For site deployment, either build first (`npm run build`, or let `deploy` build for you via the prompt / `--build`) or pass `--no-build` to deploy whatever is already in the output directory
 
 ## Output
 
@@ -93,7 +97,8 @@ After successful deployment:
 
 - If no resources are found, the command exits with a message
 - Use individual commands (`entities push`, `functions deploy`, `actors deploy`, `agents push`, `agent-skills push`, `connectors push`, `site deploy`) if you only want to deploy specific resources
-- The site must be built before deployment - this command does not run `npm run build` for you
+- When the project has a `site.buildCommand`, interactive runs ask whether to build first; `--build`/`--no-build` pre-answer that prompt so it's safe to script
+- `--git-hash <hash>` is an advanced flag: it ships the site through the deployments API (the same lane `base44 site deploy --git-hash` uses) and publishes it, addressed by that commit. Without it, the site deploys through the archive upload and goes live as before — a full-stack build (one with a Cloudflare Worker) **requires** `--git-hash`, since the archive upload can't carry its worker
 
 ## Related Commands
 
