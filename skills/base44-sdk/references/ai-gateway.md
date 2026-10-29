@@ -257,16 +257,20 @@ if (video.status === "failed") throw new Error(video.error?.message || "Video ge
 - **Models:** there is **no `automatic`** — pass a specific model:
   `veo_3_1_lite`, `veo_3_1_fast`, `seedance_2`, `seedance_2_5`, `seedance_2_fast`,
   `seedance_2_mini`, `kling_3`, `minimax_h3`, `minimax_h3_max`, `grok_imagine_video`,
-  `grok_imagine_video_1_5`. Supported `seconds`, `resolution`, `aspect_ratio`, and
+  `grok_imagine_video_1_5`, `flux_3_video`, `wan_3`. Supported `seconds`, `resolution`, `aspect_ratio`, and
   references differ per model, and some models reject `generate_audio`; unsupported values
   return **400**, and an unknown model
   (including `automatic`) returns **404**.
 - **Request fields:** `model`, `prompt`, `seconds`, `aspect_ratio`, `resolution`,
   `generate_audio`, `seed`, `dry_run`, and either `frame_images` (up to 2, each
   `{ type: "image_url", image_url: { url }, frame_type: "first_frame" | "last_frame" }`) or
-  `input_references` (up to 8 image/video/audio URLs, each
+  `input_references` (image/video/audio URLs, each
   `{ type: "image_url", image_url: { url } }` and likewise for `video_url` / `audio_url`) —
-  don't combine the two. Reference URLs must be public HTTPS URLs.
+  don't combine the two. Reference limits per model: `seedance_2_5` 30 images, 10 videos,
+  10 audio; other Seedance models 9 images, 3 videos, 3 audio; `minimax_h3` 3 of each type;
+  `wan_3` 5 videos and 50 references in total; Grok models 7 images. On Seedance and
+  `minimax_h3`, audio needs an image or video reference too. Reference URLs must be public
+  HTTPS URLs or private files the app owns.
 - **Cost preview:** `videos.create({ ...request, dry_run: true })` returns HTTP 200 with
   `usage.base44_credits` and **no job id** — don't poll it, and don't return it as a 202.
 
