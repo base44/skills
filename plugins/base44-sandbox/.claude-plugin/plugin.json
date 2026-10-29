@@ -9,6 +9,27 @@
   "homepage": "https://docs.base44.com",
   "repository": "https://github.com/base44/skills",
   "license": "MIT",
-  "keywords": ["base44", "sandbox", "remote-dev", "mcp", "entities", "backend-functions"],
-  "skills": ["./skills/base44-remote-dev/", "./skills/base44-sandbox/", "./skills/base44-sdk/", "./skills/base44-troubleshooter/"]
+  "keywords": [
+    "base44",
+    "sandbox",
+    "remote-dev",
+    "mcp",
+    "entities",
+    "backend-functions"
+  ],
+  "skills": [
+    "./skills/base44-remote-dev/",
+    "./skills/base44-sandbox/",
+    "./skills/base44-sdk/",
+    "./skills/base44-troubleshooter/",
+    "./skills/base44-platform-platform/",
+    "./skills/base44-platform-entities/",
+    "./skills/base44-platform-backend-functions/",
+    "./skills/base44-platform-workflows/",
+    "./skills/base44-platform-agents/",
+    "./skills/base44-platform-actors/",
+    "./skills/base44-platform-integrations-sdk/",
+    "./skills/base44-platform-connectors/",
+    "./skills/base44-platform-frontend/"
+  ]
 }
