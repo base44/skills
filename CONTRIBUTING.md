@@ -139,7 +139,7 @@ the in-editor AI learns it, one reference per app shape.
 3. `Auto-merge compiled skill updates` enables squash auto-merge on a labeled PR opened by
    `base44-github-actions[bot]` whose diff is confined to `skills/base44-platform-*/**` and
    `SOURCE_COMMIT`. A PR published on an engineer's approval after review findings waits for a
-   human merge; so does everything else. The Slack notifier posts the PR like any other skill-sync PR.
+   human merge; so does everything else (it carries the `human-merge` label, which the job skips). The Slack notifier posts the PR like any other skill-sync PR.
 
 ### How to change a compiled skill
 
