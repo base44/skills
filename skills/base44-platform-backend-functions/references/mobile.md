@@ -11,6 +11,13 @@ The Core-integration routing rule is an exception: use a backend function for Co
 
 For external webhooks, browser GET links and OAuth callbacks, use the server-set `X-Base44-App-Url` origin plus `/functions/<functionName>`. Never expose deployment URLs. Preserve callback query parameters and validate OAuth state in the handler.
 
+<guest_checkout>
+- Narrow exception to the authentication/service-role rules: public checkout initiation may run without login, including a server-side payment-provider call and creation of a new pending order. Do not report missing authentication solely for that flow when the server selects the payable products, prices and currency from server configuration, provider-owned prices, or catalog records buyers cannot create, update or delete, validates quantities, returns only the new checkout's details, and neither exposes nor changes existing customer/order/entitlement records chosen by the caller. Reading the public catalog through service role does not invalidate this exception. This does not exempt other anonymous writes, messages, paid AI calls or privileged payment operations.
+- Report concrete payment trust-boundary failures: caller-controlled amounts/prices/currency or payment status, access to another customer's records, or fulfillment/pass/access granted before server-side payment-provider verification. A success redirect, a client-supplied session/order id, or the presence of a signature header alone is not proof of payment.
+- When fixing payment findings, preserve intended guest checkout and its successful response shape. Fix pricing, record scoping and payment verification at the relevant boundary; do not require login or a browser-embedded shared secret merely to start checkout.
+- Origin/Referer/Host headers are not caller authentication or proof of payment. Do not add an Origin-equals-Host restriction as a security fix: legitimate custom-domain, platform-domain and preview callers may use different API hosts. Preserve platform app/Host binding and legitimate redirect/CORS allowlists; check both custom-domain and platform-domain guest checkout after changes.
+</guest_checkout>
+
 <code_validation>
 **Validation Flow**: After you generate the function code, it automatically goes through lint validation before deployment.
 
@@ -28,7 +35,7 @@ For external webhooks, browser GET links and OAuth callbacks, use the server-set
 - must not redeclare variables already in scope (e.g. `user`, `req`)
 - must prefix **external-dependency** imports with `npm:package@version` (relative imports of your own files are not external deps)
 - must return Response objects - never return strings or plain objects directly
-- must include proper try/catch error handling for robustness
+- must return 4xx for caller errors before the work, never `throw` them into the catch: 400 bad/missing input (an unparseable body too: `await req.json().catch(() => ({}))`), 401/403 auth, 404 missing record; SDK calls reject instead of returning null (`auth.me()` signed out: 401, `entities.X.get(id)` on a missing id: 404): before the `if (!x)` guard, turn only that status into null (`.catch((e) => (e.status === 404 ? null : Promise.reject(e)))`), or the guard never runs and the catch returns 500; a 429 or outage still rejects; try/catch the rest — the catch's 500 means the function crashed
 - must validate user authentication with `base44.auth.me()` when using Base44 SDK
 - Exception: use `base44.asServiceRole.integrations.Core` for Core-integration functions. Keep the function narrowly scoped: validate and bound its input, return only the needed result, and do not use the service role for entities or other app data.
 - must use proper JavaScript/TypeScript syntax with matched brackets and braces
@@ -120,7 +127,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 export default async function(req) {
     try {
         const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
+        const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
 
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
@@ -176,7 +183,7 @@ When creating backend functions that should ONLY be invoked by admin (e.g., sche
 
 <example>
 const base44 = createClientFromRequest(req);
-const user = await base44.auth.me();
+const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
 
 if (user?.role !== 'admin') { return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 }); }
 
@@ -225,7 +232,7 @@ export default async function(req) {
     try {
         const base44 = createClientFromRequest(req);
 
-        const user = await base44.auth.me();
+        const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });
         }
@@ -275,7 +282,7 @@ import { jsPDF } from 'npm:jspdf@4.0.0';
 export default async function(req) {
     try {
         const base44 = createClientFromRequest(req);
-        const user = await base44.auth.me();
+        const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
 
         if (!user) {
             return Response.json({ error: 'Unauthorized' }, { status: 401 });

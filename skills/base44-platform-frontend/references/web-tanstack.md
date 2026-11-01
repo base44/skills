@@ -69,7 +69,7 @@ Write Tailwind classes as literal strings (const maps/arrays included) — the b
 
 <prebuilt_components>
 <root_document>
-`src/routes/__root.jsx` renders the document and providers. Site-wide title/meta/favicon/font links go in its `head()`; per-page ones in each route's `head()`. External scripts (Analytics, AdSense) go in `<body>` next to `<Base44Scripts />`, never in `head()` — the preview proxy prepends its own scripts to `<head>`, which breaks hydration of any script rendered there. Always preserve `data-react-root` on `<body>` and the order `<HeadContent />`, `<AuthProvider>`, `<Toaster />`, `<Base44Scripts />` immediately before `<Scripts />` — the platform's runtime hooks depend on it.
+`src/routes/__root.jsx` renders the document and providers. Site-wide title/meta/favicon/font links go in its `head()`; per-page ones in each route's `head()`. External scripts (Analytics, AdSense) go in `<body>` next to `<Base44Scripts />`, never in `head()`. Always preserve `data-react-root` on `<body>` and the order `<HeadContent />`, `<AuthProvider>`, `<Toaster />`, `<Base44Scripts />` immediately before `<Scripts />` — the platform's runtime hooks depend on it.
 </root_document>
 </prebuilt_components>
 

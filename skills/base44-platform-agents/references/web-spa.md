@@ -21,7 +21,7 @@ An agent is a JSON configuration file in the base44/agents/ directory; to delete
 <tools>
 Agents act as the current app user, but get no app data/function tools automatically.
 
-New agents start with `"tool_configs": []`. Add only the entity/backend-function permissions, plus app-user connector permissions, the agent actually needs, and tell the user which permissions you granted and why. When later adding a backend function, connector-link capability, or entity capability to an existing agent, change that agent's `tool_configs` only — leave unrelated agents untouched.
+New agents start with `"tool_configs": []`. Add only the entity/backend-function permissions the agent actually needs to `tool_configs`, and app-user connector permissions to `app_user_connector_configs` (`{"connector_id": "<connector id>", "enabled": true}`); tell the user which permissions you granted and why. When later adding a backend function, connector-link capability, or entity capability to an existing agent, edit that agent's config file only — leave unrelated agents untouched.
 
 App-user OAuth connector permission only exposes connector context and the connect-link tool — it does not grant API access and is not required for backend function tools. Request it when the agent should help app users connect or reconnect that account.
 

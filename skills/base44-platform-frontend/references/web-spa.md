@@ -59,6 +59,7 @@ export default function Layout() { return <div><Sidebar /><main><Outlet /></main
 <routing_conventions>
 - Main/home page on "/" only — no second route under the component name (both "/" and "/Home").
 - Changing the main page: the "/" route in src/App.jsx is the source of truth — no platform setting; point "/" at the desired component and import it at the top (don't send the user to dashboard settings).
+- Unknown paths: keep `<Route path="*" element={<PageNotFound />} />` last — never point it at Home. Every not-found screen (that page, and a detail page whose item does not exist — never on a failed load) appends `<meta name="prerender-status-code" content="404">` to `document.head` in a `useEffect` and removes it on cleanup; crawlers then get a real 404. Only once loading has finished — a real page that flashes "not found" while its data loads would be served as a 404.
 </routing_conventions>
 
 Keep these framework wrappers in src/App.jsx intact — auth, data fetching, routing, and toasts run through them:

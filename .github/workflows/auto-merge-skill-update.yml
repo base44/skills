@@ -5,6 +5,8 @@ name: Auto-merge compiled skill updates
 # touches only the compiled `skills/base44-platform-*` tree and the SOURCE_COMMIT pin is merged
 # automatically once `Validate base44-platform skills` passes. Anything else with the label (the
 # CLI / SDK sync PRs, a hand-made PR) is left for a human.
+# A sync PR labelled `human-merge` was published on a person's approval after an IP review
+# finding: it is left for a human too, even when a later push updates it.
 #
 # Requires: GitHub auto-merge enabled on this repository and the validator as a required check
 # on main. See CONTRIBUTING.md, "Compiled platform skills".
@@ -19,7 +21,7 @@ permissions:
 
 jobs:
   enable-auto-merge:
-    if: contains(github.event.pull_request.labels.*.name, 'auto-skill-update') && github.event.pull_request.user.login == 'base44-github-actions[bot]'
+    if: contains(github.event.pull_request.labels.*.name, 'auto-skill-update') && !contains(github.event.pull_request.labels.*.name, 'human-merge') && github.event.pull_request.user.login == 'base44-github-actions[bot]'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

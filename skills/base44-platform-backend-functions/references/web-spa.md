@@ -17,6 +17,13 @@ For external-service integrations, in order:
 
 </integration_priority>
 
+<guest_checkout>
+- Narrow exception to the authentication/service-role rules: public checkout initiation may run without login, including a server-side payment-provider call and creation of a new pending order. Do not report missing authentication solely for that flow when the server selects the payable products, prices and currency from server configuration, provider-owned prices, or catalog records buyers cannot create, update or delete, validates quantities, returns only the new checkout's details, and neither exposes nor changes existing customer/order/entitlement records chosen by the caller. Reading the public catalog through service role does not invalidate this exception. This does not exempt other anonymous writes, messages, paid AI calls or privileged payment operations.
+- Report concrete payment trust-boundary failures: caller-controlled amounts/prices/currency or payment status, access to another customer's records, or fulfillment/pass/access granted before server-side payment-provider verification. A success redirect, a client-supplied session/order id, or the presence of a signature header alone is not proof of payment.
+- When fixing payment findings, preserve intended guest checkout and its successful response shape. Fix pricing, record scoping and payment verification at the relevant boundary; do not require login or a browser-embedded shared secret merely to start checkout.
+- Origin/Referer/Host headers are not caller authentication or proof of payment. Do not add an Origin-equals-Host restriction as a security fix: legitimate custom-domain, platform-domain and preview callers may use different API hosts. Preserve platform app/Host binding and legitimate redirect/CORS allowlists; check both custom-domain and platform-domain guest checkout after changes.
+</guest_checkout>
+
 <secrets>
 Before writing a function that needs a secret/API key, check it's set — using an unset secret fails. If missing, ask the user to add it on the app's Dashboard → Secrets page (shown once backend functions are on) and wait for their confirmation before writing code that reads it.
 Secrets: `import { secrets } from "base44:runtime"` → `secrets.get("NAME")`; pre-populated: BASE44_APP_ID. Users manage secrets on the Dashboard "Secrets" page (its own sidebar item, shown once backend functions are on), not in Settings.
@@ -32,7 +39,7 @@ Requirements:
 - Handler: `export default async function(req: Request): Promise<Response> { ... }` — the only accepted pattern.
 - Return Response objects, not strings/plain objects.
 - All initialization inside the handler — module-top-level `throw`/`await` = boot error instead of a 500: no try/catch reached, no app logs.
-- try/catch the handler body; return a proper error response.
+- Caller errors return 4xx before the work, never `throw` into the catch: 400 bad/missing input (an unparseable body too: `await req.json().catch(() => ({}))`), 401/403 auth, 404 missing record. SDK calls reject instead of returning null (`auth.me()` signed out: 401, `entities.X.get(id)` on a missing id: 404): before the `if (!x)` guard, turn only that status into null (`.catch((e) => (e.status === 404 ? null : Promise.reject(e)))`), or the guard never runs and the catch returns 500; a 429 or outage still rejects. try/catch the rest; the catch's 500 means the function crashed.
 - `await` every Base44 SDK call — `base44.entities.X.list()`, `base44.auth.me()`, `base44.functions.invoke(...)` all return Promises.
 - Validate user auth with `base44.auth.me()` when using the SDK.
 - Exception: use `base44.asServiceRole.integrations.Core` for Core-integration functions. Keep the function narrowly scoped: validate and bound its input, return only the needed result, and do not use the service role for entities or other app data.
@@ -70,12 +77,16 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const { id } = await req.json().catch(() => ({}));
+    if (!id) return Response.json({ error: 'id is required' }, { status: 400 });
+    const record = await base44.entities.SampleData.get(id).catch((e) => (e.status === 404 ? null : Promise.reject(e)));
+    if (!record) return Response.json({ error: 'Not found' }, { status: 404 });
     const { items } = await base44.entities.SampleData.filter({ status: 'open' }, { sort: '-created_date', limit: 50 });  // user-scoped (app-user token), one page
     const total = await base44.asServiceRole.entities.SampleData.count();  // service-scoped (admin), a number: no records read
     const res = await base44.functions.invoke('myFunction', { foo: 'bar' }); // another backend function
-    return Response.json({ items, total });
+    return Response.json({ record, items, total });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
@@ -136,7 +147,7 @@ import { secrets } from 'base44:runtime';
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me();
+    const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     // SDK clients constructed inside the handler — module-level init throws on missing secrets and crashes boot.
     const openai = new OpenAI({ apiKey: secrets.get("OPENAI_API_KEY") });

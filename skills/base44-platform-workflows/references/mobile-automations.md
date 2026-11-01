@@ -5,6 +5,7 @@
 
 <automations_capability>
 You can manage automations to run backend functions automatically - on a schedule, when entity records change, when external services send webhook events, or when app users start in-app agent conversations.
+Legacy automations are being retired: new ones can't be created, existing ones can still be edited, paused or deleted. When the user asks for a new automation, schedule or trigger, tell them to migrate the app with "Switch to Workflows" on its Automations page.
 
 <user_timezone>
 Times the user mentions are local to them — ask for their timezone when it is unknown.
@@ -15,7 +16,7 @@ IMPORTANT: When the user mentions times (e.g., "9am", "2pm", "midnight"), they m
 </user_timezone>
 
 <managing_automations>
-Automations are not files: create, update, toggle and delete them in the dashboard (Automations) or through the platform API (the `automations` area of the API catalog). The parameters below are the ones those surfaces accept, named as the builder passes them.
+Automations are not files: update, toggle and delete the existing ones in the dashboard (Automations); new ones can't be created. A new schedule or trigger means migrating the app with "Switch to Workflows" on its Automations page, after which the `base44-platform-workflows` skill's workflows reference applies. The parameters below are the ones the dashboard accepts, named as the builder passes them.
 </managing_automations>
 
 <automation_types>
@@ -46,12 +47,6 @@ End conditions:
 Run a function when entity records are created, updated, or deleted.
 
 Required: entity_name, event_types (array of: "create", "update", "delete")
-
-Examples:
-- Send email on new order: entity_name="orders", event_types=["create"]
-- Track status changes: entity_name="orders", event_types=["update"]
-- Cleanup on delete: entity_name="users", event_types=["delete"]
-- Multiple events: entity_name="orders", event_types=["create", "update"]
 
 The function receives a payload with:
 - event: { type, entity_name, entity_id }
@@ -87,10 +82,7 @@ trigger_conditions={
 **In-App Agent Automations (automation_type="in_app_agent"):**
 Run a function when an app user starts a new conversation with an in-app agent.
 
-Required: function_name
-Optional: agent_name (exact configured agent name; omit on create for all in-app agents; pass "" on update to clear a specific agent), event_types (array; currently only "conversation_started")
-
-Use this trigger when the user wants to react to app-user conversations in an in-app agent. Do NOT implement this with scheduled polling.
+Fields: function_name, agent_name (exact configured agent name; pass "" to clear a specific agent and watch all), event_types (array; currently only "conversation_started")
 
 The function receives a payload with:
 - automation: { id, type, name }
@@ -99,20 +91,12 @@ The function receives a payload with:
 - app_user: { id }
 - payload_too_large: true if the message text was omitted because it was too large
 
-Example:
-- Notify on a new support chat: agent_name="Support", event_types=["conversation_started"]
-
 **Connector Automations (automation_type="connector"):**
 Run a function when a connected external service sends a webhook event (e.g., new calendar event, Google Drive file change).
 
-Required: integration_type (e.g., "googlecalendar", "googledrive"), events (array of event names), function_name
-Optional: resource_id (for Google Drive/Calendar - specific file or calendar to watch)
+Fields: integration_type (e.g., "googlecalendar", "googledrive"), events (array of event names), function_name
 
-Prerequisites:
-- The connector must be authorized first (see the `base44-platform-connectors` skill)
-- The backend function to handle the webhook must exist before creating the automation
-
-Each provider has a different payload structure and auth model. Always read the connector's usage guide (`list_connectors` with the integration type) BEFORE writing the function.
+Each provider has a different payload structure and auth model. Always read the provider's own webhook documentation for its payload and auth model (`list_connectors` gives the integration type, scopes and connection state, not a handler guide) BEFORE editing the handler function.
 
 Optional: trigger_conditions — pre-filter which webhook events actually trigger execution.
 Use when the user only wants to act on a subset of events (e.g., a specific Slack channel, a specific Drive folder).
@@ -133,25 +117,9 @@ trigger_conditions format:
 </automation_types>
 
 <usage_guidelines>
-Webhook vs polling:
-When the user wants their app to react to external events (calendar changes, new messages, CRM updates, etc.),
-Try using a connector automation (automation_type="connector") instead of a scheduled poll.
-Connector automations deliver events in real time via webhooks and are more efficient and responsive than polling on a schedule.
-Only fall back to scheduled polling when there is no connector with webhook support for the service in question.
-Check the connector's details to see whether it supports webhooks before choosing scheduled polling.
-
-In-app agent conversation triggers:
-When the user wants their app to react to a user starting or sending the first message in an in-app agent conversation,
-use an in-app agent automation (automation_type="in_app_agent") with event_types=["conversation_started"].
-Do not create a scheduled automation that checks for recent conversations.
-
-Other guidelines:
-1. First, ensure the backend function exists before creating an automation for it
-2. For connector automations, ensure the connector is authorized before creating the automation
-3. Check existing automations in the dashboard or API before adding one
-4. Use descriptive names for automations to make them easy to identify
-5. Pause/resume automations from the dashboard or API
-6. Minimum interval for scheduled automations is 5 minutes
+1. Find existing automations and their IDs in the dashboard (Automations)
+2. Pause/resume automations from the dashboard
+3. Minimum interval for scheduled automations is 5 minutes
 </usage_guidelines>
 
 </automations_capability>
