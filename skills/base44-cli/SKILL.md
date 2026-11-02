@@ -483,9 +483,9 @@ Connectors let your app connect to external services (Google Calendar, Slack, St
 | `base44 connectors list-available` | List all available integration types from Base44     | [connectors-list-available.md](references/connectors-list-available.md) |
 | `base44 connectors initiate --integration-type <t> [--scopes <s...>]` | Initialize a connector and start its OAuth flow; works projectless with `--app-id` | [connectors-initiate.md](references/connectors-initiate.md) |
 | `base44 connectors pull`           | Pull remote connectors to local files                | [connectors-pull.md](references/connectors-pull.md)                 |
-| `base44 connectors push`           | Push local connectors to Base44                      | [connectors-push.md](references/connectors-push.md)                 |
+| `base44 connectors push [--force]` | Push local connectors to Base44; `--force` also removes remote ones not found locally | [connectors-push.md](references/connectors-push.md)                 |
 
-**Note:** Connector commands perform full synchronization - pushing replaces all remote connectors with local ones (and triggers OAuth for new OAuth connectors), and pulling replaces all local connectors with remote ones.
+**Note:** `connectors push` adds and updates remote connectors (and triggers OAuth for new OAuth connectors), but only removes remote connectors missing locally with `--force` — the same rule as `functions deploy`. `deploy` never removes connectors. `connectors pull` is a full sync: it replaces all local connectors with remote ones.
 
 #### Connector Schema (Quick Reference)
 
@@ -747,7 +747,7 @@ Most commands require authentication. If you're not logged in, the CLI will auto
 | Invalid agent name          | Agent names must be lowercase alphanumeric with underscores only                    |
 | No agent skills found       | Ensure skill files exist in `base44/agent-skills/` directory with valid `.md` files  |
 | Invalid skill file          | Skill file name must be lowercase-hyphenated and include a `description` in its frontmatter |
-| Push cancelled / requires --yes | `agents push`, `agent-skills push`, `entities push`, and `connectors push` are destructive full-syncs — confirm interactively or pass `-y`/`--yes` in CI/non-interactive mode |
+| Push cancelled / requires --yes | `agents push`, `agent-skills push`, `entities push`, and `connectors push --force` are destructive — confirm interactively or pass `-y`/`--yes` in CI/non-interactive mode |
 | No connectors found         | Ensure connectors exist in `base44/connectors/` directory with valid `.jsonc` configs |
 | Invalid connector type      | Run `npx base44 connectors list-available` to see valid types |
 | Duplicate connector type    | Each connector type can only be defined once per project                            |
