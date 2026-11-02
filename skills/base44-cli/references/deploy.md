@@ -23,7 +23,7 @@ The command automatically detects and deploys:
 3. **Actors** - All realtime actors in `base44/actors/`
 4. **Agents** - All agent configurations in `base44/agents/`
 5. **Agent Skills** - All skill files in `base44/agent-skills/`
-6. **Connectors** - All connector configurations in `base44/connectors/`
+6. **Connectors** - All connector configurations in `base44/connectors/` (added and updated, never removed)
 7. **Auth Config** - Authentication settings from `base44/auth/` (if present)
 8. **Visibility** - App visibility (`public`, `private`, or `workspace`) from the `visibility` field in `base44/config.jsonc` (if set)
 9. **Site** - Built files from `site.outputDirectory` (if configured)
@@ -68,6 +68,12 @@ npx base44 deploy -y
    - Uploads site files
 6. Handles OAuth authorization for any new connectors that require it
 7. Displays the dashboard URL and app URL (if site was deployed)
+
+## Removed Resources
+
+`deploy` never removes remote functions, actors, or connectors that aren't in your local files. To remove them, use `functions deploy --force`, `actors delete`, or `connectors push --force`. Entities, agents, and agent skills are fully synced, so remote ones missing locally are removed.
+
+If a connector fails to sync, `deploy` fails after the rest of the resources and the site have shipped.
 
 ## Connector OAuth Flow
 

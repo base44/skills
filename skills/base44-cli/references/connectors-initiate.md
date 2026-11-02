@@ -84,5 +84,5 @@ Error: A valid --integration-type is required (e.g. googlecalendar, gmail, slack
 
 - [connectors-list-available.md](connectors-list-available.md) - List all available integration types
 - [connectors-pull.md](connectors-pull.md) - Pull connectors from Base44 to local files
-- [connectors-push.md](connectors-push.md) - Push local connectors to Base44 (project-based full sync)
+- [connectors-push.md](connectors-push.md) - Push local connectors to Base44 (project-based; `--force` removes connectors missing locally)
 - [connectors-create.md](connectors-create.md) - How to create connector configuration files
