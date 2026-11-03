@@ -14,19 +14,19 @@ This command can run from a linked project, or outside a project when you pass `
 
 | Option | Description | Required |
 |--------|-------------|----------|
-| `--function <names>` | Filter by function name(s), comma-separated. If omitted, fetches logs for all functions in the current app | No |
+| `--function <names>` | Filter by function name(s), comma-separated. If omitted, fetches logs for all **deployed** functions in the app (not local-only, undeployed ones) | No |
 | `--since <datetime>` | Show logs from this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`). Cannot be combined with `--follow` | No |
 | `--until <datetime>` | Show logs until this time. ISO datetime or relative shorthand (e.g. `1h`, `30m`, `2d`). Cannot be combined with `--follow` | No |
 | `--level <level>` | Filter by log level: `info`, `warning`, `error`, `debug` | No |
 | `-n, --limit <n>` | Number of results to return. **No default** — the CLI sends a limit only when you pass one, and a value above 500 is clamped down to 500 | No |
 | `--order <order>` | Sort order: `asc` or `desc`. Only affects a **multi-function** fetch (it orders the client-side merge); ignored when reading a single function. Cannot be combined with `--follow` | No |
-| `--env <env>` | Which deployment to read logs from: `preview` (current draft) or `prod` (published). Default: `preview` | No |
+| `--env <env>` | Which deployment to read logs from: `preview` (current draft) or `prod` (published). Omit to read **both** | No |
 | `-f, --follow` | Stream new logs as they arrive instead of a one-shot fetch. Realtime (sub-second) where the stream is available; where it cannot be opened the CLI polls instead (~20-30s lag). Cannot be combined with `--since`, `--until` or `--order` | No |
 
 ## Examples
 
 ```bash
-# Fetch logs for all project functions
+# Fetch logs for all deployed functions
 npx base44 logs
 
 # Fetch logs for a specific app without a local checkout
@@ -71,12 +71,12 @@ npx base44 logs --follow --function my-function
 - **Authentication required.** You must be logged in before fetching logs.
 - **App context required.** Run from a linked project, or pass `--app-id` / set `BASE44_APP_ID`.
 - When multiple functions are specified, logs are merged and sorted by timestamp.
-- If `--function` is omitted, logs are fetched for **all functions** in the current app.
+- If `--function` is omitted, logs are fetched for **all deployed functions** in the app — this always queries the remote app, even when run from a linked local project, so a function defined locally but never deployed is not included.
 - The `--limit` applies after merging logs from all specified functions.
 - There is **no default page size**. The CLI sends a limit only when you pass one, and a `--limit` above 500 is clamped down to 500 — so do not plan on paging further back by raising the number. What you get when you omit it is not a fixed number: the runtime decides, and it may cap you at 500 anyway. Pass `--limit` when the count matters to you.
 - `--order` is only honored for the client-side merge of several functions. The server does not read it, so it is inert on a single-function fetch — the entries come back newest-first regardless.
 - The `--since` and `--until` values accept an ISO datetime, or a relative shorthand (e.g. `1h`, `30m`, `2d`) measured back from now. ISO values without a timezone are normalized to UTC (appends `Z`).
-- `--env` defaults to `preview`. If `prod` returns no logs, the app may not have been published yet — try `--env preview` to see draft logs.
+- `--env` has no default — omitting it reads logs from **both** preview and prod. Pass `--env prod` or `--env preview` to narrow to one. If `--env prod` returns no logs, the app may not have been published yet — try `--env preview` to see draft logs.
 - **`No logs found matching the filters.` is ambiguous.** It means one of: the run has not been ingested yet (~20-30s; wait and re-run — *do not* change flags), there is no function by that name, or a `--function` filter dropped unstamped rows from a legacy per-function deployment. It never means "the app is healthy".
 - `--follow` streams logs indefinitely (oldest to newest) instead of a single fetch; it's incompatible with `--since`, `--until` and `--order`. A stream that is lost and cannot be re-established ends the command with an error rather than dropping to polling. See [Following logs live](#following-logs-live).
 - Pass the global `--json` flag to emit each log entry as JSON instead of the human-readable format.

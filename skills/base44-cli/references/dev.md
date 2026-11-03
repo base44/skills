@@ -61,6 +61,8 @@ If `site.serveCommand` is missing, `base44 dev` still works, but it only starts 
 wired to your app's **production** backend — every read and write hits live data. Use it to develop
 the UI against real content; default to plain `base44 dev` otherwise.
 
+`--port` applies to the local backend, which `--remote` does not start — combining them fails with an error. Fails outright (no fallback) if the project has no `site.serveCommand`, since there'd be nothing to run.
+
 ## Examples
 
 ```bash
