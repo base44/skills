@@ -7,7 +7,7 @@ description: "Base44 built-in integrations on the SDK client: InvokeLLM, SendEma
      the next sync; change the source instead. -->
 # Base44 integrations sdk
 
-File uploads and signed URLs are called from the browser SDK; every other Core integration runs in server code on an app with core-integration control, the default for new apps (profile `core_integrations: backend_functions_only`). The endpoint schemas below are the ones the platform serves today.
+File uploads and signed URLs are called from the client SDK; every other Core integration runs in server code on an app with core-integration control, the default for new apps (profile `core_integrations: backend_functions_only`). The endpoint schemas below are the ones the platform serves today.
 
 ## Pick the reference for this app
 

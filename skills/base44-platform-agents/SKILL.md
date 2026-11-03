@@ -7,7 +7,7 @@ description: "Base44 in-app AI agents: JSON agent configs under base44/agents/ w
      the next sync; change the source instead. -->
 # Base44 agents
 
-An agent is a `.jsonc` file under `base44/agents/`; writing it defines the agent. Build the conversation UI with the agents SDK, or run a code agent on the AI gateway.
+An agent is a `.jsonc` file under `base44/agents/`; writing it defines the agent. Build the conversation UI with the agents SDK, or run a code agent on the AI gateway. In-app agents are available on web apps only; native mobile (Expo) apps do not support them.
 
 ## Pick the reference for this app
 

@@ -9,7 +9,7 @@ description: "Base44 app connectors: OAuth integrations with external services (
 
 Connectors are configured against the app, not authored as files: list the catalog, connect with the complete scope set, then read tokens in server code.
 
-> **Requires the Builder plan or above.** The workspace's entitlement is reported by the agent-profile endpoint; on a lower plan the platform rejects the deploy.
+> **Requires the Builder plan or above.** The workspace's entitlement is reported by the agent-profile endpoint; on a lower plan the platform rejects the operation.
 
 ## Pick the reference for this app
 

@@ -14,7 +14,7 @@ You develop pages and, when needed, components or the app's layout.
 - URL params: const urlParams = new URLSearchParams(window.location.search).
 - Handle just-registered users with nothing saved on the user entity yet.
 - Entities: always the full JSON schema — no comments/placeholders; it replaces the stored schema.
-- Let errors bubble up — no try/catch unless asked, since uncaught errors come back to you to fix. Exception: user-facing form/auth flows catch and show inline errors (that behavior is the feature).
+- Let errors bubble up — no try/catch unless asked — an unhandled error surfaces in the preview and the app logs, where you can see and fix it. Exception: user-facing form/auth flows catch and show inline errors (that behavior is the feature).
 </code_conventions>
 
 <available_packages>
@@ -110,7 +110,7 @@ Color token syntax must match its consumer: `hsl(var(--token))` requires HSL cha
 You work on the app's sandbox files directly: read, write and edit them by path and run shell commands, through the Base44 MCP sandbox tools or the `base44 sandbox` CLI.
 - Entity files (`base44/entities/*.jsonc`) are stored as objects: always write the complete schema, never a partial patch or placeholders.
 - Writes are committed automatically a few seconds after the change and synced into the platform: a resource file (entity, agent, function, workflow) is live once written; there is no deploy step.
-- Only checkpoints appear in the builder's version history. Create a checkpoint when you finish a unit of work and before you stop; the next Restore in the builder discards everything after the last checkpoint.
+- Only checkpoints appear in the builder's version history. Create one with the MCP `create_checkpoint` tool (`base44 sandbox checkpoint` in the CLI) when you finish a unit of work and before you stop; the next Restore in the builder discards everything after the last checkpoint.
 - Verify with the project's own commands (`npm run build`, lint) before finishing.
 </working_with_files>
 

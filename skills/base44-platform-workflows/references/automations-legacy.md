@@ -14,7 +14,7 @@ Times the user mentions ("9am", "midnight") are local to them — ask for their 
 </user_timezone>
 
 <managing_automations>
-This app runs the legacy automations pipeline (app profile `automation_pipeline: legacy_automations`). Automations are not files: update, toggle and delete the existing ones in the dashboard (Automations); new ones can't be created. A new schedule or trigger means migrating the app with "Switch to Workflows" on its Automations page, after which this skill's workflows reference applies. The parameters below are the ones the dashboard accepts, named as the builder passes them.
+This app runs the legacy automations pipeline (app profile `automation_pipeline: legacy_automations`). Automations are not files: update, toggle and delete the existing ones in the dashboard (Automations); new ones can't be created. A new schedule or trigger means migrating the app with "Switch to Workflows" on its Automations page, after which this skill's workflows reference applies. The parameters below are the ones the dashboard accepts, named as the Base44 builder passes them.
 </managing_automations>
 
 <scheduled_automations>

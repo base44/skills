@@ -20,9 +20,8 @@ What workflows can be built from; the authoring guide that follows documents eac
 - connector — Fires on a real-time webhook event from an authorized connector (Slack, Google Calendar, Drive, …).
 - in_app_agent — Fires when a conversation starts with an in-app agent.
 - app_user_auth — Fires when an app user signs up or logs in.
-- app_publish — Fires when the app is published from the builder.
+- app_publish — Fires when the app is published from the Base44 dashboard or builder, or through the publish API (`published_by` is null for API-key publishes); a prebuilt-site `deploy-dist` upload does not fire it.
 - app_payment — Fires when a payment succeeds or is refunded, or a subscription is canceled, in the app's payment provider.
-- webhook — Fires on an inbound POST to a reusable workspace webhook URL, from any source. Use it for a third-party event no connector trigger covers - don't connect that provider or poll it to get the event.
 
 ### Activities (what a `call` step can do)
 - app_security_scan — Security scan (same as the Security tab): `start` kicks it off, `results` reads the latest findings.
@@ -47,7 +46,7 @@ Each write creates a new version; running workflows keep their starting version.
 
 # Workflow Authoring Guide
 
-> **Filtered guide** — documents ONLY triggers: scheduled, entity, connector, in_app_agent, app_user_auth, app_publish, app_payment, webhook; activities: app_security_scan, compute_seconds_until, invoke_backend_function. Any other trigger or activity is NOT covered here: do not author with it from memory — call this tool again with the names you need.
+> **Filtered guide** — documents ONLY triggers: scheduled, entity, connector, in_app_agent, app_user_auth, app_publish, app_payment; activities: app_security_scan, compute_seconds_until, invoke_backend_function. Any other trigger or activity is not documented here: do not author one from memory.
 
 ## File Convention
 
@@ -57,7 +56,7 @@ Workflows are `.jsonc` files under `base44/workflows/`.
 - Create or update a workflow by writing its file
 - Each write creates a new version. Already-running workflows keep the version they started with.
 - After a successful write, the workflow is immediately active — scheduled triggers start firing, entity/connector triggers start listening.
-- The workflow appears in the code view sidebar under Workflows and in the Workflows dashboard.
+- The workflow appears in the Workflows dashboard.
 
 ## Managing Workflow Status
 
@@ -145,7 +144,7 @@ Compute seconds from now until a target datetime.
 - Returns: {"seconds": float, "target_iso": str, "now_iso": str}
 
 ### invoke_backend_function
-Call a deployed Deno backend function.
+Call a deployed backend function.
 - When to use: Logic you write as code: API calls, data fetching/transforms, entity CRUD, sending email/HTTP. You control exactly what it does — no agent reasoning turn.
 - `function_name`: Name of the backend function to call
 - `args`: Dict of arguments passed as the function request body (supports jq expressions)
@@ -166,7 +165,7 @@ Use `${ .field }` syntax (CNCF SWF v1.0).
 **Write jq, not JavaScript/Python.** Common mistakes to avoid:
 - Logic operators are `and` / `or` / `not`, never `&&` / `||` / `!`: `${ .trigger.data.a == 1 and .trigger.data.b != 2 }`.
 - Membership is `${ .trigger.data.event.channel | IN("C1","C2") }`, never infix `x in [...]`.
-- String tests (`test` / `contains` / `startswith` / `ascii_downcase`) throw on a null field — default first: `${ (.trigger.data.subject // "") | test("receipt"; "i") }`.
+- String tests (`test` / `contains` / `startswith` / `ascii_downcase`) throw on a null field — default first: `${ (.trigger.data.subject // "") | ascii_downcase | contains("receipt") }`.
 - Iteration throws on null — default with `// []`: `${ any((.trigger.data.items // [])[]; .qty > 0) }`.
 - In a pipe, `.` is the piped value, not the root — bind root refs first: `${ .trigger.data.event.channel as $c | ["C1","C2"] | index($c) != null }`.
 
@@ -175,6 +174,9 @@ Use `${ .field }` syntax (CNCF SWF v1.0).
 jq only reads the payload (trigger data + prior task outputs): field access, equality, simple boolean/arithmetic checks. Anything more — transformation, computation, lookups, multi-step branching — belongs in a backend function (`invoke_backend_function`), not in elaborate jq.
 - Never use `env` / `$ENV`, `input`, `def`, `range`, `recurse`, `reduce`, `foreach`, `walk`, `..` — the save is rejected. jq cannot reach app secrets; only a backend function can read and use an API key or signing secret.
 - Good: `${ .trigger.data.status == "approved" }`. Bad: `${ env.API_KEY }`.
+- A trigger `condition` runs on every event, so it must be simple, or the save is rejected: paths, literals, comparisons, and/or/not, `//`, if/then/else, `+ - / %`, builtins such as has, contains, startswith, endswith, index and IN(...) with literal arguments, and any/all(.list[]; condition).
+For anything else (regex `test`/`match`, `map`/`select`, `as $x`, `-` between two fields), keep only the simple part in the condition
+and put the rest in a `switch` as the workflow's first step.
 
 ## Trigger Types
 
@@ -251,7 +253,7 @@ Condition examples:
 
 Note: when the entity record is very large (over ~256KB), `data` and `old_data` arrive as null and `payload_too_large` is true (`changed_fields` stays populated). Trigger conditions still evaluate against the full data, but the backend function must re-fetch the record by id using the Base44 SDK: `await base44.asServiceRole.entities["entity_name"].get(entity_id)`.
 
-Use `read_file("base44/entities/<EntityName>.jsonc")` to check entity field names before writing conditions.
+Read `base44/entities/<EntityName>.jsonc` to check entity field names before writing conditions.
 
 ### connector
 ```json
@@ -389,11 +391,11 @@ Condition examples:
 
 Requires a connected payment provider (Stripe, PayPal, Wix Payments, or Payments by Wix): activating a workflow with this trigger fails when none is connected. Connect a provider first, then create the workflow. The payload is normalized across providers; workflows never receive provider-shaped raw data.
 
-Valid events: `payment_succeeded` (a successful payment: a completed checkout and the first payment of a subscription), `payment_refunded` (an approved refund, including one made from the Payments dashboard or the provider's own site), `subscription_canceled` (a subscription stopped billing: canceled or ended on Stripe and PayPal, and paused/suspended on PayPal only, e.g. by the buyer in PayPal or after failed payments; a Stripe pause fires nothing; a PayPal subscription resumed outside the app fires nothing and `listPurchases` can't show it, so tell the user to restore that access by hand). Failed payment attempts do NOT fire this trigger.
+Valid events: `payment_succeeded` (a successful payment: a completed checkout and the first payment of a subscription), `payment_refunded` (an approved refund, including one made from the Payments dashboard or the provider's own site), `subscription_canceled` (a subscription stopped billing: canceled or ended on Stripe, PayPal and Wix, and paused/suspended on PayPal only, e.g. by the buyer in PayPal or after failed payments; a Stripe pause fires nothing; a PayPal subscription resumed outside the app fires nothing and `listPurchases` can't show it, so tell the user to restore that access by hand). Failed payment attempts do NOT fire this trigger.
 
 Use `payment_refunded` and `subscription_canceled` to revoke what a purchase granted: match the event to the purchase the app saved by whichever of `subscription_id`, `checkout_id` and `payment_id` it carries, and make the revoke idempotent.
 
-Recurring subscription renewal charges are wired to fire `payment_succeeded` too, but delivery is not enabled yet for every Stripe account. Do not build a workflow whose only purpose is reacting to renewals, and tell the user renewals may not fire yet if they ask for one. The same holds for `subscription_canceled` on Stripe; on PayPal both fire.
+Recurring subscription renewal charges are wired to fire `payment_succeeded` too, but delivery is not guaranteed for every Stripe account. Do not build a workflow whose only purpose is reacting to renewals, and tell the user renewals may not fire yet if they ask for one. The same holds for `subscription_canceled` on Stripe; on PayPal both fire.
 
 When renewals do arrive, the payload does not distinguish them from a first subscription payment — both are `payment_succeeded` with `mode: "subscription"`. So do not use this trigger for one-time-only actions on a subscription (welcome emails, provisioning, granting access) without your own guard, e.g. an entity record keyed by `provider_customer_id` that the workflow checks and writes.
 
@@ -405,64 +407,21 @@ Trigger payload fields (use `${ .trigger.<field> }` in conditions and `do` args)
 - `${ .trigger.amount }`: integer amount in cents for most currencies (e.g. 2500 = $25.00), matching the platform's payment analytics representation; 0 on `subscription_canceled`
 - `${ .trigger.currency }` — lowercase ISO currency code (e.g. "usd")
 - `${ .trigger.is_live }` — false for test/sandbox payments; test payments DO fire this trigger
-- `${ .trigger.mode }`: "payment" (one-off checkout) or "subscription" (a subscription charge, first payment OR renewal, indistinguishable); null on refunds. Only Stripe and PayPal distinguish these; Wix payments always report "payment"
+- `${ .trigger.mode }`: "payment" (one-off checkout) or "subscription" (a subscription charge, first payment OR renewal, indistinguishable); null on refunds. Wix may report "payment" for a subscription charge
 - `${ .trigger.occurred_at }` — ISO timestamp of the provider event
 - `${ .trigger.provider_customer_id }` — provider-side customer/contact ID, or null
 - `${ .trigger.provider_transaction_id }`: provider-side transaction/session/refund ID, for logs; look purchases up by the ids below instead
 - `${ .trigger.provider_event_id }` — provider webhook event ID (webhook redeliveries are already deduped on it — don't build your own guard)
-- `${ .trigger.checkout_id }`, `${ .trigger.subscription_id }`, `${ .trigger.payment_id }`: the same ids `base44.payments` returns on a purchase; each is null when the provider does not name it on that event (Wix events carry none; a Stripe renewal carries only `subscription_id`; a refund carries `payment_id`, plus `subscription_id` when it refunds a subscription charge)
+- `${ .trigger.checkout_id }`, `${ .trigger.subscription_id }`, `${ .trigger.payment_id }`: the same ids `base44.payments` returns on a purchase; each is null when the provider does not name it on that event (Wix events carry `subscription_id` when they belong to a subscription, including `subscription_canceled`, and never `checkout_id` or `payment_id`; a Stripe renewal carries only `subscription_id`; a refund carries `payment_id`, plus `subscription_id` when it refunds a subscription charge)
 - `${ .trigger.subscription_status }`: on `subscription_canceled`: "canceled" (canceled or ended) or "paused" (can resume); null otherwise
 
-The payload carries no payer email or other PII. When needed, look the purchase up in a backend function, as service role, with `payments.listPurchases({ subscription_id })` when the event names one, else `({ checkout_id })`, which returns `buyer_email`. Never call `listPurchases` with neither id: unscoped it lists every buyer's purchases. Events that carry neither (Wix, or a Stripe payment made outside a checkout) are re-fetched by `provider_transaction_id` from the provider's API instead. Zero-amount payments and refunds (free checkouts, 100% discounts) do not fire.
+The payload carries no payer email or other PII. When needed, look the purchase up in a backend function, as service role, with `payments.listPurchases({ subscription_id })` when the event names one, else `({ checkout_id })`, which returns `buyer_email`. Never call `listPurchases` with neither id: unscoped it lists every buyer's purchases. Events that carry neither (a Wix one-off payment, or a Stripe payment made outside a checkout) are re-fetched by `provider_transaction_id` from the provider's API instead. Zero-amount payments and refunds (free checkouts, 100% discounts) do not fire.
 
 Condition examples:
 - Only real (live-mode) payments:
   `"condition": "${ .trigger.is_live }"`
 - Only large payments (over $100):
   `"condition": "${ .trigger.amount > 10000 }"`
-
-### webhook
-
-A workspace webhook must already exist — this trigger listens on one, it does
-not create one. Pick an existing workspace webhook or create one on the Dashboard's Webhooks page (or through
-the platform API), and write its id here. Reuse an existing
-one where you can: many providers allow only a single webhook URL per account,
-so a second listener for the same provider usually cannot be wired up at all.
-
-```json
-{ "trigger_type": "webhook", "webhook_id": "<id from the tool>",
-  "webhook_name": "hubspot-events", "events": ["contact.creation"] }
-```
-
-`webhook_id` is the reference — never a URL and never a token. You cannot guess
-or invent it: it only exists once a tool hands it to you, and an id that is not
-in this workspace blocks activation with `WEBHOOK_NOT_FOUND`.
-
-`webhook_name` is the listener's display name at authoring time. It is carried for
-readability only and is never resolved against — the user may rename the
-listener, which changes the label and nothing else.
-
-One webhook URL commonly carries several event types. `events` filters which
-ones run this workflow; an empty list subscribes to all of them. Reusing a
-webhook across workflows is normal and preferred — many providers allow only
-one webhook URL per account. Only set `events` when the webhook classifies
-event types; otherwise activation fails with `WEBHOOK_HAS_NO_EVENT_TYPES`.
-
-Trigger payload (use `${ .trigger.* }` in conditions and `do` args):
-- `${ .trigger.data.<field> }` — the parsed request body, e.g. `${ .trigger.data.properties.email }`
-- `${ .trigger.event_type }` — the event type this request was classified as
-- `${ .trigger.webhook_name }` — the webhook's display name (may have changed since authoring)
-- `${ .trigger.webhook_id }` — the webhook's id, stable across renames
-- `${ .trigger.headers.<name> }` — request headers, lowercased, credentials removed
-- `${ .trigger.query.<name> }` — query-string params, credentials removed
-
-`${ .trigger.data }` arrives as `null` when the body was too large to forward.
-Unlike an entity trigger there is nothing to re-fetch — the body is never
-persisted — so a workflow that must tolerate big payloads should branch on the
-absence rather than assume the field is there.
-
-Condition example — only enterprise-tier contacts:
-`"condition": "${ .trigger.data.properties.tier == \"enterprise\" }"`
 
 ## Designing Steps: When to Split vs Combine
 
@@ -481,13 +440,12 @@ Condition example — only enterprise-tier contacts:
 
 ## Examples
 
-> Envelope examples below are written as `write_file(path, envelope)`: create the file at `path` with the envelope as its content.
-
 ### "Clean up old data every night at 2am"
 1. Create backend function `base44/functions/cleanupOldData/entry.ts`
 2. Create workflow:
-```json
-write_file("base44/workflows/Nightly Cleanup.jsonc", {
+```jsonc
+// base44/workflows/Nightly Cleanup.jsonc
+{
   "name": "Nightly Cleanup",
   "description": "Cleans up old data every night at 2am",
   "trigger": { "config": { "trigger_type": "scheduled", "cron_expression": "0 2 * * *", "timezone": "<user_timezone>" } },
@@ -495,14 +453,15 @@ write_file("base44/workflows/Nightly Cleanup.jsonc", {
     "document": { "dsl": "1.0.0", "name": "nightly_cleanup", "version": "1.0", "namespace": "base44" },
     "do": [{ "cleanup": { "call": "invoke_backend_function", "with": { "function_name": "cleanupOldData" }, "then": "end" } }]
   }
-})
+}
 ```
 
 ### "When an order status changes to completed, send a confirmation and wait 3 days, then request a review"
 1. Create two backend functions: `sendConfirmation` and `requestReview`
 2. Create workflow:
-```json
-write_file("base44/workflows/Order Followup.jsonc", {
+```jsonc
+// base44/workflows/Order Followup.jsonc
+{
   "name": "Order Followup",
   "description": "Sends confirmation on order completion, then requests review after 3 days",
   "trigger": {
@@ -517,7 +476,7 @@ write_file("base44/workflows/Order Followup.jsonc", {
       { "request_review": { "call": "invoke_backend_function", "with": { "function_name": "requestReview", "args": { "order_id": "${ .trigger.entity_id }" } }, "then": "end" } }
     ]
   }
-})
+}
 ```
 
 ### "When someone messages in #general on Slack, log it"
@@ -525,8 +484,9 @@ write_file("base44/workflows/Order Followup.jsonc", {
 2. Resolve "#general" to channel ID: create temp function, call Slack API, get "C0123ABC"
 3. Create backend function: `logSlackMessage`
 4. Create workflow with condition:
-```json
-write_file("base44/workflows/Slack Logger.jsonc", {
+```jsonc
+// base44/workflows/Slack Logger.jsonc
+{
   "name": "Slack Logger",
   "description": "Logs messages from #general channel",
   "trigger": {
@@ -537,14 +497,15 @@ write_file("base44/workflows/Slack Logger.jsonc", {
     "document": { "dsl": "1.0.0", "name": "slack_logger", "version": "1.0", "namespace": "base44" },
     "do": [{ "log_message": { "call": "invoke_backend_function", "with": { "function_name": "logSlackMessage", "args": { "text": "${ .trigger.data.event.text }", "user": "${ .trigger.data.event.user }" } }, "then": "end" } }]
   }
-})
+}
 ```
 
 ### "When someone starts a chat with the Support agent, create a ticket and notify the team"
 1. Create two backend functions: `createSupportTicket` and `notifyTeam`
 2. Create workflow:
-```json
-write_file("base44/workflows/Support Ticket.jsonc", {
+```jsonc
+// base44/workflows/Support Ticket.jsonc
+{
   "name": "Support Ticket",
   "description": "Creates a ticket and notifies team when a support conversation starts",
   "trigger": {
@@ -557,14 +518,15 @@ write_file("base44/workflows/Support Ticket.jsonc", {
       { "notify": { "call": "invoke_backend_function", "with": { "function_name": "notifyTeam", "args": { "ticket_id": "${ .create_ticket.id }", "agent": "${ .trigger.data.event.agent_name }" } }, "then": "end" } }
     ]
   }
-})
+}
 ```
 
 ### "When someone signs up or logs in with a password, record it in the audit log"
 1. Create backend function: `onPasswordAuth`
 2. Create workflow:
-```json
-write_file("base44/workflows/On Password Auth.jsonc", {
+```jsonc
+// base44/workflows/On Password Auth.jsonc
+{
   "name": "On Password Auth",
   "description": "Records password signups and logins in the audit log",
   "trigger": {
@@ -575,14 +537,15 @@ write_file("base44/workflows/On Password Auth.jsonc", {
     "document": { "dsl": "1.0.0", "name": "on_password_auth", "version": "1.0", "namespace": "base44" },
     "do": [{ "write_audit": { "call": "invoke_backend_function", "with": { "function_name": "onPasswordAuth", "args": { "user_id": "${ .trigger.user_id }", "email": "${ .trigger.email }", "activity": "${ .trigger.event_type }" } }, "then": "end" } }]
   }
-})
+}
 ```
 
 ### "When the app is published for the first time, notify the team"
 1. Create backend function: `onAppLaunched`
 2. Create workflow:
-```json
-write_file("base44/workflows/On First Publish.jsonc", {
+```jsonc
+// base44/workflows/On First Publish.jsonc
+{
   "name": "On First Publish",
   "description": "Notifies the team when the app is published for the first time",
   "trigger": {
@@ -593,14 +556,15 @@ write_file("base44/workflows/On First Publish.jsonc", {
     "document": { "dsl": "1.0.0", "name": "on_first_publish", "version": "1.0", "namespace": "base44" },
     "do": [{ "notify_team": { "call": "invoke_backend_function", "with": { "function_name": "onAppLaunched", "args": { "published_at": "${ .trigger.occurred_at }", "visibility": "${ .trigger.visibility }" } }, "then": "end" } }]
   }
-})
+}
 ```
 
 ### "When someone pays, send a thank-you email"
 1. Create backend function: `sendPaymentThankYou`: as service role it calls `payments.listPurchases({ subscription_id })` when given one, else `({ checkout_id })`, and else, with neither id, re-fetches the payer from the provider's API by `transaction_id`; it emails that `buyer_email`, and sends nothing when no purchase matches
 2. Create workflow:
-```json
-write_file("base44/workflows/On Payment.jsonc", {
+```jsonc
+// base44/workflows/On Payment.jsonc
+{
   "name": "On Payment",
   "description": "Sends a thank-you email when a live payment succeeds",
   "trigger": {
@@ -611,7 +575,7 @@ write_file("base44/workflows/On Payment.jsonc", {
     "document": { "dsl": "1.0.0", "name": "on_payment", "version": "1.0", "namespace": "base44" },
     "do": [{ "send_thank_you": { "call": "invoke_backend_function", "with": { "function_name": "sendPaymentThankYou", "args": { "checkout_id": "${ .trigger.checkout_id }", "subscription_id": "${ .trigger.subscription_id }", "transaction_id": "${ .trigger.provider_transaction_id }", "amount": "${ .trigger.amount }", "currency": "${ .trigger.currency }" } }, "then": "end" } }]
   }
-})
+}
 ```
 
 ### Refresh, then act on the findings — the start / wait / results pattern (any trigger)
@@ -622,9 +586,9 @@ Point the `ready` branch at whatever step consumes `${ .read.scan }` (its `findi
   { "settle": { "wait": "PT15M", "then": "read" } },
   { "read": { "call": "app_security_scan", "with": { "action": "results", "after": "${ .scan.requested_at }" }, "then": "route" } },
   { "route": { "switch": [
-      { "ready": { "when": "${ .read.state == \"ready\" }", "then": "end" } },
-      { "running": { "when": "${ .read.state == \"running\" }", "then": "settle_again" } },
-      { "other": { "then": "end" } }
+      { "when": "${ .read.state == \"ready\" }", "then": "end" },
+      { "when": "${ .read.state == \"running\" }", "then": "settle_again" },
+      { "when": "${ true }", "then": "end" }
   ] } },
   { "settle_again": { "wait": "PT5M", "then": "read_again" } },
   { "read_again": { "call": "app_security_scan", "with": { "action": "results", "after": "${ .scan.requested_at }" }, "then": "end" } }

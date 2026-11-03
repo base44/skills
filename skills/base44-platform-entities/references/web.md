@@ -4,9 +4,10 @@
 # Base44 entities: Entities and the entity SDK (web apps)
 
 Entities = JSON schema objects defining stored data. Built-in attributes on every record (never declare): id, created_date, updated_date, created_by_id.
+Enum fields take `enumColors`, a list parallel to `enum` (green, yellow, red, blue, purple, pink, gray) that colors each option's badge in the Data table: an ordered scale runs green → yellow → red (easy → hard, low → high), a status follows its meaning (done green, failed red, draft gray), and plain categories get distinct colors.
 
 <deleting_entities>
-Restoring entities is possible from the UI.
+Delete records with the SDK (`delete` / `deleteMany`); the user can restore them from the app dashboard: Data → the table → Recently deleted. Deleting an entity's `base44/entities/<Name>.jsonc` file removes the entity itself.
 </deleting_entities>
 <user_entity>
 User is built-in on every app — never create it. Read-only: id, created_date, full_name, email. Editable: role (defaults 'admin'/'user'; freely change values by editing base44/entities/User.jsonc, declaring only customized fields). Built-in security: only admins list/update/delete other users. Don't add custom User RLS unless explicitly asked. You cannot insert User records — users join via invites; say so if asked.
