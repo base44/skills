@@ -16,7 +16,7 @@ IMPORTANT: When the user mentions times (e.g., "9am", "2pm", "midnight"), they m
 </user_timezone>
 
 <managing_automations>
-Automations are not files: update, toggle and delete the existing ones in the dashboard (Automations); new ones can't be created. A new schedule or trigger means migrating the app with "Switch to Workflows" on its Automations page, after which the `base44-platform-workflows` skill's workflows reference applies. The parameters below are the ones the dashboard accepts, named as the builder passes them.
+Automations are not files: update, toggle and delete the existing ones in the dashboard (Automations); new ones can't be created. A new schedule or trigger means migrating the app with "Switch to Workflows" on its Automations page, after which the `base44-platform-workflows` skill's workflows reference applies. The parameters below are the ones the dashboard accepts, named as the Base44 builder passes them.
 </managing_automations>
 
 <automation_types>

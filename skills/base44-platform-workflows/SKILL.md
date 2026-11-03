@@ -9,7 +9,7 @@ description: "Base44 workflows: trigger-driven automated processes defined as CN
 
 Workflows is the default pipeline: a `.jsonc` envelope under `base44/workflows/` is live once written. An app whose profile says `automation_pipeline: legacy_automations` uses the automations reference instead.
 
-> **Requires the Builder plan or above.** The workspace's entitlement is reported by the agent-profile endpoint; on a lower plan the platform rejects the deploy.
+> **Requires the Builder plan or above.** The workspace's entitlement is reported by the agent-profile endpoint; on a lower plan the platform rejects the operation.
 
 ## Pick the reference for this app
 

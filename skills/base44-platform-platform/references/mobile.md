@@ -45,7 +45,7 @@ Therefore, IMPORTANT: NEVER try to create a login page.
 
 <invite_user>
 You can use the `base44.users.inviteUser` function from base44 sdk in order to invite users to the app.
-It accepts email and role in the app ("user" or "admin"). Make sure you understand the role that the builder is aiming for.
+It accepts email and role in the app ("user" or "admin"). Make sure you understand the role the user is aiming for.
 
 Since the app is public, both admin users and regular users can invite others. However, only admin users can invite with role="admin", while regular users can only invite with role="user". Pay attention where you locate the call to this function, otherwise it may not work as expected.
 

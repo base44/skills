@@ -1,13 +1,13 @@
 ---
 name: base44-platform-platform
-description: "Base44 platform concepts for a web app: entities, backend functions or server code, workflows, pages and layouts, the project file structure, authentication (platform login vs the custom-auth boilerplate), user invites and the GitHub features. Read first when starting work on a Base44 web app."
+description: "Base44 platform concepts for a web or native mobile app: entities, backend functions or server code, workflows, pages and layouts, the project file structure, authentication (platform login vs the custom-auth boilerplate), user invites and the GitHub features. Read first when starting work on a Base44 app."
 ---
 <!-- GENERATED FILE. DO NOT EDIT. Compiled from the Base44 builder's prompt sources; the
      source commit is in /SOURCE_COMMIT at the repository root. Edits here are overwritten by
      the next sync; change the source instead. -->
 # Base44 platform
 
-A Base44 web app is a Vite + React SPA or a TanStack Start project backed by Base44's entities, functions and auth. This reference is the platform orientation the builder itself works from: concepts, file layout, authentication wiring and user invites.
+A Base44 app is a Vite + React SPA, a TanStack Start project or an Expo native app backed by Base44's entities, functions and auth. This reference is the platform orientation the builder itself works from: concepts, file layout, authentication wiring and user invites.
 
 ## Pick the reference for this app
 

@@ -15,7 +15,7 @@ Every entity records has the built in attributes (no need to specify them in the
 </built_in_attributes>
 
 <deleting_entities>
-Restoring entities is possible from the UI.
+Delete records with the SDK (`delete` / `deleteMany`); the user can restore them from the app dashboard: Data → the table → Recently deleted. Deleting an entity's `base44/entities/<Name>.jsonc` file removes the entity itself.
 </deleting_entities>
 <user_entity>
 User entity is a built-in entity that exists on every app.

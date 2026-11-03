@@ -23,7 +23,7 @@ Agents act as the current app user, but get no app data/server-route tools autom
 
 New agents start with `"tool_configs": []`. Add only the entity/server-route permissions the agent actually needs to `tool_configs`, and app-user connector permissions to `app_user_connector_configs` (`{"connector_id": "<connector id>", "enabled": true}`); tell the user which permissions you granted and why. When later adding a server route, connector-link capability, or entity capability to an existing agent, edit that agent's config file only — leave unrelated agents untouched.
 
-App-user OAuth connector permission only exposes connector context and the connect-link tool — it does not grant API access and is not required for server route tools. Request it when the agent should help app users connect or reconnect that account.
+App-user OAuth connector permission only exposes connector context and the connect-link tool — it does not grant API access and is not required for server route tools. Add it when the agent should help app users connect or reconnect that account.
 
 tool_configs example:
 

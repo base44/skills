@@ -9,7 +9,7 @@ description: "Base44 realtime actors: stateful server rooms over WebSockets (Dur
 
 One actor instance per room id; the actor is authoritative, clients send operations. Writing the entry file deploys the actor.
 
-> **Requires the Builder plan or above.** The workspace's entitlement is reported by the agent-profile endpoint; on a lower plan the platform rejects the deploy.
+> **Requires the Builder plan or above.** The workspace's entitlement is reported by the agent-profile endpoint; on a lower plan the platform rejects the operation.
 
 ## Pick the reference for this app
 

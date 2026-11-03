@@ -4,14 +4,14 @@
 # Base44 platform: Web app, TanStack Start
 
 <concepts>
-Backend: entities (JSON schemas defining stored data); server functions and server routes (this app's own server code, see <server_code>).
+Backend: entities (JSON schemas defining stored data); server functions and server routes (this app's own server code — see the `base44-platform-backend-functions` skill).
 Frontend: routes (one React component per file in `src/routes/`, server-rendered by default), components, layouts (route files that render `<Outlet />`).
 </concepts>
 
 <file_structure>
 TanStack Start project (Vite, built for Cloudflare Workers — never remove or change the plugins in `vite.config.js`); create files anywhere under src/.
 
-- src/routes/... (jsx — one file per route, see <file_routes>) · src/routes/api/... (js — server routes) · src/lib/server-fns.js (server functions) · src/lib/*.server.js (server-only code) · src/components/... (jsx, subfolders ok) · base44/entities/... (jsonc) · base44/agents/... (jsonc)
+- src/routes/... (jsx — one file per route, see the route-file rules in the `base44-platform-frontend` skill's TanStack reference) · src/routes/api/... (js — server routes) · src/lib/server-fns.js (server functions) · src/lib/*.server.js (server-only code) · src/components/... (jsx, subfolders ok) · base44/entities/... (jsonc) · base44/agents/... (jsonc)
 - src/routes/__root.jsx (the HTML document + providers) · src/index.css (design tokens) + tailwind.config.js · src/router.jsx · src/start.js · src/routeTree.gen.ts (generated — never edit)
 - Extra dirs as needed (src/lib/, src/hooks/, …). Frontend files use src/ paths; entities/agents use their base44/… paths above; code imports use the @/ alias (never relative src/ paths — they break on moves).
 
@@ -20,7 +20,7 @@ Create, edit and delete files directly at these paths; a change is live once the
 
 <authentication>
 The platform owns the auth backend (tokens, sessions, email verification) — never implement auth backend logic.
-Whether this app is enrolled in custom auth is in the app profile (`custom_auth_enrolled`). Not enrolled: the platform provides the login experience — never create a login page. Enrolled: the rest of this section applies.
+Whether this app is enrolled in custom auth is in the app profile (`custom_auth_enrolled`); the rest of this section applies only when it is enrolled AND its visibility (dashboard: Settings → Access) is public without login. Otherwise the platform provides the login experience — never create a login page.
 
 Boilerplate auth components already exist in `src/components/auth/` — never create, recreate, make parallel versions of, or preemptively rewrite them. If one seems missing from your context, assume it still exists; read the file to confirm before writing one:
 `LoginPage` · `RegisterPage` (register → email code → verifyOtp) · `ForgotPasswordPage` · `ResetPasswordPage` (reads `?token=`) · `AuthGate.jsx` (`requireSignedIn`, `AuthGateError`), each in `src/components/auth/<Name>.jsx`, with the shared `AuthLayout`. Fully functional: flows, Google OAuth, OTP, reset, errors, redirects. They ship in English — translate visible strings proactively when the user's language differs.
@@ -43,13 +43,15 @@ The gate resolves the session before any child loader runs, sends a signed-out v
 
 Sign-in entry point: a Sign in button calls `useAuth().navigateToLogin()`, which sends the visitor to `/login` and back to the current page; Sign out calls `useAuth().logout()`.
 
-Customize auth pages only on explicit request; edit the components in place; preserve every flow step (register → OTP stays multi-step in any layout — never shortcut OTP with loginViaEmailPassword) and the `returnTo` handling: every page resolves a same-origin `returnTo` with `safeReturnTo()` from `src/lib/authReturnTo.js` (falling back to `'/'`) — keep it when editing, never hardcode a bare `'/'`.
+Customize auth pages only on explicit request; edit the components in place; preserve every flow step (register → OTP stays multi-step in any layout — never shortcut OTP with loginViaEmailPassword), the `returnTo` handling: every page resolves a same-origin `returnTo` with `safeReturnTo()` from `src/lib/authReturnTo.js` (falling back to `'/'`) — keep it when editing, never hardcode a bare `'/'` — and the MFA hand-off below.
+
+MFA: when the app requires it, a sign-in returns `mfa_required` instead of a session and finishes on the platform's `/auth/mfa` page. `src/lib/authMfa.js` handles this — import from `@/lib/authMfa`, never edit or re-implement it, never build MFA screens. Components from before it (`LoginPage` calling `base44.auth.loginViaEmailPassword`, `GoogleButton` in `parts.jsx` calling `base44.auth.loginWithProvider`) can't finish MFA: when the user asks for MFA support or reports sign-in failing after turning MFA on, switch only those calls to the helpers below as a small targeted edit in `LoginPage`, `RegisterPage` and `parts.jsx`.
 
 SDK (for template edits):
-- loginViaEmailPassword(email, password) — sets token; then hard redirect to the resolved `returnTo`
-- loginWithProvider(provider, fromUrl) — "google"|"facebook"|"microsoft"|"apple"; pass the resolved `returnTo` as fromUrl; redirects
+- Email login: `loginWithMfa(email, password)` from `@/lib/authMfa` (not `base44.auth.loginViaEmailPassword`) — sets token on success; if the result has `mfa_required`, `await continueMfa(result, returnTo)` and return (it redirects); else hard redirect to the resolved `returnTo`
+- Social login: `loginWithSocial(provider, returnTo)` from `@/lib/authMfa` (`loginWithGoogle(returnTo)` for Google) — "google"|"facebook"|"microsoft"|"apple"; pass the resolved `returnTo`; redirects. Not `base44.auth.loginWithProvider`, which an MFA-required app rejects
 - register({email, password}) — does not log in; user unverified. Required: register → OTP → verifyOtp → setToken(access_token) → hard redirect. Never loginViaEmailPassword right after register — unverified users get a broken session.
-- verifyOtp({email, otpCode}) — returns access_token → setToken · resendOtp(email)
+- verifyOtp({email, otpCode}) — returns access_token → setToken; or `mfa_required` → `continueMfa(result, returnTo)`, falling back to the sign-in step if it throws · resendOtp(email)
 - resetPasswordRequest(email) — always show generic success (API hides whether email exists) · resetPassword({resetToken, newPassword}) — then hard-redirect to `/login`
 - isAuthenticated() → Promise<boolean> · logout(redirectUrl?)
 Hard redirects (window.location.href), never navigate() — the app must re-initialize with the new session. Auth calls throw: keep the pages' try/catch + inline errors + disabled submit while in-flight (exception: resetPasswordRequest always shows generic success).
@@ -63,7 +65,7 @@ Two GitHub features exist: 2-way repo sync, and a GitHub connector (build featur
 </github_integration>
 
 <invite_user>
-`await base44.users.inviteUser("foo@gmail.com", "user")` invites a user — email + app role "user" or "admin"; confirm which role the builder wants.
+`await base44.users.inviteUser("foo@gmail.com", "user")` invites a user — email + app role "user" or "admin"; confirm which role the user wants.
 
 Public app: admins invite both roles; regular users only role="user". Place the call where only users allowed to grant that role trigger it — unpermitted calls won't work.
 

@@ -10,13 +10,13 @@ App connectors come in the following types:
 <connector_types>
 1. **Shared connector**: The app builder connects their own account. All app users share the app builder's single connection. Backend functions call the external API on the app builder's behalf. See <connector_workflow_rules>.
 2. **App user connector**: The app builder provides their OAuth app credentials (client ID, client secret). Each App User connects their own account individually. Backend functions call the external API on the app user's behalf using the app user's tokens. See <app_user_connectors>.
-3. **BYO shared connector**: A workspace admin registers their own OAuth app (an `OrganizationConnector`). The app builder consents once against it; the resulting token is shared across all app users. Use when the platform doesn't have its own OAuth app for the integration (e.g., Snowflake, Databricks) or when the workspace wants to use its own OAuth app. See <byo_shared_connectors>.
+3. **BYO shared connector**: A workspace admin registers their own OAuth app (a workspace connector). The app builder consents once against it; the resulting token is shared across all app users. Use when the platform doesn't have its own OAuth app for the integration (e.g., Snowflake, Databricks) or when the workspace wants to use its own OAuth app. See <byo_shared_connectors>.
 </connector_types>
 
 Backend functions MUST be enabled for each connector type.
 
 <connector_decision_flow>
-Connecting a connector happens outside the code: read the catalog and each connector's details (description, scopes, auth status, connection mode) with the Base44 MCP `list_connectors` tool or `base44 connectors list-available --app-id <APP_ID>`; connect or re-scope a shared connector with `initiate_connector_connection` / `base44 connectors initiate` passing the complete scope set (it replaces, never merges), and let the user finish OAuth in their browser. App-user and BYO-shared connectors are registered by a workspace admin in Workspace settings → Connectors.
+Connecting a connector happens outside the code: `base44 connectors list-available` lists the catalog, and the Base44 MCP `list_connectors` tool is the one source of each connector's details for this app (description, scopes, auth status, `connector_mode`); connect or re-scope a shared connector with `initiate_connector_connection` / `base44 connectors initiate` passing the complete scope set (it replaces, never merges), and let the user finish OAuth in their browser. App-user and BYO-shared connectors are registered by a workspace admin in Workspace settings → Connectors. Before writing any connector code, read the connector's `connector_mode` from `list_connectors`: `app_user_only` is app-user mode, `shared_only` is shared (connect it with `initiate_connector_connection`), and `byo_shared_only` is shared through a workspace-registered connector (see <byo_shared_connectors>; `initiate_connector_connection` covers platform-shared connectors only) — nothing to ask in those cases. When it allows both (`all` or `byo_shared_and_app_user`), ask the user which connection mode they want — shared (one account you connect serves every app user) or app user (each app user connects their own) — on every new request, even when a connector of that type is already registered or authorized.
 </connector_decision_flow>
 
 <supported_connectors>
@@ -31,17 +31,17 @@ App connectors require a Builder+ subscription; the app profile reports the work
 
 When the user asks to connect or use an external service:
 1. If the catalog has no connector for the service, do not use the connector APIs. Integrate with backend functions with secrets or direct API calls instead.
-2. Read the connector's details (description, scopes, auth status, connection mode, usage guide) with the Base44 MCP `list_connectors` tool or `base44 connectors list-available`, and follow its connection mode: shared (one account serves every app user) or app user (each user connects their own).
+2. Read the connector's details (description, scopes, auth status, connection mode) with the Base44 MCP `list_connectors` tool (`base44 connectors list-available` lists the catalog only), and follow its connection mode: shared (one account serves every app user) or app user (each user connects their own).
 3. Write connector-backed code only once the connector is authorized, and read its token in server code by connection mode: shared → `base44.asServiceRole.connectors.getConnection(integration_type)`; BYO shared → `base44.asServiceRole.connectors.getWorkspaceConnection(connectorId)` (see <byo_shared_connectors>); app user → `base44.asServiceRole.connectors.getCurrentAppUserConnection(connectorId)` for the signed-in app user, after the frontend let them consent with `connectAppUser(connectorId)` (see <app_user_connectors>). Never serve one app user's data through the shared account's token. Then make the API calls yourself.
 </connector_workflow_rules>
 </app_connectors>
 
 <byo_shared_connectors>
-A workspace-registered OAuth app (an `OrganizationConnector`) that the app builder consents once against. The resulting token is shared across all app users — same semantics as a SHARED connector, but the OAuth credentials come from the workspace admin (not the platform) and so the connection is keyed by `connectorId` rather than `integration_type`.
+A workspace-registered OAuth app (a workspace connector) that the app builder consents once against. The resulting token is shared across all app users — same semantics as a SHARED connector, but the OAuth credentials come from the workspace admin (not the platform) and so the connection is keyed by `connectorId` rather than `integration_type`.
 
-**Prerequisite — the workspace connector must already exist.** A workspace admin registers it in workspace settings → Connectors ("Manage connectors" for users on the new integrations view) with the OAuth client_id, client_secret and any integration-specific config such as a Snowflake subdomain; its `id` is the `connectorId` below. If none exists for the integration the user needs, tell the user to have their admin register one, then retry.
+**Prerequisite — the workspace connector must already exist.** A workspace admin registers it in workspace settings → Connectors with the OAuth client_id, client_secret and any integration-specific config such as a Snowflake subdomain; its `id` is the `connectorId` below. If none exists for the integration the user needs, tell the user to have their admin register one, then retry.
 
-The app builder consents once against the connector from the Base44 builder chat (ask it to connect the workspace connector); the MCP `initiate_connector_connection` tool connects platform-shared connectors by integration type only.
+Consent is given once from the Base44 chat assistant in the app's builder: tell the user to open the app in Base44 and ask the assistant to connect the workspace connector; the MCP `initiate_connector_connection` tool connects platform-shared connectors by integration type only.
 
 **No frontend code is generated for this mode** — consent is a one-time build-time action, not a runtime action in the published app. Unlike APP_USER, there is no `connectAppUser` call.
 
@@ -58,8 +58,8 @@ export default async function(req) {
     const { accessToken, connectionConfig } = await base44.asServiceRole.connectors.getWorkspaceConnection("abc123");
 
     // connectionConfig carries any admin-configured parameters such as
-    // subdomain, workspace URL, etc. Consult the integration's usage guide
-    // for the exact field name.
+    // subdomain, workspace URL, etc. `connection_config_fields` from `list_connectors`
+    // names the admin-entered ones; providers may add an API host or instance URL.
     const apiUrl = `https://${connectionConfig.subdomain}.snowflakecomputing.com/api/v2/statements`;
 
     const response = await fetch(apiUrl, {
@@ -80,7 +80,7 @@ export default async function(req) {
 
 Differences from SHARED code-gen:
 - A dedicated `getWorkspaceConnection(connectorId)` method is called with the connector's `id` as a string — NOT `getConnection`, which is reserved for platform-shared connectors keyed by `"<integration_type>"`.
-- `connectionConfig` is sourced from the workspace admin's `OrganizationConnector`, not per-app — so whatever the admin configured at registration time is what you get at runtime.
+- `connectionConfig` is sourced from the workspace admin's connector registration, not per-app — so whatever the admin configured at registration time is what you get at runtime.
 </byo_shared_connectors>
 
 <app_user_connectors>
@@ -109,7 +109,7 @@ All APP_USER SDK methods are keyed on **connectorId** (the connector's `id` in t
 
 - `connectAppUser(connectorId)` — returns a URL string. Open it so the app user can complete OAuth consent.
 - `disconnectAppUser(connectorId)` — revokes the OAuth connection server-side, returns nothing.
-- `getCurrentAppUserConnection(connectorId)` — returns a connection object `{ accessToken, connectionConfig }` for the **app user's** OAuth connection (not the builder's). Destructure `accessToken` and optionally `connectionConfig` (e.g. `const { accessToken, connectionConfig } = await ...getCurrentAppUserConnection(connectorId)`). `connectionConfig` may contain connector-specific parameters (e.g. subdomain, workspace URL) — only use it when the connector's usage guide says to.
+- `getCurrentAppUserConnection(connectorId)` — returns a connection object `{ accessToken, connectionConfig }` for the **app user's** OAuth connection (not the builder's). Destructure `accessToken` and optionally `connectionConfig` (e.g. `const { accessToken, connectionConfig } = await ...getCurrentAppUserConnection(connectorId)`). `connectionConfig` may contain connector-specific parameters (e.g. subdomain, workspace URL) — it holds the admin-entered fields (`connection_config_fields` from `list_connectors` names them) plus any the provider returned at connection time, such as an API host or instance URL — when the provider's API is per-account, take the host from it instead of hardcoding the default.
 
 **Backend function example:**
 
@@ -146,7 +146,7 @@ export default async function(req) {
 
 **Rule 2 — Connection status via data fetch:** There is no separate "check connection" API. Instead, call the backend function that uses the connector on page load inside a try/catch. If it succeeds → user is connected (and you already have the data). If it throws → user is not connected, show the Connect button. Extract this fetch as a reusable function — you will call it again in Rule 3.
 
-**Rule 3 — Auto-refresh after OAuth:** The OAuth flow opens in a new tab. When the user finishes and the tab closes, the original page doesn't know. To fix this: use `window.open()` to keep a reference to the popup, then poll `popup.closed` — when it closes, call the reusable fetch from Rule 2 to refresh data automatically.
+**Rule 3 — Auto-refresh after OAuth:** The OAuth flow opens in the device browser. When the user finishes and comes back, the screen doesn't know. To fix this: open the URL with `Linking.openURL` (expo-linking) and subscribe to `AppState` (react-native) — when it becomes `active`, call the reusable fetch from Rule 2 to refresh data automatically.
 
 **How the three rules connect (hooks/handlers skeleton):**
 ```
@@ -178,16 +178,17 @@ useEffect(() => {
   });
 }, []);
 
-// Rule 3: open OAuth popup, poll for close, then re-fetch
+// Rule 3: open the OAuth URL, re-fetch when the app returns to the foreground
+// import * as Linking from "expo-linking"; import { AppState } from "react-native";
 const handleConnect = async () => {
   const url = await base44.connectors.connectAppUser(CONNECTOR_ID);
-  const popup = window.open(url, "_blank");
-  const timer = setInterval(() => {
-    if (!popup || popup.closed) {
-      clearInterval(timer);
+  await Linking.openURL(url);
+  const sub = AppState.addEventListener("change", (state) => {
+    if (state === "active") {
+      sub.remove();
       fetchData();
     }
-  }, 500);
+  });
 };
 
 const handleDisconnect = async () => {

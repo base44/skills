@@ -14,7 +14,7 @@ You develop pages and, when needed, components or the app's layout.
 - URL params: `Route.useParams()` for path params, `validateSearch` + `Route.useSearch()` for the query string — never `window.location` in render.
 - Handle just-registered users with nothing saved on the user entity yet.
 - Entities: always the full JSON schema — no comments/placeholders; it replaces the stored schema.
-- Let errors bubble up — no try/catch unless asked, since uncaught errors come back to you to fix. Exception: user-facing form/auth flows catch and show inline errors (that behavior is the feature).
+- Let errors bubble up — no try/catch unless asked — an unhandled error surfaces in the preview and the app logs, where you can see and fix it. Exception: user-facing form/auth flows catch and show inline errors (that behavior is the feature).
 </code_conventions>
 
 <available_packages>
@@ -41,8 +41,8 @@ Routing is file-based: every file under `src/routes/` is a route. `src/routeTree
 - `__root.jsx` — the document and providers (see <root_document>).
 - `index.jsx` → `/` · `about.jsx` → `/about` · `posts.index.jsx` → `/posts` · `posts.$postId.jsx` → `/posts/:postId` · `posts.$postId_.edit.jsx` → `/posts/:postId/edit` · `$.jsx` catch-all.
 - Dots and folders nest: `posts.jsx` is the parent of every `posts.*` route, as `posts/$postId.jsx` is of `posts/$postId/edit.jsx`, and a parent shows its child only through `<Outlet />` — without it the child URL silently renders the parent page. So list/detail/edit pages are siblings: `posts.index.jsx` + `posts.$postId.jsx` + `posts.$postId_.edit.jsx`, no `posts.jsx` (add one only as a shared layout with `<Outlet />`). A trailing `_` (`posts_.$postId.jsx`, `$postId_.edit`) opts out of the parent.
-- `_authed.jsx` + `_authed/dashboard.jsx` — pathless layout: wraps its children (`/dashboard`) without adding a URL segment; `_authed.jsx` holds the login gate (`beforeLoad: requireSignedIn` from `@/components/auth/AuthGate`, see <authentication>), and its children read `Route.useRouteContext().user`. `(marketing)/pricing.jsx` — route group: organizes files, adds no segment. A folder (`posts/index.jsx`) equals the dotted name.
-- `api/<name>.js` — server routes (see <server_code>).
+- `_authed.jsx` + `_authed/dashboard.jsx` — pathless layout: wraps its children (`/dashboard`) without adding a URL segment; `_authed.jsx` holds the login gate (`beforeLoad: requireSignedIn` from `@/components/auth/AuthGate`, see the authentication section of the `base44-platform-platform` skill's TanStack reference), and its children read `Route.useRouteContext().user`. `(marketing)/pricing.jsx` — route group: organizes files, adds no segment. A folder (`posts/index.jsx`) equals the dotted name.
+- `api/<name>.js` — server routes (see the `base44-platform-backend-functions` skill).
 - Every route file: `export const Route = createFileRoute("/path")({ component, loader, head, … })` from `@tanstack/react-router`; the path string is the file's URL, and the plugin rewrites it on rename.
 </file_routes>
 
@@ -50,7 +50,7 @@ Routing is file-based: every file under `src/routes/` is a route. `src/routeTree
 - Reads: a `loader` (runs on the server for a document request, in the browser on client navigation) calling a server function; the component reads it with `Route.useLoaderData()`. `loaderDeps: ({ search }) => ({ … })` when the loader depends on search params.
 - Writes: `useServerFn(fn)` + TanStack Query `useMutation`, then `useRouter().invalidate()` (or `queryClient.invalidateQueries`) so lists refresh.
 - Page metadata: `head: () => ({ meta: [{ title }, { name: "description", content }], links: [...] })` per route — never a `<title>` in JSX.
-- `ssr: false` only on a route whose render or loader needs the signed-in user (`useAuth()`, `base44.auth.me()`, the user's own records), so personal data never lands in cacheable HTML, and on the auth pages and `oauth/consent`, wired with `ssr: false` as <authentication> shows. Every other page stays server-rendered — public pages anyone can open and pages that only keep browser state (localStorage, theme, drafts); `ssr: false` is never the fix for `window` or hydration. A library that touches `window`/`document` on import (maps, rich-text editors) goes in its own component, rendered as `lazy(() => import("@/components/Map"))` inside `<ClientOnly fallback={…}>` from `@tanstack/react-router`. Public pages may opt into edge caching with the route's `headers: () => ({ "cache-control": "public, s-maxage=…" })`.
+- `ssr: false` only on a route whose render or loader needs the signed-in user (`useAuth()`, `base44.auth.me()`, the user's own records), so personal data never lands in cacheable HTML, and on the auth pages and `oauth/consent`, wired with `ssr: false` as the authentication section of the `base44-platform-platform` skill's TanStack reference shows. Every other page stays server-rendered — public pages anyone can open and pages that only keep browser state (localStorage, theme, drafts); `ssr: false` is never the fix for `window` or hydration. A library that touches `window`/`document` on import (maps, rich-text editors) goes in its own component, rendered as `lazy(() => import("@/components/Map"))` inside `<ClientOnly fallback={…}>` from `@tanstack/react-router`. Public pages may opt into edge caching with the route's `headers: () => ({ "cache-control": "public, s-maxage=…" })`.
 - Auth is resolved client-side after hydration: `useAuth()` from `@/lib/AuthContext` (`user`, `isAuthenticated`, `isLoadingAuth`, `refresh`, `logout`, `navigateToLogin`). Gate user-specific UI on `isLoadingAuth`; the server renders every page anonymously.
 - Search params: make each `validateSearch` param optional and apply its default where it is read, since a default returned from `validateSearch` redirects `/` to `/?param=…`.
 - Server and first client render must match, or React throws a hydration error (a bug to fix, not a warning). `window`, `document` and browser storage only inside effects and handlers — never at module scope, in render or in a `useState` initializer, even behind `typeof window`: render the server's default, then load the stored value in `useEffect`. Format dates and numbers with an explicit locale and time zone (`toLocaleString("en-US", { timeZone: "UTC" })`); render `Date.now()`/random values only after mount.
@@ -104,7 +104,7 @@ Color token syntax must match its consumer: `hsl(var(--token))` requires HSL cha
 You work on the app's sandbox files directly: read, write and edit them by path and run shell commands, through the Base44 MCP sandbox tools or the `base44 sandbox` CLI.
 - Entity files (`base44/entities/*.jsonc`) are stored as objects: always write the complete schema, never a partial patch or placeholders.
 - Writes are committed automatically a few seconds after the change and synced into the platform: a resource file (entity, agent, function, workflow) is live once written; there is no deploy step.
-- Only checkpoints appear in the builder's version history. Create a checkpoint when you finish a unit of work and before you stop; the next Restore in the builder discards everything after the last checkpoint.
+- Only checkpoints appear in the builder's version history. Create one with the MCP `create_checkpoint` tool (`base44 sandbox checkpoint` in the CLI) when you finish a unit of work and before you stop; the next Restore in the builder discards everything after the last checkpoint.
 - Verify with the project's own commands (`npm run build`, lint) before finishing.
 </working_with_files>
 
@@ -115,13 +115,13 @@ Install only when the user explicitly requests a package by name or npmjs.com UR
 <example>
 Two short worked examples; each file is shown with its path. `…` elides boilerplate.
 
-<user_ask>Create a simple TODO app where I can track my tasks</user_ask>
-<assistant>
+**Request:** Create a simple TODO app where I can track my tasks
+**Response:**
 ```
 // base44/entities/Task.jsonc
 {"name":"Task","type":"object","properties":{"title":{"type":"string"},"description":{"type":"string"},"status":{"type":"string","enum":["todo","in_progress","done"],"default":"todo"},"priority":{"type":"string","enum":["low","medium","high"],"default":"medium"},"due_date":{"type":"string","format":"date"}},"required":["title"]}
 ```
-<note>Schema first; then all independent files in one parallel batch:</note>
+<note>Schema first; the files below do not depend on each other:</note>
 ```
 // src/lib/server-fns.js
 import { createServerFn } from "@tanstack/react-start";
@@ -173,10 +173,9 @@ function TasksPage() {
 ```
 
 Your todo app is ready — add tasks, set priority and due dates, and move them between To Do, In Progress, and Done.
-</assistant>
 
-<user_ask>show each item on its own page with its full details</user_ask>
-<assistant>
+**Request:** show each item on its own page with its full details
+**Response:**
 <note>One focused route — exactly the ask, no extra sections/pages/animations. Add the server function it needs, load by id in the loader, and render every stored field (a view that drops the item's main text/body is incomplete).</note>
 ```
 // src/lib/server-fns.js
@@ -208,5 +207,4 @@ function TaskDetail() {
 }
 ```
 Each item now opens on its own page with its full details.
-</assistant>
 </example>

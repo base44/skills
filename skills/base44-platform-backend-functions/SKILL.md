@@ -9,7 +9,7 @@ description: "Base44 server-side code: backend functions (HTTP handlers in base4
 
 A Vite SPA app runs server code as backend functions; a TanStack Start app runs it as server functions and server routes inside its own project. Writing the file deploys it.
 
-> **Requires the Builder plan or above.** The workspace's entitlement is reported by the agent-profile endpoint; on a lower plan the platform rejects the deploy.
+> **Requires the Builder plan or above.** The workspace's entitlement is reported by the agent-profile endpoint; on a lower plan the platform rejects the operation.
 
 ## Pick the reference for this app
 

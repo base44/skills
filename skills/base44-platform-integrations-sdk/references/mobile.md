@@ -29,7 +29,7 @@ const {signed_url} = await base44.integrations.Core.CreateFileSignedUrl({file_ur
 const {file_url} = await base44.integrations.Core.UploadPublicFile({file});
 ```
 
-InvokeLLM supports an optional `model` parameter for higher quality output on complex tasks (e.g. model: "claude-sonnet-5"). Non-default models use more integration credits, so only use them when the task requires it. When you use a non-default model, tell the user that it uses more integration credits. Only 'gemini_3_flash' and 'gemini_3_1_pro' support add_context_from_internet. Using an incompatible model will raise an error.
+InvokeLLM supports an optional `model` parameter for higher quality output on complex tasks (e.g. model: "claude-sonnet-5"). Non-default models use more integration credits, so only use them when the task requires it. When you use a non-default model, tell the user that it uses more integration credits. Only the models the Core InvokeLLM schema below names for web search support add_context_from_internet. Using an incompatible model will raise an error.
 
 <end_user_uploads>
 Default every end-user upload to `UploadPrivateFile`. Use `UploadPublicFile` only when the user asked for these files to be public, or when something outside the app must fetch the file later without signing in.
@@ -52,7 +52,7 @@ Here are the integration packages available in this app:
     Generates a response from an LLM with a prompt.
     Be elaborate and detailed in your prompt.
     You can potentially ask the llm to output a json, in which case specify the json schema in response_json_schema.
-    If you need to use external knowledge, use add_context_from_internet=true. This will give the LLM context from google search, google maps, news, etc. That way you can fetch structured data from the web.
+    If you need to use external knowledge, use add_context_from_internet=true. This will give the LLM context from live web search, maps and news results. That way you can fetch structured data from the web.
     You can attach files (including images) for additional context to the LLM, using the `file_urls` parameter. This should be a list of urls after uploading them.
     You can use both file_urls AND add_context_from_internet together - the system will use a model that supports both vision and web search.
     You can optionally specify a `model` for this call. Options: 'automatic', 'gemini_3_8_flash', 'gpt_6_luna', 'claude-sonnet-5', 'claude_opus_5_5', 'gpt_6_sol', 'gpt_6_astra', 'claude_fable_5_1', 'glm_5_2'. Defaults to automatic.
@@ -68,7 +68,7 @@ Here are the integration packages available in this app:
     <endpoint>
       <name>TranscribeAudio</name>
       <description>
-    Transcribes an audio file to text using speech recognition (Whisper).
+    Transcribes an audio file to text using speech recognition.
     First upload the audio file using the UploadPublicFile integration, then pass the resulting URL here.
     Returns the transcript as a plain string.
     Supported formats: ogg, oga, mp3, wav, webm, m4a, mp4, mpeg, mpga, flac. Maximum file size: 25MB.
@@ -126,7 +126,7 @@ Here are the integration packages available in this app:
       <description>Generate stored, shareable speech audio (TTS) from text. Returns an MP3 URL: {url: str}.
     Multiple voices, consistent across users, high-quality multilingual (auto-detected if language_code is omitted).
     For simple in-page playback, prefer the browser's TTS API.
-    Cost: 1 integration credit per 50 characters of text, up to 100 per call.</description>
+    Spends integration credits in proportion to the length of the text.</description>
       <input_schema>{'properties': {'app_id': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None, 'title': 'App Id'}, 'app_owner': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None, 'title': 'App Owner'}, 'text': {'description': 'Text to convert. Max 5000 chars.', 'title': 'Text', 'type': 'string'}, 'voice': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None, 'description': "Optional voice (default 'river'):\n- river: calm, neutral.\n- honey: warm, soft.\n- sunny: bright, upbeat.\n- storm: formal, authoritative.\n- spark: energetic, quick.", 'title': 'Voice'}, 'language_code': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None, 'description': "Optional ISO-639-1 code (e.g. 'en', 'es'). Omit to auto-detect.", 'title': 'Language Code'}}, 'required': ['text'], 'title': 'GenerateSpeechModel', 'type': 'object'}</input_schema>
     </endpoint>
 
@@ -134,15 +134,12 @@ Here are the integration packages available in this app:
       <name>GenerateVideo</name>
       <description>Generate a video using AI.
 
-    Takes about 30-60 seconds to generate a video using Google's Veo 3.x models.
+    Takes about 30-60 seconds to generate a video.
     Be detailed in the prompt - the better the prompt, the better the video.
 
     The integration returns a URL to the generated video: {url: str}
 
-    Credit Cost: 5 integration credits per second of video
-    - 4 seconds = 20 credits
-    - 6 seconds (default) = 30 credits
-    - 8 seconds = 40 credits
+    Spends integration credits in proportion to the video's duration — prefer the shortest duration that meets the need and tell the user.
     </description>
       <input_schema>{'properties': {'app_id': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None, 'title': 'App Id'}, 'app_owner': {'anyOf': [{'type': 'string'}, {'type': 'null'}], 'default': None, 'title': 'App Owner'}, 'prompt': {'title': 'Prompt', 'type': 'string'}, 'duration': {'default': 6, 'enum': [4, 6, 8], 'title': 'Duration', 'type': 'integer'}, 'aspect_ratio': {'default': '16:9', 'enum': ['16:9', '9:16'], 'title': 'Aspect Ratio', 'type': 'string'}, 'generate_audio': {'default': True, 'title': 'Generate Audio', 'type': 'boolean'}}, 'required': ['prompt'], 'title': 'GenerateVideoModel', 'type': 'object'}</input_schema>
     </endpoint>
