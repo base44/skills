@@ -18,6 +18,10 @@ base44.integrations.Core.FunctionName(params)
 base44.integrations.custom.call(slug, operationId, params)
 ```
 
+**Authentication modes:** `base44.integrations` runs with the current user's permissions (or
+anonymously, for unauthenticated users). For backend code that needs elevated permissions, use
+`base44.asServiceRole.integrations` instead — same methods, service-role context.
+
 ## Core Integrations
 
 ### InvokeLLM (AI Text Generation)
@@ -28,6 +32,12 @@ Generate text or structured JSON data using AI models.
 // Basic prompt - returns string
 const response = await base44.integrations.Core.InvokeLLM({
   prompt: "Summarize this text: ..."
+});
+
+// Override the app-level model for just this call
+const response = await base44.integrations.Core.InvokeLLM({
+  prompt: "Explain quantum computing",
+  model: "claude-sonnet-5"
 });
 
 // With internet context (uses Google Search, Maps, News)
@@ -59,22 +69,38 @@ const response = await base44.integrations.Core.InvokeLLM({
 
 **Parameters:**
 - `prompt` (string, required): The prompt text to send to the model
+- `model` (string, optional): Override the app-level model setting for this call only. One of: `gemini_3_8_flash`, `gpt_6_luna`, `claude-sonnet-5`, `claude_opus_5_5`, `gpt_6_sol`, `gpt_6_astra`, `claude_fable_5_1`, `glm_5_2`, `gemini_3_1_pro`, `gpt_5_4`, `claude_sonnet_4_6`, `claude_opus_4_6`, `claude_opus_4_7`, `claude_opus_4_8`, `claude_opus_5`, `gpt_5_6_terra`, `gpt_5_6_sol`, `gpt_5_6_luna`
 - `add_context_from_internet` (boolean, optional): If true, uses Google Search/Maps/News for real-time context
 - `response_json_schema` (object, optional): JSON schema for structured output
-- `file_urls` (string[], optional): URLs of uploaded files for context
+- `file_urls` (string[], optional): URLs of uploaded files for context. Do not combine with `add_context_from_internet` — they're mutually exclusive.
 
 > `InvokeLLM` is a **single call with no tools**. Don't chain it to simulate an agent loop — for a tool-using agent, build a **code agent** on the AI gateway. See [ai-gateway.md](ai-gateway.md).
 
 ### GenerateImage
 
-Create AI-generated images from text prompts.
+Create AI-generated images from text prompts, optionally guided by reference images.
 
 ```javascript
 const { url } = await base44.integrations.Core.GenerateImage({
   prompt: "A serene mountain landscape with a lake"
 });
 console.log(url); // https://...generated_image.png
+
+// Edit an existing image / use reference images
+const { url } = await base44.integrations.Core.GenerateImage({
+  prompt: "Replace the background with a sunset beach",
+  existing_image_urls: [productPhotoUrl]
+});
 ```
+
+**Parameters:**
+- `prompt` (string, required): Description of the image to generate. When `existing_image_urls` is passed, describe what to do with the reference images instead.
+- `existing_image_urls` (string[], optional): URLs of images to use as references — to edit an existing image, match a style, or add visual context. Images that can't be read are skipped; if none of them can be read, the request fails.
+
+**Behavior notes:**
+- Output is always a PNG, ~1024px on the shorter side (exact dimensions vary by aspect ratio).
+- Prompts that violate the AI provider's content policy are refused.
+- This is a fixed-default call — no model, aspect ratio, resolution, or quality options. For that level of control, use the AI Gateway image endpoints instead (see [ai-gateway.md](ai-gateway.md)).
 
 ### SendEmail
 
@@ -219,6 +245,19 @@ const response = await base44.integrations.custom.call(
 }
 ```
 
+### Error Handling
+
+`custom.call()` throws in these cases:
+- `slug` missing/empty: plain `Error` — `"Integration slug is required and cannot be empty"`
+- `operationId` missing/empty: plain `Error` — `"Operation ID is required and cannot be empty"`
+- Integration or operation not found: `Base44Error` with `status: 404`
+- External API call fails: `Base44Error` with `status: 502`
+- External API call times out: `Base44Error` with `status: 504`
+
+A non-2xx response from the external API itself (e.g. the external API returns 400 or 500) does **not**
+throw — it resolves normally with `success: false` and the external `status_code`/`data`. Check
+`response.success` to distinguish that case from a thrown `Base44Error`.
+
 ## Requirements
 
 - **Core integrations**: Available on all plans
@@ -233,18 +272,27 @@ const response = await base44.integrations.custom.call(
 interface InvokeLLMParams {
   /** The prompt text to send to the model. */
   prompt: string;
+  /** Optionally override the app-level model setting for this call only.
+   * One of: "gemini_3_8_flash", "gpt_6_luna", "claude-sonnet-5", "claude_opus_5_5",
+   * "gpt_6_sol", "gpt_6_astra", "claude_fable_5_1", "glm_5_2", "gemini_3_1_pro",
+   * "gpt_5_4", "claude_sonnet_4_6", "claude_opus_4_6", "claude_opus_4_7",
+   * "claude_opus_4_8", "claude_opus_5", "gpt_5_6_terra", "gpt_5_6_sol", "gpt_5_6_luna".
+   */
+  model?: string;
   /** If true, uses Google Search/Maps/News for real-time context. */
   add_context_from_internet?: boolean;
   /** JSON schema for structured output. If provided, returns object instead of string. */
   response_json_schema?: object;
-  /** File URLs (from UploadFile) to provide as context. */
+  /** File URLs (from UploadFile) to provide as context. Do not combine with add_context_from_internet. */
   file_urls?: string[];
 }
 
 /** Parameters for the GenerateImage function. */
 interface GenerateImageParams {
-  /** Description of the image to generate. */
+  /** Description of the image to generate. When existing_image_urls is passed, describe what to do with the reference images instead. */
   prompt: string;
+  /** URLs of images to use as references (e.g. to edit an image or match a style). Unreadable images are skipped; if none can be read, the request fails. */
+  existing_image_urls?: string[];
 }
 
 /** Result from GenerateImage. */
@@ -357,6 +405,11 @@ interface CustomIntegrationsModule {
    * @param slug - The integration's unique identifier (set by workspace admin).
    * @param operationId - The endpoint in "method:path" format (e.g. "get:/contacts", "post:/users/{id}").
    * @param params - Optional payload, pathParams, queryParams.
+   * @throws {Error} If slug is missing/empty.
+   * @throws {Error} If operationId is missing/empty.
+   * @throws {Base44Error} If the integration or operation is not found (404).
+   * @throws {Base44Error} If the external API call fails (502).
+   * @throws {Base44Error} If the request times out (504).
    */
   call(slug: string, operationId: string, params?: CustomIntegrationCallParams): Promise<CustomIntegrationCallResponse>;
 }

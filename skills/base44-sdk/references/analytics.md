@@ -6,6 +6,7 @@ Track custom events and user activity via `base44.analytics`.
 - [Methods](#methods)
 - [Examples](#examples)
 - [Automatic Tracking](#automatic-tracking)
+- [Consent & Opt-Out Behavior](#consent--opt-out-behavior)
 - [Best Practices](#best-practices)
 
 ## Methods
@@ -60,11 +61,21 @@ base44.analytics.track({
 ## Automatic Tracking
 
 The analytics module automatically tracks:
-- **Initialization events**: When the app loads
-- **Heartbeat events**: Periodic activity signals
-- **Session duration**: Time spent in the app
+- **Initialization events**: When the app loads. This also captures the page referrer and, if present in the URL, marketing attribution parameters (`utm_source`, `utm_medium`, `utm_campaign`, `utm_term`, `utm_content`, `utm_id`, `gclid`, `gbraid`, `wbraid`, `gad_source`, `gad_campaignid`, `fbclid`, `msclkid`, `ttclid`, `li_fat_id`).
+- **Heartbeat events**: Periodic activity signals, sent while the page is visible
+- **Session duration**: Time spent in the app, measured between the page becoming visible and becoming hidden
 
 These internal events help measure user engagement without manual instrumentation.
+
+## Consent & Opt-Out Behavior
+
+Tracking (both automatic and custom `track()` calls) respects the app's analytics consent setting, which the Base44 platform controls per app:
+
+- If analytics is turned **off** for the app, `track()` is a no-op and no events are queued or sent.
+- If the app requires **consent** (e.g. a cookie/consent banner), tracking is paused until the visitor grants consent through that banner, and stops again if consent is withdrawn. Events are not queued while consent is withheld.
+- Otherwise, tracking proceeds as normal.
+
+This is handled automatically by the SDK — there's nothing you need to configure from application code. If events you expect aren't appearing in the dashboard, consider whether the visitor may not have granted analytics consent.
 
 ## Best Practices
 

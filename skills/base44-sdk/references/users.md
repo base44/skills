@@ -56,13 +56,16 @@ The `role` parameter must be one of:
 
 - **Email invitation**: The invited user receives an email with a link to join the app
 - **Duplicate handling**: Inviting an existing user will re-send the invitation
-- **Also available in auth**: `base44.auth.inviteUser()` provides the same functionality
-- **Role validation**: Only `"user"` or `"admin"` are accepted
+- **Also available in auth**: `base44.auth.inviteUser(userEmail, role)` sends the same kind of invitation, but is more permissive — its `role` parameter accepts any role string configured for the app, not just `"user"`/`"admin"`. Prefer `base44.users.inviteUser()` when you only need the two built-in roles, since it validates the role client-side.
+- **Role validation**: `base44.users.inviteUser()` only accepts `"user"` or `"admin"`; passing anything else throws before a request is made
 
 ```javascript
-// These are equivalent:
+// Equivalent for the two built-in roles:
 await base44.users.inviteUser("newuser@example.com", "user");
 await base44.auth.inviteUser("newuser@example.com", "user");
+
+// Only base44.auth.inviteUser() supports custom app-defined roles:
+await base44.auth.inviteUser("manager@example.com", "manager");
 ```
 
 ## Type Definitions
