@@ -8,12 +8,15 @@ Single Sign-On (SSO) support for authenticating Base44 users with external syste
 
 | Method | Signature | Description |
 |--------|-----------|-------------|
-| `getAccessToken(userId)` | `Promise<SsoAccessTokenResponse>` | Get an SSO access token for a specific user |
-| `getIdToken(userId)` | `Promise<string>` | Get the stored SSO OIDC ID token for the current app user |
+| `getAccessToken(userId)` | `Promise<SsoAccessTokenResponse>` | Get an SSO access token for the user who made the current request |
+| `getIdToken(userId)` | `Promise<string>` | Get the stored SSO OIDC ID token for the user who made the current request |
 
 Use `getIdToken(userId)` when you need identity claims, especially the user's `email` claim. Use `getAccessToken(userId)` when you need a token to authorize requests to an external system.
 
-The service-role client must include an on-behalf-of token for the same user passed to `getIdToken`.
+**Both methods only work for the user who made the current request.** Create the client with `createClientFromRequest` so it acts on behalf of the request's user, then pass that user's ID (e.g. from `base44.auth.me()`) as `userId`. If `userId` is any other user, the call fails — service role does **not** grant access to arbitrary users' SSO tokens.
+
+- `getAccessToken`: an expired access token is refreshed automatically when a refresh token is available.
+- `getIdToken`: the stored ID token is returned as-is and is **never** refreshed, so the call fails if the token has already expired.
 
 ## Examples
 
@@ -39,14 +42,20 @@ export default async function (req) {
 }
 ```
 
-### Get Token for a Specific User (Service Role)
+### Verify the Requested User Matches the Caller
 
 ```javascript
 export default async function (req) {
   const base44 = createClientFromRequest(req);
   const { userId } = await req.json();
 
-  // Get SSO token for any user (service role has access to all users)
+  // getAccessToken only works for the user who made the current request.
+  // Passing a different user's ID here causes the call to fail.
+  const user = await base44.auth.me();
+  if (!user || user.id !== userId) {
+    return Response.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const { access_token } = await base44.asServiceRole.sso.getAccessToken(userId);
 
   return Response.json({ token: access_token });
@@ -93,17 +102,25 @@ interface SsoAccessTokenResponse {
 /** SSO module for managing SSO authentication (service role only). */
 interface SsoModule {
   /**
-   * Gets an SSO access token for a specific user.
-   * @param userId - The Base44 user ID to get the SSO token for.
+   * Gets an SSO access token for the user who made the current request.
+   * Only works for that same user (the service-role client must act on
+   * behalf of this user); fails for any other user ID. An expired token
+   * is refreshed automatically when a refresh token is available.
+   * @param userId - The ID of the user who made the current request,
+   * such as the `id` returned by `base44.auth.me()`.
    * @returns Promise resolving to the SSO access token response.
    */
   getAccessToken(userId: string): Promise<SsoAccessTokenResponse>;
 
   /**
-   * Gets the stored SSO OIDC ID token for the current app user.
-   * Use this method when you need the user's email claim.
-   * The service-role client must act on behalf of this same user.
-   * @param userId - The current app user's Base44 user ID.
+   * Gets the stored SSO OIDC ID token for the user who made the current
+   * request. Use this method when you need the user's email claim. Only
+   * works for that same user (the service-role client must act on behalf
+   * of this user); fails for any other user ID. The stored token is
+   * returned as-is and is never refreshed, so the call fails if the token
+   * has already expired.
+   * @param userId - The ID of the user who made the current request,
+   * such as the `id` returned by `base44.auth.me()`.
    * @returns Promise resolving to the raw ID token string.
    */
   getIdToken(userId: string): Promise<string>;

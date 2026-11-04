@@ -3,13 +3,14 @@
 AI agent conversations and messages via `base44.agents`.
 
 > **Note:** This module requires a logged-in user. All agent methods work in the context of the authenticated user.
+> It is available in both authentication modes: `base44.agents` (scoped to the current user's permissions — users must be authenticated) and `base44.asServiceRole.agents` (service role, for backend code that needs elevated permissions).
 
 > **This module is for in-app agents** — **managed and conversational**: app users talk to the agent and the platform runs the loop. For **non-conversational task work where your code owns the loop** (triggered by an entity event, schedule, or webhook — not a chat), build a **code agent** on the AI gateway instead. See [ai-gateway.md](ai-gateway.md).
 
 ## Contents
 - [Concepts](#concepts)
 - [Methods](#methods)
-- [Examples](#examples) (Create, Get Conversations, List, Subscribe, Send Message, WhatsApp)
+- [Examples](#examples) (Create, Get Conversations, List, Subscribe, Send Message, WhatsApp, Telegram)
 - [Message Structure](#message-structure)
 - [Conversation Structure](#conversation-structure)
 - [Common Patterns](#common-patterns)
@@ -30,6 +31,7 @@ AI agent conversations and messages via `base44.agents`.
 | `subscribeToConversation(id, onUpdate?)` | `() => void` | Realtime updates via WebSocket; tool call data truncated (returns unsubscribe function) |
 | `addMessage(conversation, message)` | `Promise<Message>` | Send a message |
 | `getWhatsAppConnectURL(agentName)` | `string` | Get WhatsApp connection URL for agent |
+| `getTelegramConnectURL(agentName)` | `string` | Get Telegram connection URL for agent |
 
 ## Examples
 
@@ -125,6 +127,15 @@ const whatsappUrl = base44.agents.getWhatsAppConnectURL("support-agent");
 console.log(whatsappUrl);
 ```
 
+### Get Telegram Connection URL
+
+```javascript
+const telegramUrl = base44.agents.getTelegramConnectURL("support-agent");
+// User opens this URL and is redirected to the agent's Telegram bot with an
+// activation code that securely links their account.
+console.log(telegramUrl);
+```
+
 ## Message Structure
 
 ```javascript
@@ -136,24 +147,36 @@ console.log(whatsappUrl);
   
   // Optional fields
   reasoning: {
-    content: "Agent's reasoning process",
-    timing: 1500
+    start_date: "2024-01-15T10:29:58Z",
+    end_date: "2024-01-15T10:30:00Z",
+    content: "Agent's reasoning process"
   },
   tool_calls: [{
+    id: "call-123",
     name: "search",
-    arguments: { query: "weather" },
-    result: { ... },
-    status: "success"
+    arguments_string: "{\"query\":\"weather\"}",
+    status: "success", // "running" | "success" | "error" | "stopped" | "waiting_for_user_input"
+    results: "..."
   }],
   file_urls: ["https://..."],
   usage: {
     prompt_tokens: 150,
     completion_tokens: 50
   },
-  metadata: { ... },
-  custom_context: { ... }
+  hidden: false,
+  model: "gpt-4o",
+  checkpoint_id: "chk-123",
+  metadata: {
+    created_date: "2024-01-15T10:30:00Z",
+    created_by_email: "user@example.com",
+    created_by_full_name: "Jane Doe"
+  },
+  custom_context: [{ message: "...", data: { ... }, type: "..." }],
+  additional_message_params: { ... }
 }
 ```
+
+> **Note:** `arguments_string` and `results` on `tool_calls` are strings (JSON-encoded), not objects. When received via `subscribeToConversation`, `arguments_string` is truncated to 500 characters and `results` to 50 characters; call `getConversation()` after the message completes for the full values.
 
 ## Conversation Structure
 
@@ -270,6 +293,8 @@ interface AgentMessage {
   checkpoint_id?: string;
   /** Metadata about when and by whom the message was created. */
   metadata?: AgentMessageMetadata;
+  /** Additional custom parameters for the message. */
+  additional_message_params?: Record<string, any>;
 }
 ```
 
@@ -295,7 +320,7 @@ interface AgentMessageToolCall {
   /** Arguments passed to the tool as JSON string. */
   arguments_string: string;
   /** Status of the tool call. */
-  status: "running" | "success" | "error" | "stopped";
+  status: "running" | "success" | "error" | "stopped" | "waiting_for_user_input";
   /** Results from the tool call. */
   results?: string;
 }
@@ -384,5 +409,8 @@ interface AgentsModule {
 
   /** Gets WhatsApp connection URL for an agent. */
   getWhatsAppConnectURL(agentName: AgentName): string;
+
+  /** Gets Telegram connection URL for an agent. */
+  getTelegramConnectURL(agentName: AgentName): string;
 }
 ```

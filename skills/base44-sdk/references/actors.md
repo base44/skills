@@ -145,9 +145,13 @@ The instance id is what separates one room from another.
 
 ## Authentication
 
+`base44.actors` is available on a client in anonymous or user authentication mode. It is **not** available in service role authentication mode (`base44.asServiceRole` has no `actors` property) — connect from the frontend client, not from a service-role backend client.
+
 Actors use direct connections. The SDK authenticates a connection-token request using the user's existing session, then opens the WebSocket directly to Cloudflare with the returned credentials. You do not mint or pass tokens yourself. Anonymous (logged-out) connections are allowed when the app permits them, and a login or logout is picked up on the next reconnect.
 
 On the actor, `conn.identity` is the platform-verified principal: `{ type: "authenticated", userId }` or `{ type: "anonymous", anonymousId }`. It survives hibernation. For user attribution and permissions, check for an authenticated identity and use `userId` — never a user id supplied in a message. An anonymous visitor is not a signed-in user.
+
+> **Note:** as of SDK 0.8.59, the published `Conn` interface in `@base44/sdk` (`src/actor.ts`) does not yet declare an `identity` field — only `id`, `send`, and `reject`. The behavior above is the platform's documented contract (per the actors module's JSDoc), but a strict TypeScript actor referencing `conn.identity` may need a type assertion until the shipped type catches up. Verify against the deployed runtime before relying on this in production TypeScript code.
 
 `conn.id` is client-chosen reconnect bookkeeping. Keep it out of broadcasts, public records, and author fields; use a separate server-assigned participant id for presence. A returning connection id alone must not grant access to another user's state or permissions.
 
@@ -307,15 +311,9 @@ interface ActorClient<N extends string = string> {
 Server-side types (`Actor`, `Conn`, `Storage`) come from the actor base class:
 
 ```typescript
-type ActorConnectionIdentity =
-  | Readonly<{ type: "authenticated"; userId: string }>
-  | Readonly<{ type: "anonymous"; anonymousId: string }>;
-
 interface Conn<Send = unknown> {
   /** Unique per-connection id (one per socket/tab). */
   id: string;
-  /** Platform-verified principal, preserved across hibernation. */
-  identity?: ActorConnectionIdentity;
   send(data: Send): void;
   reject(code: number, reason: string): void;
 }
@@ -335,7 +333,7 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   /** The managed ticker's callback. Runs only while `shouldTick()` returns true. */
   abstract handleTick(): void | Promise<void>;
   handleStart(): void | Promise<void>;
-  handleWake(key: string): void | Promise<void>;
+  protected handleWake(key: string): void | Promise<void>;
   protected schedule(key: string, at: number | Date): Promise<void>;
   protected cancelSchedule(key: string): Promise<void>;
   protected broadcast(data: Outgoing): void;
@@ -345,13 +343,13 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   /** Anonymous client with an asServiceRole client for validated, room-owned work. */
   protected get client(): Base44Client;
   /** Override to opt into the managed ticker; must be cheap and side-effect free. */
-  shouldTick?(): boolean;
+  protected shouldTick?(): boolean;
   /** Ticker period in ms. Default 100. */
-  tickIntervalMs: number;
+  protected tickIntervalMs: number;
 }
 ```
 
-The members you **implement** (`handleConnect`, `handleMessage`, `handleClose`, `handleTick`, `handleStart`, `handleWake`, `shouldTick`, `tickIntervalMs`) are public — override them without a modifier. The members you only **call** (`broadcast`, `getConnections`, `schedule`, `cancelSchedule`, `instanceId`, `storage`, `client`) are `protected`: reachable via `this` inside your actor, invisible from outside it. Marking an override `protected` where the base declares it public is a compile error (`TS2416`), so don't add the modifier to a handler.
+The members you **implement** as the core request handlers (`handleConnect`, `handleMessage`, `handleClose`, `handleTick`) and the optional startup hook `handleStart` are declared **public** on the base class — override them without a modifier; marking an override `protected` where the base declares it public is a compile error (`TS2416`). `handleWake`, `shouldTick`, and `tickIntervalMs` are also members you implement, but the base class declares them **protected** (same as the call-only members below) — overriding them without a modifier still works (widening `protected` to public on override is legal), but matching the base's `protected` is equally valid and closer to the source. The members you only **call** (`broadcast`, `getConnections`, `schedule`, `cancelSchedule`, `instanceId`, `storage`, `client`) are `protected`: reachable via `this` inside your actor, invisible from outside it.
 
 `handleTick` is an abstract member, so a **TypeScript** actor has to declare it to compile — `handleTick() {}` is all it needs. Plain-JavaScript actors can omit it.
 

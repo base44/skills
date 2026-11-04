@@ -80,8 +80,9 @@ interface ChangePasswordParams {
 
 ### Provider Type
 ```typescript
-type Provider = 'google' | 'microsoft' | 'facebook';
+type Provider = 'google' | 'microsoft' | 'facebook' | 'apple' | 'sso';
 ```
+`loginWithProvider()` actually types `provider` as a plain `string`; the union above documents the values Base44 recognizes. `'google'` is enabled by default. `'microsoft'`, `'facebook'`, and `'apple'` must be enabled in the app's authentication settings first. `'sso'` requires an SSO provider to be configured in the app's authentication settings.
 
 ---
 
@@ -92,7 +93,7 @@ type Provider = 'google' | 'microsoft' | 'facebook';
 interface AuthModule {
   // User Info
   me(): Promise<User>;
-  updateMe(data: Partial<Omit<User, 'id' | 'created_date' | 'updated_date' | 'app_id' | 'is_service'>>): Promise<User>;
+  updateMe(data: Record<string, any>): Promise<User>;
   isAuthenticated(): Promise<boolean>;
 
   // Login/Logout
@@ -103,6 +104,7 @@ interface AuthModule {
 
   // Token Management
   setToken(token: string, saveToStorage?: boolean): void;
+  hasToken(): boolean;
 
   // Registration
   register(params: RegisterParams): Promise<any>;
@@ -125,12 +127,13 @@ interface AuthModule {
 |--------|-----------|-------------|-------------|
 | `register()` | `params: RegisterParams` | `Promise<any>` | Create new user account |
 | `loginViaEmailPassword()` | `email: string, password: string, turnstileToken?: string` | `Promise<LoginResponse>` | Authenticate with email/password |
-| `loginWithProvider()` | `provider: Provider, fromUrl?: string` | `void` | Initiate OAuth login flow. Providers: `'google'` (default), `'microsoft'`, `'facebook'` (enable in app settings) |
+| `loginWithProvider()` | `provider: Provider, fromUrl?: string` | `void` | Initiate OAuth login flow. Providers: `'google'` (default), `'microsoft'`, `'facebook'`, `'apple'` (enable in app settings), `'sso'` (configure an SSO provider in app settings) |
 | `me()` | None | `Promise<User>` | Get current authenticated user |
-| `updateMe()` | `data: Partial<User>` | `Promise<User>` | Update current user's profile |
+| `updateMe()` | `data: Record<string, any>` | `Promise<User>` | Update current user's profile (custom schema fields plus a few writable built-ins) |
 | `logout()` | `redirectUrl?: string` | `void` | Redirect to server-side logout (clears HTTP-only cookies and session), then to redirectUrl or current URL |
 | `redirectToLogin()` | `nextUrl: string` | `void` | ⚠️ **Avoid** - Prefer custom login UI with `loginViaEmailPassword()` or `loginWithProvider()` |
-| `isAuthenticated()` | None | `Promise<boolean>` | Check if user is logged in |
+| `isAuthenticated()` | None | `Promise<boolean>` | Check if user is logged in (calls `me()` against the server) |
+| `hasToken()` | None | `boolean` | Synchronously check whether an access token is set on the client (doesn't validate it with the server) |
 | `setToken()` | `token: string, saveToStorage?: boolean` | `void` | Manually set auth token |
 | `inviteUser()` | `userEmail: string, role: string` | `Promise<any>` | Send invitation email |
 | `verifyOtp()` | `params: VerifyOtpParams` | `Promise<any>` | Verify OTP code |
@@ -189,6 +192,8 @@ try {
 
 ### Login with Email/Password
 
+> **Behavior note:** If the server responds with `401` (invalid credentials), `loginViaEmailPassword()` internally calls `logout()` before re-throwing the error. In a browser, `logout()` navigates `window.location` to the server-side logout endpoint. The `catch` block below still runs first, but the page will navigate away shortly after — don't rely on in-page state surviving a failed login attempt.
+
 ```javascript
 try {
   const response = await base44.auth.loginViaEmailPassword(
@@ -215,7 +220,7 @@ try {
 
 ### Login with OAuth Provider
 
-Supported providers: `'google'` (enabled by default), `'microsoft'`, and `'facebook'`. Enable Microsoft or Facebook in your app's authentication settings before using them.
+Supported providers: `'google'` (enabled by default), `'microsoft'`, `'facebook'`, `'apple'`, and `'sso'`. Enable Microsoft, Facebook, Apple, or an SSO provider in your app's authentication settings before using them. `fromUrl` defaults to `'/'` if omitted.
 
 ```javascript
 // Redirect to Google OAuth
@@ -224,10 +229,16 @@ base44.auth.loginWithProvider('google');
 // Redirect to Google OAuth and return to current page after
 base44.auth.loginWithProvider('google', window.location.href);
 
-// Microsoft or Facebook (enable in app settings first)
+// Microsoft, Facebook, or Apple (enable in app settings first)
 base44.auth.loginWithProvider('microsoft');
 base44.auth.loginWithProvider('facebook', '/dashboard');
+base44.auth.loginWithProvider('apple', '/dashboard');
+
+// Enterprise SSO (set up an SSO provider in app settings first)
+base44.auth.loginWithProvider('sso', '/dashboard');
 ```
+
+> **Note:** `loginWithProvider()` and `redirectToLogin()` require a browser environment and throw/fail if called on the backend. When the app is running inside an iframe, `loginWithProvider()` automatically opens the provider's login page in a centered popup window (instead of a full-page redirect) so OAuth providers that block iframe navigation still work; on success the popup closes and the current window is redirected to `fromUrl` with the token appended.
 
 ### Get Current User
 
@@ -256,11 +267,15 @@ try {
 
 ### Update User Profile
 
+`updateMe()` can update any [custom field](https://docs.base44.com/developers/backend/resources/entities/user-schema#custom-fields) defined on the User entity schema. [Field-level security](https://docs.base44.com/developers/backend/resources/entities/security#field-level-security-fls) `write` rules on custom User fields apply here too — if `data` includes a field the user isn't allowed to write, the call throws a permission error and no fields are updated. Updating `role` requires editor access on the app.
+
+These fields **cannot** be changed with `updateMe()`: `id`, `email`, `full_name`, `created_date`, `updated_date`, `created_by`, and `collaborator_role`.
+
 ```javascript
 try {
   const updatedUser = await base44.auth.updateMe({
-    full_name: "John Doe",
     // Custom schema fields can be updated here
+    bio: "Software developer",
     phone: "+1234567890",
     preferences: { theme: "dark" }
   });
@@ -274,6 +289,8 @@ try {
   } else if (error.status === 401) {
     console.error('Authentication required');
     navigate('/login');
+  } else if (error.status === 403) {
+    console.error('Not allowed to write one of these fields');
   }
 }
 ```
@@ -296,6 +313,15 @@ try {
   console.error('Failed to check authentication:', error.message);
   // On error, treat as not authenticated
 }
+```
+
+### Check for a Token (Synchronous)
+
+`hasToken()` only reports whether an access token is currently set on the client (the one passed to `createClient()` or set via `setToken()`) — it does **not** validate the token with the server. An expired or revoked token still returns `true`. Use it to skip requests that can't succeed for an anonymous visitor (such as `me()`), and use `isAuthenticated()` when you need to confirm the session is actually still valid. A session held only in an HTTP-only cookie isn't visible to the client and returns `false` even though the user is authenticated server-side.
+
+```javascript
+// Skip the user lookup for anonymous visitors
+const user = base44.auth.hasToken() ? await base44.auth.me() : null;
 ```
 
 ### Logout
@@ -516,6 +542,8 @@ try {
 }
 ```
 
+> **Note:** If `me()` gets a `401` and the request was sent with the token currently in local storage, the SDK automatically removes the stored token(s). A subsequent page load won't resend the rejected token, avoiding redirect loops when an app's own `/login` page also calls `me()`.
+
 #### Validation Errors (400/422)
 ```javascript
 try {
@@ -586,20 +614,25 @@ Configure authentication providers in your app dashboard:
 
 **Built-in (All Plans):**
 - **Email/Password** - Default, always enabled
-- **Google** - OAuth authentication
-- **Microsoft** - OAuth authentication
-- **Facebook** - OAuth authentication
+- **Google** - OAuth authentication ([Google OAuth docs](https://developers.google.com/identity/protocols/oauth2))
+- **Microsoft** - OAuth authentication ([Microsoft OAuth docs](https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow))
+- **Facebook** - OAuth authentication ([Facebook Login docs](https://developers.facebook.com/docs/facebook-login))
+- **Apple** - Sign in with Apple ([Apple docs](https://developer.apple.com/sign-in-with-apple/))
 
 **SSO Providers (Elite Plan):**
 - **Okta**
 - **Azure AD**
 - **GitHub**
 
+Regardless of which SSO identity provider is configured, the SDK call is always `loginWithProvider('sso', fromUrl)` — see [Set up SSO](https://docs.base44.com/Setting-up-your-app/Setting-up-SSO).
+
 ### Using OAuth Providers
 
 - **Google** – enabled by default.
 - **Microsoft** – enable in your app's authentication settings before use.
 - **Facebook** – enable in your app's authentication settings before use.
+- **Apple** – enable in your app's authentication settings before use.
+- **SSO** – set up an SSO provider in your app's authentication settings before use.
 
 ```javascript
 // Initiate OAuth login flow
@@ -608,7 +641,10 @@ base44.auth.loginWithProvider('google');
 // Return to specific page after authentication
 base44.auth.loginWithProvider('microsoft', '/dashboard');
 
-// Supported values: 'google', 'microsoft', 'facebook'
+base44.auth.loginWithProvider('apple', '/dashboard');
+base44.auth.loginWithProvider('sso', '/dashboard');
+
+// Supported values: 'google', 'microsoft', 'facebook', 'apple', 'sso'
 ```
 
 ---
@@ -681,7 +717,8 @@ Registration, OTP, login, and password reset requests share one rate limit for e
 ### Token Management
 - JWTs are automatically stored in localStorage by default
 - Token expiration and refresh not exposed in API
-- Call `me()` or `isAuthenticated()` to verify token validity
+- Call `me()` or `isAuthenticated()` to verify token validity against the server
+- Call `hasToken()` for a synchronous, non-network check of whether a token is set (doesn't confirm the token is still valid)
 
 ---
 

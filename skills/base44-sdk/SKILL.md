@@ -140,6 +140,16 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `entities.Task.remove(id)` | `entities.Task.delete(id)` |
 | `entities.Task.onChange(cb)` | `entities.Task.subscribe(cb)` |
 
+### Payments - WRONG vs CORRECT
+
+| ❌ WRONG (hallucinated) | ✅ CORRECT |
+|------------------------|-----------|
+| `stripe.checkout.sessions.create(...)` | `base44.asServiceRole.payments.createCheckout(...)` (backend only) |
+| `payments.charge(...)` / `payments.createPayment(...)` | `base44.asServiceRole.payments.createCheckout(...)` |
+| `payments.createCheckout(...)` (from the frontend) | Only `base44.asServiceRole.payments.createCheckout()` can create a checkout — call it from a backend function and pass the result to `base44.payments.mountCheckout()` |
+| `payments.subscribe(...)` | `base44.asServiceRole.payments.createCheckout({ items: [{ ..., recurring: {...} }] })` creates a subscription; there's no separate `subscribe()` |
+| `payments.getSubscription(id)` | `base44.asServiceRole.payments.listPurchases({ subscription_id })` |
+
 ## SDK Modules
 
 | Module | Purpose | Reference |
@@ -151,6 +161,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `actors` | Realtime rooms over WebSockets (multiplayer, collaboration, presence) | [actors.md](references/actors.md) |
 | `integrations` | AI, email, file uploads, custom APIs | [integrations.md](references/integrations.md) |
 | `aiGateway` | Base44's AI gateway: code agents, images, videos, speech, and structured evaluations (Jev) | [ai-gateway.md](references/ai-gateway.md) |
+| `payments` | Embedded checkout for one-time purchases and subscriptions (Stripe, PayPal, Base44 Payments) | [payments.md](references/payments.md) |
 | `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
 | `appLogs` | Log user activity in app | [app-logs.md](references/app-logs.md) |
 | `users` | Invite users to the app | [users.md](references/users.md) |
@@ -239,6 +250,11 @@ const base44 = createClient({
 **Custom backend logic?**
 - Run server-side code → `functions.invoke()`
 - Need admin access → `base44.asServiceRole.functions.invoke()`
+
+**Payments?**
+- Sell a one-time item or start a subscription → backend `base44.asServiceRole.payments.createCheckout()`, then render it with `base44.payments.mountCheckout()` (embedded) or redirect to `redirect_url` (redirect) (see [payments.md](references/payments.md))
+- Confirm a purchase before granting access → `base44.asServiceRole.payments.listPurchases({ checkout_id })` from a backend function
+- Refund, cancel, pause, or resume → `base44.asServiceRole.payments.refund()` / `cancelSubscription()` / `pauseSubscription()` / `resumeSubscription()`
 
 **Realtime shared session?**
 - Multiplayer, collaborative board/doc, presence, live cursors, in-room chat → `actors.<Name>(roomId).connect()` (see [actors.md](references/actors.md))
@@ -356,8 +372,10 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `analytics` | Yes | Yes |
 | `appLogs` | Yes | Yes |
 | `users` | Yes | Yes |
+| `payments` (checkout/purchases) | Yes | No |
 | `asServiceRole.*` | No | Yes |
 | `asServiceRole.connectors` (app OAuth) | No | Yes |
 | `asServiceRole.sso` | No | Yes |
+| `asServiceRole.payments` (create/refund/manage) | No | Yes |
 
 Backend functions `export default` an async request handler and use `createClientFromRequest(req)` to get a properly authenticated client.
