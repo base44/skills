@@ -1,6 +1,6 @@
 {
   "name": "base44-sandbox",
-  "version": "1.0.0-beta.1",
+  "version": "1.1.0",
   "description": "Develop a Base44 app remotely in Base44's cloud sandbox; conventions only, no deploy/push.",
   "author": {
     "name": "base44",
