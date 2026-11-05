@@ -112,11 +112,21 @@ Start **read-only** to build a mental model before changing anything:
 
 ```
 Using the base44 tools on appId <APP_ID>:
-1. list_directory on the app root (recursive, depth 2)
-2. read_file src/App.jsx and src/pages.config.js
-3. grep for the component I want to change
+1. GET /api/apps/<APP_ID>/agent-profile (execute_api, or with your CLI token)
+   and note its `framework`
+2. list_directory on the app root (recursive, depth 2), then read_file AGENTS.md
+3. read the router: src/routes/ for `tanstack_start`, src/App.jsx for `vite_spa`
+4. grep for the component I want to change
 Summarize the structure before editing.
 ```
+
+> **Keep the app's framework.** It is fixed when the app is created and the
+> editor finds pages only in that framework's layout. In a TanStack Start app
+> every page is a file route in `src/routes/` (`index.jsx` is `/`) and there is
+> no `index.html`, `src/main.jsx`, `src/App.jsx` or `react-router-dom`; in a
+> Vite app pages are routed by React Router in `src/App.jsx`. When you port
+> code written for the other framework, rewrite it into this app's layout
+> instead of replacing the router, or the editor shows no pages and no preview.
 
 > **Cold start:** if the app has no running sandbox, the first tool call
 > transparently brings one up from your last commit — it just takes a bit
@@ -316,7 +326,7 @@ no `config.jsonc` is required.
 | `create_checkpoint` | `base44 sandbox checkpoint` |
 
 ```bash
-npx base44 sandbox read --app-id <APP_ID> src/App.jsx
+npx base44 sandbox read --app-id <APP_ID> AGENTS.md
 ```
 
 `base44 sandbox checkpoint` takes an optional `--name` (message/title) and saves a restore point.
