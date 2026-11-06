@@ -33,7 +33,7 @@ actorRef.connect(options?): Connection
 
 - `options.id` (optional): the connection id, which becomes the actor's `conn.id`. Supply a stable value so a reconnect reuses the same server-side identity; omit for an auto-generated one
 - Returns a `Connection` synchronously — messages you send are buffered until the socket opens
-- **Idempotent per ref**: calling `connect()` again on the *same* ref returns the same connection. But `base44.actors.ChatRoom(id)` mints a **new** ref on every call, so `base44.actors.ChatRoom(id).connect()` opens a **new** socket each time — hold the ref (or the connection) yourself, as the React example does
+- **Idempotent per ref, until closed**: calling `connect()` again on the *same* ref returns the same connection — until that connection's `close()` runs, after which the next `connect()` on that ref opens a fresh one. Separately, `base44.actors.ChatRoom(id)` mints a **new** ref on every call, so `base44.actors.ChatRoom(id).connect()` opens a **new** socket each time — hold the ref (or the connection) yourself, as the React example does
 
 ### `Connection.subscribe`
 
@@ -135,6 +135,8 @@ Persist that id in **`sessionStorage`** (per tab), not `localStorage` — two *l
 
 `base44.cleanup()` closes every live room, so a forgotten `close()` cannot leak a heartbeat timer.
 
+A connection failure the SDK can't self-heal — the room or actor name is rejected outright (bad request, forbidden, not found) — closes the connection for good instead of retrying forever; call `connect()` again yourself to retry. That failure, and any other failed connection attempt, is reported through the `onError` callback passed to `createClient({ onError })` — the same handler used for failed API requests.
+
 ## Instance Ids
 
 The instance id is what separates one room from another.
@@ -145,11 +147,9 @@ The instance id is what separates one room from another.
 
 ## Authentication
 
-Actors use direct connections. The SDK authenticates a connection-token request using the user's existing session, then opens the WebSocket directly to Cloudflare with the returned credentials. You do not mint or pass tokens yourself. Anonymous (logged-out) connections are allowed when the app permits them, and a login or logout is picked up on the next reconnect.
+Actors use direct connections. The SDK authenticates a connection-token request using the user's existing session, then opens the WebSocket directly to Cloudflare with the returned credentials, transparently falling back to the platform's proxy for actors that don't yet support a direct connection. You do not mint or pass tokens yourself. Anonymous (logged-out) connections are allowed when the app permits them, and a login or logout is picked up on the next reconnect.
 
-On the actor, `conn.identity` is the platform-verified principal: `{ type: "authenticated", userId }` or `{ type: "anonymous", anonymousId }`. It survives hibernation. For user attribution and permissions, check for an authenticated identity and use `userId` — never a user id supplied in a message. An anonymous visitor is not a signed-in user.
-
-`conn.id` is client-chosen reconnect bookkeeping. Keep it out of broadcasts, public records, and author fields; use a separate server-assigned participant id for presence. A returning connection id alone must not grant access to another user's state or permissions.
+The `Conn` the actor receives exposes only `conn.id` — there is no verified `userId`/identity field on a connection, and the actor's `this.client` (see [Writing an Actor](#writing-an-actor)) is always anonymous. `conn.id` is client-chosen reconnect bookkeeping, not proof of who is connected: keep it out of broadcasts, public records, and author fields, and use a separate server-assigned participant id for presence. A returning connection id alone must not grant access to another user's state or permissions, and a user id supplied in a message is an unverified client claim, never an authenticated fact.
 
 ## Writing an Actor
 
@@ -171,8 +171,7 @@ export default class ChatRoom extends Actor {
 
   async handleMessage(conn, msg) {
     if (msg?.type !== "message" || typeof msg.text !== "string") return;
-    const authorUserId = conn.identity?.type === "authenticated" ? conn.identity.userId : null;
-    const entry = { authorUserId, text: msg.text.slice(0, 2000) };
+    const entry = { text: msg.text.slice(0, 2000) };
     this.history = [...this.history, entry].slice(-100);
     await this.storage.put("history", this.history);          // survives hibernation
     this.broadcast({ type: "message", ...entry });
@@ -184,9 +183,9 @@ export default class ChatRoom extends Actor {
 }
 ```
 
-This example attributes signed-in authors with verified `userId`; guest messages have `authorUserId: null`. Connection IDs never enter the chat history or presence messages.
+`conn` carries no verified user identity, only `conn.id` (see [Authentication](#authentication)) — this example doesn't attribute messages to a user. If your app needs a display name, have the client include one in the message and treat it as an unverified, client-supplied label rather than an authenticated fact. Connection IDs never enter the chat history or presence messages.
 
-Instance fields are lost when the room hibernates: persist in `this.storage` and rehydrate in `handleStart`. `this.broadcast()` sends room-wide state; `conn.send()` sends to one client. `this.client` uses the **anonymous** role, while `this.client.asServiceRole` provides admin-level access for validated, room-owned work. Persist canonical room results from the actor through `asServiceRole`, using an explicit field from authenticated `conn.identity.userId` when attribution is needed. Keep frontend writes limited to user-owned records.
+Instance fields are lost when the room hibernates: persist in `this.storage` and rehydrate in `handleStart`. `this.broadcast()` sends room-wide state; `conn.send()` sends to one client. `this.client` is always **anonymous** — entity access is RLS-gated the same as a logged-out visitor, with no service-role escalation available inside an actor. Writes the actor makes through `this.client` must satisfy the same access rules a logged-out visitor would.
 
 For the complete authoring contract — naming, lifecycle handlers, storage and hibernation, scheduled wakes, rooms and discovery, deployment — see [actors-create.md](../../base44-cli/references/actors-create.md) in base44-cli.
 
@@ -211,8 +210,8 @@ declare module "@base44/sdk" {
   interface ActorRegistry {
     ChatRoom: {
       toClient:
-        | { type: "history"; messages: { authorUserId: string | null; text: string }[] }
-        | { type: "message"; authorUserId: string | null; text: string }
+        | { type: "history"; messages: { text: string }[] }
+        | { type: "message"; text: string }
         | { type: "joined" | "left" };
       toServer: { type: "message"; text: string };
     };
@@ -307,15 +306,10 @@ interface ActorClient<N extends string = string> {
 Server-side types (`Actor`, `Conn`, `Storage`) come from the actor base class:
 
 ```typescript
-type ActorConnectionIdentity =
-  | Readonly<{ type: "authenticated"; userId: string }>
-  | Readonly<{ type: "anonymous"; anonymousId: string }>;
-
 interface Conn<Send = unknown> {
-  /** Unique per-connection id (one per socket/tab). */
+  /** Unique per-connection id (one per socket/tab), the same value the
+   *  client receives from `subscribe()`. */
   id: string;
-  /** Platform-verified principal, preserved across hibernation. */
-  identity?: ActorConnectionIdentity;
   send(data: Send): void;
   reject(code: number, reason: string): void;
 }
@@ -342,7 +336,7 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   protected getConnections(): Conn<Outgoing>[];
   protected get instanceId(): string;
   protected get storage(): Storage;
-  /** Anonymous client with an asServiceRole client for validated, room-owned work. */
+  /** Anonymous client, RLS-gated like a logged-out visitor — no user or service auth. */
   protected get client(): Base44Client;
   /** Override to opt into the managed ticker; must be cheap and side-effect free. */
   shouldTick?(): boolean;
@@ -364,3 +358,4 @@ It only *runs* if you opt into the managed ticker by overriding `shouldTick()`: 
 - Messages are JSON in both directions; `type` values beginning with `__` are reserved by the platform
 - Actors are frontend-facing: the client connects from the browser, and the actor itself *is* the backend half
 - Actors do not run under `base44 dev` — verify against a deployed actor
+- In the editor, connecting to an actor targets its **draft** script; a deployed app targets the **published** one — the same draft/published semantics as `functions.invoke()`

@@ -436,8 +436,9 @@ export default async function (req) {
 
 ## Models
 
-- **Chat:** any model available through `InvokeLLM`; `automatic` by default (see the
-  code-agent rules above).
+- **Chat:** any model available through `InvokeLLM`; `automatic` by default, or pin one
+  such as `claude_sonnet_4_6`, `gpt_5_5`, or `gemini_3_1_pro` (see the code-agent rules
+  above).
 - **Images:** `automatic` or a pinned image model — see [Generate and edit images](#generate-and-edit-images).
 - **Videos:** always a specific model — see [Generate videos](#generate-videos).
 - **Speech:** `automatic` is a fixed default; use the speech catalog for model-specific controls — see [Generate speech](#generate-speech).

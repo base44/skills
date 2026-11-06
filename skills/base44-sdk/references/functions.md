@@ -19,6 +19,7 @@ base44.functions.invoke(functionName, data?): Promise<AxiosResponse>
 
 - `functionName`: Name of the backend function
 - `data`: Optional object of parameters (sent as JSON, or multipart if contains File objects)
+- **`data` must be an object (or `FormData`), not a string.** Passing a string throws `Function <name> must receive an object with named parameters, received: <value>` before any request is sent.
 - **Returns the RAW axios response** — the JSON your function returned lives on **`.data`**, not on the top-level object. The resolved value is `{ data, status, headers, … }`.
 - **Throws on a non-2xx response.** The error body is at `err.response.data`.
 
@@ -43,8 +44,9 @@ base44.functions.fetch(path, init?): Promise<Response>
 
 Low-level method that performs a direct HTTP request to a backend function path and returns the native `Response` object. Use when you need streaming responses, custom HTTP methods, or raw response access.
 
-- `path`: Function path (e.g., `/streaming_demo` or `/my-function/endpoint`)
+- `path`: Function path (e.g., `/streaming_demo` or `/my-function/endpoint`). Leading slash is optional — `chat` and `/chat` are equivalent.
 - `init`: Optional native fetch options (`RequestInit`)
+- **Auth headers are merged in automatically** — you do not need to set `Authorization` or similar headers yourself. Any header you pass in `init.headers` overrides the automatic one for that key.
 - Returns: Native `Response` object
 
 ## Invoking Functions
@@ -287,6 +289,7 @@ type FunctionName = keyof FunctionNameRegistry extends never ? string : keyof Fu
 
 /**
  * Options for functions.fetch(). Uses native fetch options directly.
+ * Auth headers are merged in automatically; you do not need to set them.
  */
 type FunctionsFetchInit = RequestInit;
 
@@ -295,12 +298,17 @@ interface FunctionsModule {
   /**
    * Invokes a custom backend function by name.
    *
+   * Sends a POST request to a custom backend function deployed to the app.
    * If any parameter is a File object, the request will automatically be
    * sent as multipart/form-data. Otherwise, it will be sent as JSON.
+   * `data` must be a plain object (or FormData) — passing a string throws.
+   *
+   * For streaming responses, non-POST methods, or raw response access, use fetch() instead.
    *
    * @param functionName - The name of the function to invoke.
    * @param data - Optional object containing named parameters for the function.
-   * @returns Promise resolving to the function's response.
+   * @returns Promise resolving to the raw axios response. The function's own
+   * returned data is on the `.data` property.
    */
   invoke(functionName: FunctionName, data?: Record<string, any>): Promise<any>;
 
@@ -308,9 +316,10 @@ interface FunctionsModule {
    * Performs a direct HTTP request to a backend function path and returns the native Response.
    *
    * Use for streaming responses (SSE, chunked text), custom HTTP methods,
-   * or when you need raw access to the response.
+   * or when you need raw access to the response. Auth headers are merged in
+   * automatically; headers passed in `init` take precedence.
    *
-   * @param path - Function path, e.g. `/streaming_demo` or `/my-function/endpoint`
+   * @param path - Function path, e.g. `/streaming_demo` or `/my-function/endpoint`. Leading slash is optional.
    * @param init - Optional native fetch options.
    * @returns Promise resolving to a native fetch Response.
    */

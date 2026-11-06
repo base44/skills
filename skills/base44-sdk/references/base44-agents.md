@@ -9,7 +9,7 @@ AI agent conversations and messages via `base44.agents`.
 ## Contents
 - [Concepts](#concepts)
 - [Methods](#methods)
-- [Examples](#examples) (Create, Get Conversations, List, Subscribe, Send Message, WhatsApp)
+- [Examples](#examples) (Create, Get Conversations, List, Subscribe, Send Message, WhatsApp, Telegram)
 - [Message Structure](#message-structure)
 - [Conversation Structure](#conversation-structure)
 - [Common Patterns](#common-patterns)
@@ -30,6 +30,7 @@ AI agent conversations and messages via `base44.agents`.
 | `subscribeToConversation(id, onUpdate?)` | `() => void` | Realtime updates via WebSocket; tool call data truncated (returns unsubscribe function) |
 | `addMessage(conversation, message)` | `Promise<Message>` | Send a message |
 | `getWhatsAppConnectURL(agentName)` | `string` | Get WhatsApp connection URL for agent |
+| `getTelegramConnectURL(agentName)` | `string` | Get Telegram connection URL for agent |
 
 ## Examples
 
@@ -125,6 +126,15 @@ const whatsappUrl = base44.agents.getWhatsAppConnectURL("support-agent");
 console.log(whatsappUrl);
 ```
 
+### Get Telegram Connection URL
+
+```javascript
+const telegramUrl = base44.agents.getTelegramConnectURL("support-agent");
+// User opens this URL and is redirected to the agent's Telegram bot with an
+// activation code that securely links their account
+console.log(telegramUrl);
+```
+
 ## Message Structure
 
 ```javascript
@@ -136,14 +146,16 @@ console.log(whatsappUrl);
   
   // Optional fields
   reasoning: {
-    content: "Agent's reasoning process",
-    timing: 1500
+    start_date: "2024-01-15T10:29:58Z",
+    end_date: "2024-01-15T10:30:00Z",
+    content: "Agent's reasoning process"
   },
   tool_calls: [{
+    id: "call-abc123",
     name: "search",
-    arguments: { query: "weather" },
-    result: { ... },
-    status: "success"
+    arguments_string: '{"query":"weather"}', // JSON-encoded string, not an object
+    status: "success", // "running" | "success" | "error" | "stopped" | "waiting_for_user_input"
+    results: "..." // string, not an object
   }],
   file_urls: ["https://..."],
   usage: {
@@ -270,6 +282,8 @@ interface AgentMessage {
   checkpoint_id?: string;
   /** Metadata about when and by whom the message was created. */
   metadata?: AgentMessageMetadata;
+  /** Additional custom parameters for the message. */
+  additional_message_params?: Record<string, any>;
 }
 ```
 
@@ -295,7 +309,7 @@ interface AgentMessageToolCall {
   /** Arguments passed to the tool as JSON string. */
   arguments_string: string;
   /** Status of the tool call. */
-  status: "running" | "success" | "error" | "stopped";
+  status: "running" | "success" | "error" | "stopped" | "waiting_for_user_input";
   /** Results from the tool call. */
   results?: string;
 }
@@ -350,6 +364,8 @@ interface ModelFilterParams {
   q?: Record<string, any>;
   /** Sort parameter (e.g., "-created_date" for descending). */
   sort?: string | null;
+  /** Alternative sort parameter. Use either `sort` or `sort_by`. */
+  sort_by?: string | null;
   /** Maximum number of results to return. */
   limit?: number | null;
   /** Number of results to skip for pagination. */
@@ -384,5 +400,8 @@ interface AgentsModule {
 
   /** Gets WhatsApp connection URL for an agent. */
   getWhatsAppConnectURL(agentName: AgentName): string;
+
+  /** Gets Telegram connection URL for an agent. */
+  getTelegramConnectURL(agentName: AgentName): string;
 }
 ```

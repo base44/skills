@@ -154,8 +154,12 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
 | `appLogs` | Log user activity in app | [app-logs.md](references/app-logs.md) |
 | `users` | Invite users to the app | [users.md](references/users.md) |
+| `app` | Read the app's own public visibility settings | [app.md](references/app.md) |
+| `payments` / `asServiceRole.payments` | Accept one-time payments and subscriptions via Stripe/PayPal/Base44 Payments | [payments.md](references/payments.md) |
+| `connectors` | Per-user OAuth connections (frontend) | [connectors.md](references/connectors.md) |
 | `asServiceRole.connectors` | App-scoped OAuth tokens (service role only) | [connectors.md](references/connectors.md) |
 | `asServiceRole.sso` | SSO token generation (service role only) | [sso.md](references/sso.md) |
+| `asServiceRole.browser` | Remote CDP browser sessions for backend automation (service role only) | [browser.md](references/browser.md) |
 
 For client setup and authentication modes, see [client.md](references/client.md).
 
@@ -248,11 +252,21 @@ const base44 = createClient({
 - Send emails → `integrations.Core.SendEmail()`
 - Upload files → `integrations.Core.UploadFile()`
 - Custom APIs → `integrations.custom.call()`
-- App-scoped OAuth (app builder's account) → `asServiceRole.connectors.getConnection()` (backend only)
+- App-scoped OAuth (app builder's account, shared by all users) → `asServiceRole.connectors.getConnection()` (backend only)
+- Per-user OAuth (each app user connects their own account) → `connectors.connectAppUser()` (frontend) + `asServiceRole.connectors.getCurrentAppUserConnection()` (backend)
+- Backend browser automation (Playwright/Puppeteer over CDP) → `asServiceRole.browser.getSession()` (backend only, see [browser.md](references/browser.md))
+
+**Payments?**
+- Accept one-time payments or subscriptions → create a checkout with `asServiceRole.payments.createCheckout()` (backend), then redirect or mount it with `payments.mountCheckout()` (frontend)
+- Confirm a purchase before granting access → `asServiceRole.payments.listPurchases()` (backend) — never trust frontend-only checkout callbacks
+- Refund or manage a subscription → `asServiceRole.payments.refund()` / `cancelSubscription()` / `pauseSubscription()` / `resumeSubscription()` (backend only, see [payments.md](references/payments.md))
 
 **Tracking and analytics?**
 - Track custom events → `analytics.track()`
 - Log page views/activity → `appLogs.logUserInApp()`
+
+**App visibility?**
+- Check whether the current visitor can access the app, and redirect to login if not → `app.getPublicSettings()` (see [app.md](references/app.md))
 
 ## Common Patterns
 
@@ -330,7 +344,7 @@ export default class ChatRoom extends Actor {
 
 ### Service Role Access
 
-Use `asServiceRole` in backend functions for admin-level operations. Actors expose `this.client.asServiceRole` for validated, room-owned work such as persisting canonical results; use verified `conn.identity.userId` from an authenticated connection for explicit user attribution. See [actors.md](references/actors.md).
+Use `asServiceRole` in backend functions for admin-level operations. Actors are different: `this.client` inside an actor is always **anonymous** (RLS-gated like a logged-out visitor, no service-role escalation), and `conn` carries no verified user identity — only `conn.id`, which is client-chosen reconnect bookkeeping, not proof of who is connected. See [actors.md](references/actors.md).
 
 ```javascript
 // User mode - respects permissions
@@ -356,8 +370,13 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `analytics` | Yes | Yes |
 | `appLogs` | Yes | Yes |
 | `users` | Yes | Yes |
+| `app` | Yes | Yes |
+| `payments` | Yes (`mountCheckout`/`preloadCheckout` require a browser) | Yes |
+| `connectors` (per-user OAuth) | Yes | Yes |
 | `asServiceRole.*` | No | Yes |
 | `asServiceRole.connectors` (app OAuth) | No | Yes |
 | `asServiceRole.sso` | No | Yes |
+| `asServiceRole.browser` | No | Yes |
+| `asServiceRole.payments` | No | Yes |
 
 Backend functions `export default` an async request handler and use `createClientFromRequest(req)` to get a properly authenticated client.
