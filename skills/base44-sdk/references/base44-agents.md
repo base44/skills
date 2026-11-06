@@ -47,7 +47,7 @@ const conversation = await base44.agents.createConversation({
 console.log(conversation.id);
 ```
 
-### Get All Conversations
+### Get the Current User's Conversations
 
 ```javascript
 const conversations = await base44.agents.getConversations();
@@ -364,7 +364,7 @@ interface ModelFilterParams {
 ```typescript
 /** Agents module for managing AI agent conversations. */
 interface AgentsModule {
-  /** Gets all conversations from all agents in the app. */
+  /** Gets the current user's conversations with all agents in the app. Conversations that other users started aren't included. */
   getConversations(): Promise<AgentConversation[]>;
 
   /** Gets a specific conversation by ID. Returns complete stored conversation including full tool call results. */
