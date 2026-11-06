@@ -51,6 +51,11 @@ Apps that restrict Core integrations (the default for new apps) also block front
 
 `headers` requires `@base44/sdk` 0.8.52+ and `provider` requires 0.8.50+.
 
+Any `provider` other than `"openai"` or `"typesafe"` throws a client-side
+`Unsupported AI Gateway provider: <value>` error before any request is made —
+only relevant if you build the options object dynamically rather than relying on
+TypeScript's `"openai" | "typesafe"` union to catch it.
+
 ## Rules for every gateway call
 
 - **Backend function only** (`createClientFromRequest(req)`). All other backend-function

@@ -30,6 +30,12 @@ const response = await base44.integrations.Core.InvokeLLM({
   prompt: "Summarize this text: ..."
 });
 
+// Override the app-level model for this call
+const response = await base44.integrations.Core.InvokeLLM({
+  prompt: "Write a haiku about coding.",
+  model: "claude_opus_5"
+});
+
 // With internet context (uses Google Search, Maps, News)
 const response = await base44.integrations.Core.InvokeLLM({
   prompt: "What's the current weather in NYC?",
@@ -59,22 +65,35 @@ const response = await base44.integrations.Core.InvokeLLM({
 
 **Parameters:**
 - `prompt` (string, required): The prompt text to send to the model
-- `add_context_from_internet` (boolean, optional): If true, uses Google Search/Maps/News for real-time context
+- `model` (string, optional): Override the app-level model setting for this specific call. One of: `gemini_3_8_flash`, `gpt_6_luna`, `claude-sonnet-5`, `claude_opus_5_5`, `gpt_6_sol`, `gpt_6_astra`, `claude_fable_5_1`, `glm_5_2`, `gemini_3_1_pro`, `gpt_5_4`, `claude_sonnet_4_6`, `claude_opus_4_6`, `claude_opus_4_7`, `claude_opus_4_8`, `claude_opus_5`, `gpt_5_6_terra`, `gpt_5_6_sol`, `gpt_5_6_luna`
+- `add_context_from_internet` (boolean, optional, default `false`): If true, uses Google Search/Maps/News for real-time context
 - `response_json_schema` (object, optional): JSON schema for structured output
-- `file_urls` (string[], optional): URLs of uploaded files for context
+- `file_urls` (string[], optional): URLs of uploaded files for context. Do not combine with `add_context_from_internet`.
 
 > `InvokeLLM` is a **single call with no tools**. Don't chain it to simulate an agent loop — for a tool-using agent, build a **code agent** on the AI gateway. See [ai-gateway.md](ai-gateway.md).
 
 ### GenerateImage
 
-Create AI-generated images from text prompts.
+Create AI-generated images from text prompts, optionally guided by reference images. Images are generated as PNG files at approximately 1024px on the shorter side (exact dimensions vary by aspect ratio). Prompts that violate the AI provider's content policy are refused.
 
 ```javascript
 const { url } = await base44.integrations.Core.GenerateImage({
   prompt: "A serene mountain landscape with a lake"
 });
 console.log(url); // https://...generated_image.png
+
+// Edit an existing image / use reference images
+const { url: editedUrl } = await base44.integrations.Core.GenerateImage({
+  prompt: "Replace the background with a sunset beach",
+  existing_image_urls: [productPhotoUrl]
+});
 ```
+
+**Parameters:**
+- `prompt` (string, required): Description of the image to generate. When `existing_image_urls` is passed, describe what to do with the reference images instead.
+- `existing_image_urls` (string[], optional): URLs of images to use as references (e.g. to edit an existing image, match a style, or add visual context). Images that can't be read are skipped; if none can be read, the request fails.
+
+> To choose the model, aspect ratio, resolution, or quality, use the AI Gateway image endpoints instead of `GenerateImage`. See [ai-gateway.md](ai-gateway.md).
 
 ### SendEmail
 
@@ -84,7 +103,7 @@ Send emails to registered users. Every app gets this integration (no plan upgrad
 await base44.integrations.Core.SendEmail({
   to: "user@example.com",
   subject: "Welcome!",
-  body: "<h1>Hello</h1><p>Welcome to our app.</p>",
+  body: "Hello, welcome to our app.",
   from_name: "My App"  // optional, defaults to app name
 });
 ```
@@ -92,8 +111,8 @@ await base44.integrations.Core.SendEmail({
 **Parameters:**
 - `to` (string, required): Recipient email address
 - `subject` (string, required): Email subject line
-- `body` (string, required): Plain text or HTML email body
-- `from_name` (string, optional): Sender name displayed to recipient
+- `body` (string, required): Plain text email body content
+- `from_name` (string, optional): Sender name displayed to recipient (defaults to app name if omitted)
 
 **Limitations:**
 - 1 credit per email (2 credits with custom domain)
@@ -219,6 +238,11 @@ const response = await base44.integrations.custom.call(
 }
 ```
 
+### Errors
+
+- Throws a plain `Error` if `slug` or `operationId` is missing/empty.
+- Throws a `Base44Error` if the integration/operation isn't found (404), the external API call fails (502), or the request times out (504).
+
 ## Requirements
 
 - **Core integrations**: Available on all plans
@@ -233,18 +257,24 @@ const response = await base44.integrations.custom.call(
 interface InvokeLLMParams {
   /** The prompt text to send to the model. */
   prompt: string;
-  /** If true, uses Google Search/Maps/News for real-time context. */
+  /** Optionally override the app-level model setting for this call.
+   * One of: "gemini_3_8_flash" | "gpt_6_luna" | "claude-sonnet-5" | "claude_opus_5_5" | "gpt_6_sol" | "gpt_6_astra" | "claude_fable_5_1" | "glm_5_2" | "gemini_3_1_pro" | "gpt_5_4" | "claude_sonnet_4_6" | "claude_opus_4_6" | "claude_opus_4_7" | "claude_opus_4_8" | "claude_opus_5" | "gpt_5_6_terra" | "gpt_5_6_sol" | "gpt_5_6_luna"
+   */
+  model?: string;
+  /** If true, uses Google Search/Maps/News for real-time context. Default: false. */
   add_context_from_internet?: boolean;
   /** JSON schema for structured output. If provided, returns object instead of string. */
   response_json_schema?: object;
-  /** File URLs (from UploadFile) to provide as context. */
+  /** File URLs (from UploadFile) to provide as context. Do not combine with add_context_from_internet. */
   file_urls?: string[];
 }
 
 /** Parameters for the GenerateImage function. */
 interface GenerateImageParams {
-  /** Description of the image to generate. */
+  /** Description of the image to generate. When existing_image_urls is passed, describe what to do with the reference images instead. */
   prompt: string;
+  /** URLs of images to use as references (e.g. to edit an image or match a style). Unreadable images are skipped. */
+  existing_image_urls?: string[];
 }
 
 /** Result from GenerateImage. */
@@ -271,7 +301,7 @@ interface SendEmailParams {
   to: string;
   /** Email subject line. */
   subject: string;
-  /** Plain text or HTML email body. */
+  /** Plain text email body content. */
   body: string;
   /** Sender name (defaults to app name). */
   from_name?: string;

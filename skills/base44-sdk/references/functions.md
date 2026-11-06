@@ -17,6 +17,8 @@ Invoke custom backend functions via `base44.functions`.
 base44.functions.invoke(functionName, data?): Promise<AxiosResponse>
 ```
 
+Sends a POST request to a custom backend function deployed to the app. The function receives `data` as named parameters and returns the result. For streaming responses, non-POST methods, or raw response access, use `fetch()` instead.
+
 - `functionName`: Name of the backend function
 - `data`: Optional object of parameters (sent as JSON, or multipart if contains File objects)
 - **Returns the RAW axios response** — the JSON your function returned lives on **`.data`**, not on the top-level object. The resolved value is `{ data, status, headers, … }`.
@@ -41,9 +43,9 @@ try {
 base44.functions.fetch(path, init?): Promise<Response>
 ```
 
-Low-level method that performs a direct HTTP request to a backend function path and returns the native `Response` object. Use when you need streaming responses, custom HTTP methods, or raw response access.
+Low-level method that performs a direct HTTP request to a backend function path and returns the native `Response` object. Use when you need low-level control that `invoke()` doesn't provide, such as streaming responses (SSE, chunked text, NDJSON), custom HTTP methods (PUT, PATCH, DELETE), or raw response access (status codes, headers, binary bodies).
 
-- `path`: Function path (e.g., `/streaming_demo` or `/my-function/endpoint`)
+- `path`: Function path. Leading slash is optional — `/chat` and `chat` are equivalent (e.g., `/streaming_demo` or `/my-function/endpoint`)
 - `init`: Optional native fetch options (`RequestInit`)
 - Returns: Native `Response` object
 
@@ -261,10 +263,13 @@ export default async function (req) {
 
 ## Authentication Modes
 
+This module is available on the client in all authentication modes:
+
 | Mode | Context | Permissions |
 |------|---------|-------------|
-| User | `base44.functions.invoke()` | Runs under calling user's permissions |
-| Service Role | `base44.asServiceRole.functions.invoke()` | Admin-level access |
+| Anonymous | `base44.functions.invoke()` (no logged-in user) | Runs with no authentication |
+| User | `base44.functions.invoke()` (logged-in user) | Runs under the calling user's permissions |
+| Service Role | `base44.asServiceRole.functions.invoke()` | Admin-level access, for backend code that needs elevated permissions |
 
 Inside the function, use `createClientFromRequest(req)` to get a client that inherits the caller's auth context.
 
@@ -290,29 +295,46 @@ type FunctionName = keyof FunctionNameRegistry extends never ? string : keyof Fu
  */
 type FunctionsFetchInit = RequestInit;
 
-/** Functions module for invoking custom backend functions. */
+/**
+ * Functions module for invoking custom backend functions.
+ *
+ * Available with a client in all authentication modes:
+ * - Anonymous or User authentication (`base44.functions`): runs with the current user's permissions (or no auth, if anonymous).
+ * - Service role authentication (`base44.asServiceRole.functions`): runs with elevated, admin-level permissions.
+ */
 interface FunctionsModule {
   /**
    * Invokes a custom backend function by name.
    *
-   * If any parameter is a File object, the request will automatically be
-   * sent as multipart/form-data. Otherwise, it will be sent as JSON.
+   * Sends a POST request to a custom backend function deployed to the app.
+   * The function receives the provided data as named parameters and returns
+   * the result. If any parameter is a `File` object, the request will automatically be
+   * sent as `multipart/form-data`. Otherwise, it will be sent as JSON.
+   *
+   * For streaming responses, non-POST methods, or raw response access, use `fetch()` instead.
    *
    * @param functionName - The name of the function to invoke.
-   * @param data - Optional object containing named parameters for the function.
-   * @returns Promise resolving to the function's response.
+   * @param data - An object containing named parameters for the function.
+   * @returns Promise resolving to the function's response. The `data` property contains
+   *          the data returned by the function, if there is any.
+   *          (Note: in the current SDK implementation, this resolves to the raw axios
+   *          response — see the `invoke()` section above.)
    */
   invoke(functionName: FunctionName, data?: Record<string, any>): Promise<any>;
 
   /**
-   * Performs a direct HTTP request to a backend function path and returns the native Response.
+   * Performs a direct HTTP request to a backend function path and returns the native `Response`.
    *
-   * Use for streaming responses (SSE, chunked text), custom HTTP methods,
-   * or when you need raw access to the response.
+   * Use `fetch()` when you need low-level control that `invoke()` doesn't provide, such as:
+   * - Streaming responses, like SSE, chunked text, or NDJSON
+   * - Custom HTTP methods, like PUT, PATCH, or DELETE
+   * - Raw response access, including status codes, headers, and binary bodies
    *
-   * @param path - Function path, e.g. `/streaming_demo` or `/my-function/endpoint`
-   * @param init - Optional native fetch options.
-   * @returns Promise resolving to a native fetch Response.
+   * @param path - Function path. Leading slash is optional, so `/chat` and `chat` are
+   *               equivalent. For example, `/streaming_demo` or `reports/export`.
+   * @param init - Optional `RequestInit` options such as `method`, `headers`, `body`, and
+   *               `signal`. Auth headers are added automatically.
+   * @returns Promise resolving to a native `Response`.
    */
   fetch(path: string, init?: FunctionsFetchInit): Promise<Response>;
 }

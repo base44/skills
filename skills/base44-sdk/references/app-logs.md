@@ -33,6 +33,8 @@ await base44.appLogs.logUserInApp("export-button-click");
 
 The page name doesn't have to be an actual page - it can be any string you want to track.
 
+`logUserInApp` follows the same consent/opt-out rules as `base44.analytics` (a page visit feeds App Analytics). If analytics is disabled or the visitor hasn't granted consent, the call resolves immediately as a no-op and nothing is sent to the server.
+
 ## Use Cases
 
 ### Track Page Views in React
@@ -90,6 +92,7 @@ const weekStats = await base44.appLogs.getStats({
 - Logs appear in the Analytics page of your app dashboard
 - App logs track page-level and feature-level activity
 - Use `analytics.track()` for custom events with properties, `appLogs.logUserInApp()` for simple page/feature tracking
+- `fetchLogs` and `getStats` are marked `@internal` in the SDK's type definitions - they exist on `base44.appLogs` and work as documented, but they're not part of the module's primary public-facing surface (no typed params/filters are exposed; both just pass through an arbitrary `Record<string, any>` as query params). Prefer `logUserInApp` for app code; treat `fetchLogs`/`getStats` as subject to change.
 
 ## Type Definitions
 

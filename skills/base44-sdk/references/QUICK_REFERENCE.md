@@ -94,6 +94,24 @@ call(slug, operationId, {payload?, pathParams?, queryParams?}?) → Promise<{suc
 
 ---
 
+## Payments (`base44.payments.*`, `base44.asServiceRole.payments.*`)
+
+```
+preloadCheckout(provider: 'paypal' | 'stripe') → Promise<void>                        # frontend, browser only
+mountCheckout(element, checkout, options?) → Promise<CheckoutMount>                   # frontend, browser only
+completeCheckout(checkoutId) → Promise<{checkout_id, status}>                         # both modes
+listPurchases(params?) → Promise<{items, next_cursor}>                                # both modes; service role takes buyer_email, sees metadata/shipping_address
+createCheckout(params) → Promise<{checkout_id, redirect_url | embedded, ...}>          # service role only
+refund(params) → Promise<RefundResult>                                                # service role only
+cancelSubscription(subscriptionId, options?) → Promise<SubscriptionResult>            # service role only
+pauseSubscription(subscriptionId) → Promise<SubscriptionResult>                       # service role only
+resumeSubscription(subscriptionId) → Promise<SubscriptionResult>                      # service role only
+```
+
+**Flow:** only the service role can create a checkout. A backend function calls `createCheckout()` and returns the result; the page passes it to `base44.payments.mountCheckout()` (embedded) or redirects to `redirect_url` (redirect). See [payments.md](payments.md).
+
+---
+
 ## Analytics (`base44.analytics.*`)
 
 ```
@@ -156,6 +174,7 @@ base44.asServiceRole.functions.invoke('name', data)
 base44.asServiceRole.connectors.getConnection('slack')
 base44.asServiceRole.sso.getAccessToken(userId)
 base44.asServiceRole.sso.getIdToken(userId) // current app user only; use for the email claim
+base44.asServiceRole.payments.createCheckout({ items, success_path })
 ```
 
 ---
