@@ -55,5 +55,9 @@ jobs:
             The label is the discriminator that downstream automation (e.g. the Slack notifier) uses to
             recognize skill-sync PRs, so it must be attached at creation time.
             PR title: "Update base44-sdk skill to ${{ github.event.client_payload.version || inputs.sdk_version || 'latest' }} {human-readable-time}"
+            Start the PR body with this line, so reviewers see what triggered the sync:
+            `Triggered by base44-sdk release [${{ github.event.client_payload.version || inputs.sdk_version || 'latest' }}](https://github.com/base44/javascript-sdk/releases/tag/${{ github.event.client_payload.version || inputs.sdk_version || 'latest' }})`
+            If the version is not a release tag (e.g. `main` or `latest`), write
+            `Triggered manually against base44-sdk ${{ github.event.client_payload.version || inputs.sdk_version || 'latest' }}` instead.
 
             ${{ inputs.additional_instructions && format('Additional instructions: {0}', inputs.additional_instructions) || '' }}
