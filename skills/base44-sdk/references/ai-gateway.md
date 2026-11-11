@@ -12,7 +12,7 @@ library. Two providers sit behind it:
 
 | Provider | Endpoints | Client |
 |----------|-----------|--------|
-| `openai` (default) | Chat Completions, `/images/generations`, `/images/edits`, `/videos`, `/audio/speech` | Any OpenAI-compatible client (Vercel AI SDK, Mastra, the `openai` SDK, …) |
+| `openai` (default) | Chat Completions, `/images/generations`, `/images/edits`, `/videos`, `/audio/speech` | Any OpenAI-compatible client (the `openai` SDK, Vercel AI SDK, TanStack AI, …) |
 | `typesafe` | Structured evaluations with the `jev` model | `@ai-sdk/typesafe-ai` + `ai`'s `experimental_evaluate` |
 
 Every call is metered against your app's credit quota, the same quota
@@ -49,8 +49,6 @@ Apps that restrict Core integrations (the default for new apps) also block front
 - **`base44.aiGateway`** — the signed-in app user's token. Accepted only on apps shared
   privately or with the workspace.
 
-`headers` requires `@base44/sdk` 0.8.52+ and `provider` requires 0.8.50+.
-
 ## Rules for every gateway call
 
 - **Backend function only** (`createClientFromRequest(req)`). All other backend-function
@@ -62,9 +60,9 @@ Apps that restrict Core integrations (the default for new apps) also block front
 - **Decide cost-driving parameters in code** (model, image count, video duration,
   resolution). Don't pass a browser-supplied request straight to the gateway, or any
   signed-in user can pick the most expensive options.
-- **Always pass `headers`** to the client (`defaultHeaders` for the `openai` SDK, `headers`
-  for Vercel AI SDK providers). On a client from `createClientFromRequest()` it carries the
-  signed `Base44-State` that a workspace IP allowlist requires; without it those
+- **Always pass `headers`** to the client (`defaultHeaders` for the `openai` SDK and TanStack
+  AI, `headers` for Vercel AI SDK providers). On a client from `createClientFromRequest()` it
+  carries the signed `Base44-State` that a workspace IP allowlist requires; without it those
   workspaces reject the call.
 - **Set `maxRetries: 0` on image, video, speech, and evaluation calls.** Client retries replay
   billed requests.
@@ -462,7 +460,7 @@ interface AiGatewayConnection {
   token: string;
   /**
    * Extra headers to send with every gateway request (`defaultHeaders` for the `openai`
-   * SDK, `headers` for Vercel AI SDK providers). On a client from
+   * SDK and TanStack AI, `headers` for Vercel AI SDK providers). On a client from
    * `createClientFromRequest()` this carries the signed `Base44-State` a workspace IP
    * allowlist requires; otherwise it's empty.
    */

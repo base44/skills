@@ -59,15 +59,16 @@ const response = await base44.integrations.Core.InvokeLLM({
 
 **Parameters:**
 - `prompt` (string, required): The prompt text to send to the model
-- `add_context_from_internet` (boolean, optional): If true, uses Google Search/Maps/News for real-time context
+- `model` (string, optional): Override the app-level model setting for this call. One of: `gemini_3_8_flash`, `gpt_6_luna`, `claude-sonnet-5`, `claude_opus_5_5`, `gpt_6_sol`, `gpt_6_astra`, `claude_fable_5_1`, `glm_5_2`, `gemini_3_1_pro`, `gpt_5_4`, `claude_sonnet_4_6`, `claude_opus_4_6`, `claude_opus_4_7`, `claude_opus_4_8`, `claude_opus_5`, `gpt_5_6_terra`, `gpt_5_6_sol`, `gpt_5_6_luna`
+- `add_context_from_internet` (boolean, optional): If true, uses Google Search/Maps/News for real-time context. Default `false`
 - `response_json_schema` (object, optional): JSON schema for structured output
-- `file_urls` (string[], optional): URLs of uploaded files for context
+- `file_urls` (string[], optional): URLs of uploaded files for context. Don't use together with `add_context_from_internet`
 
 > `InvokeLLM` is a **single call with no tools**. Don't chain it to simulate an agent loop — for a tool-using agent, build a **code agent** on the AI gateway. See [ai-gateway.md](ai-gateway.md).
 
 ### GenerateImage
 
-Create AI-generated images from text prompts.
+Create AI-generated images from text prompts, optionally using existing images as references.
 
 ```javascript
 const { url } = await base44.integrations.Core.GenerateImage({
@@ -76,24 +77,55 @@ const { url } = await base44.integrations.Core.GenerateImage({
 console.log(url); // https://...generated_image.png
 ```
 
+```javascript
+// Edit/reference existing images
+const { url } = await base44.integrations.Core.GenerateImage({
+  prompt: "Make the sky look like sunset",
+  existing_image_urls: ["https://...original_image.png"]
+});
+```
+
+**Parameters:**
+- `prompt` (string, required): Description of the image. When passing `existing_image_urls`, describe what to do with the reference images instead
+- `existing_image_urls` (string[], optional): URLs of images to use as references (edit, style match, visual context). Unreadable images are skipped; if none can be read, the request fails
+
 ### SendEmail
 
-Send emails to registered users. Every app gets this integration (no plan upgrade required).
+Send emails to registered users of your app. To email anyone else, the app needs a paid plan and a connected custom domain.
 
 ```javascript
 await base44.integrations.Core.SendEmail({
   to: "user@example.com",
   subject: "Welcome!",
-  body: "<h1>Hello</h1><p>Welcome to our app.</p>",
+  html: "<h1>Hello</h1><p>Welcome to our app.</p>",
+  text: "Hello! Welcome to our app.",
   from_name: "My App"  // optional, defaults to app name
+});
+```
+
+```javascript
+// With attachments
+await base44.integrations.Core.SendEmail({
+  to: "user@example.com",
+  subject: "Your invoice",
+  text: "Your invoice is attached.",
+  attachments: [
+    { filename: "invoice.pdf", file_url: uploadedFileUrl },
+    { filename: "chart.png", content: base64PngString },
+  ],
 });
 ```
 
 **Parameters:**
 - `to` (string, required): Recipient email address
 - `subject` (string, required): Email subject line
-- `body` (string, required): Plain text or HTML email body
-- `from_name` (string, optional): Sender name displayed to recipient
+- `body` (string, optional): HTML email body. Same as `html` — set one or the other, not both
+- `html` (string, optional): HTML email body. Same as `body` — set one or the other, not both
+- `text` (string, optional): Plain-text body. Alone, sends plain-text only; combined with `body`/`html`, sends both so the recipient's mail client picks the one it prefers (keep them saying the same thing)
+- `from_name` (string, optional): Sender name displayed to recipient (defaults to the app's name)
+- `attachments` (`EmailAttachment[]`, optional): Up to 5 files, up to 5 MB each and 10 MB total. Each needs `filename` and exactly one of `file_url` (a file your app already uploaded, e.g. via `UploadFile`/`UploadPrivateFile`) or `content` (base64-encoded contents for a file your code generated). Supported `filename` extensions: `csv`, `docx`, `gif`, `ics`, `jpeg`, `jpg`, `md`, `pdf`, `png`, `txt`, `webp`, `xlsx`
+
+Set at least one of `body`, `html`, or `text`.
 
 **Limitations:**
 - 1 credit per email (2 credits with custom domain)
@@ -219,10 +251,23 @@ const response = await base44.integrations.custom.call(
 }
 ```
 
+### Errors
+
+`call()` throws:
+- A plain `Error` if `slug` is missing/empty, or if `operationId` is missing/empty.
+- A `Base44Error` (404) if the integration or operation isn't found.
+- A `Base44Error` (502) if the external API call fails.
+- A `Base44Error` (504) if the request times out.
+
 ## Requirements
 
 - **Core integrations**: Available on all plans
 - **Catalog/Custom integrations**: Require Builder plan or higher
+
+## Authentication Modes
+
+- **Anonymous or user authentication** (`base44.integrations`): methods run with the current user's permissions (or anonymously, where the app allows it).
+- **Service role authentication** (`base44.asServiceRole.integrations`): methods run with the service role, for backend code that needs elevated permissions.
 
 ## Type Definitions
 
@@ -233,18 +278,22 @@ const response = await base44.integrations.custom.call(
 interface InvokeLLMParams {
   /** The prompt text to send to the model. */
   prompt: string;
-  /** If true, uses Google Search/Maps/News for real-time context. */
+  /** Optional model override for this call (app-level model setting is used otherwise). */
+  model?: 'gemini_3_8_flash' | 'gpt_6_luna' | 'claude-sonnet-5' | 'claude_opus_5_5' | 'gpt_6_sol' | 'gpt_6_astra' | 'claude_fable_5_1' | 'glm_5_2' | 'gemini_3_1_pro' | 'gpt_5_4' | 'claude_sonnet_4_6' | 'claude_opus_4_6' | 'claude_opus_4_7' | 'claude_opus_4_8' | 'claude_opus_5' | 'gpt_5_6_terra' | 'gpt_5_6_sol' | 'gpt_5_6_luna';
+  /** If true, uses Google Search/Maps/News for real-time context. Default false. */
   add_context_from_internet?: boolean;
   /** JSON schema for structured output. If provided, returns object instead of string. */
   response_json_schema?: object;
-  /** File URLs (from UploadFile) to provide as context. */
+  /** File URLs (from UploadFile) to provide as context. Don't combine with add_context_from_internet. */
   file_urls?: string[];
 }
 
 /** Parameters for the GenerateImage function. */
 interface GenerateImageParams {
-  /** Description of the image to generate. */
+  /** Description of the image to generate (or of the edit, when existing_image_urls is set). */
   prompt: string;
+  /** Reference image URLs, for edits/style/visual context. Unreadable images are skipped. */
+  existing_image_urls?: string[];
 }
 
 /** Result from GenerateImage. */
@@ -265,16 +314,32 @@ interface UploadFileResult {
   file_url: string;
 }
 
-/** Parameters for the SendEmail function. */
+/** A file to attach to an email. */
+interface EmailAttachment {
+  /** Shown filename, including extension. Supported: csv, docx, gif, ics, jpeg, jpg, md, pdf, png, txt, webp, xlsx. */
+  filename: string;
+  /** A file your app already uploaded (e.g. UploadFile's file_url or UploadPrivateFile's file_uri). */
+  file_url?: string;
+  /** Base64-encoded contents, for a file your code generated. */
+  content?: string;
+}
+
+/** Parameters for the SendEmail function. Set at least one of body, html, or text. */
 interface SendEmailParams {
   /** Recipient email address. */
   to: string;
   /** Email subject line. */
   subject: string;
-  /** Plain text or HTML email body. */
-  body: string;
+  /** HTML email body. Same as html — set one or the other, not both. */
+  body?: string;
+  /** HTML email body. Same as body — set one or the other, not both. */
+  html?: string;
+  /** Plain-text body. Alone, sends plain-text only; with body/html, sends both. */
+  text?: string;
   /** Sender name (defaults to app name). */
   from_name?: string;
+  /** Up to 5 files, up to 5 MB each / 10 MB total. */
+  attachments?: EmailAttachment[];
 }
 
 /** Parameters for ExtractDataFromUploadedFile. */
@@ -357,6 +422,11 @@ interface CustomIntegrationsModule {
    * @param slug - The integration's unique identifier (set by workspace admin).
    * @param operationId - The endpoint in "method:path" format (e.g. "get:/contacts", "post:/users/{id}").
    * @param params - Optional payload, pathParams, queryParams.
+   * @throws {Error} If slug is not provided.
+   * @throws {Error} If operationId is not provided.
+   * @throws {Base44Error} If the integration or operation is not found (404).
+   * @throws {Base44Error} If the external API call fails (502).
+   * @throws {Base44Error} If the request times out (504).
    */
   call(slug: string, operationId: string, params?: CustomIntegrationCallParams): Promise<CustomIntegrationCallResponse>;
 }

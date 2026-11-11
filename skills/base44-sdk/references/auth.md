@@ -79,9 +79,19 @@ interface ChangePasswordParams {
 ```
 
 ### Provider Type
+
+`loginWithProvider()`'s `provider` parameter is typed as a plain `string` in the SDK (not an exported union type), but these are the supported values:
+
 ```typescript
-type Provider = 'google' | 'microsoft' | 'facebook';
+// Supported provider values (not an exported SDK type — provider: string)
+type Provider = 'google' | 'microsoft' | 'facebook' | 'apple' | 'sso';
 ```
+
+- `'google'` — Google OAuth, enabled by default.
+- `'microsoft'` — Microsoft OAuth, must enable in app auth settings.
+- `'facebook'` — Facebook Login, must enable in app auth settings.
+- `'apple'` — Sign in with Apple, must enable in app auth settings.
+- `'sso'` — Enterprise SSO, must set up an SSO provider in app auth settings.
 
 ---
 
@@ -92,17 +102,19 @@ type Provider = 'google' | 'microsoft' | 'facebook';
 interface AuthModule {
   // User Info
   me(): Promise<User>;
-  updateMe(data: Partial<Omit<User, 'id' | 'created_date' | 'updated_date' | 'app_id' | 'is_service'>>): Promise<User>;
+  updateMe(data: Record<string, any>): Promise<User>;
   isAuthenticated(): Promise<boolean>;
 
   // Login/Logout
   loginViaEmailPassword(email: string, password: string, turnstileToken?: string): Promise<LoginResponse>;
-  loginWithProvider(provider: Provider, fromUrl?: string): void;
+  loginWithProvider(provider: string, fromUrl?: string): void;
   logout(redirectUrl?: string): void;
   redirectToLogin(nextUrl: string): void;
 
   // Token Management
   setToken(token: string, saveToStorage?: boolean): void;
+  /** Whether an access token is currently set (not whether it's still valid). */
+  hasToken(): boolean;
 
   // Registration
   register(params: RegisterParams): Promise<any>;
@@ -125,13 +137,14 @@ interface AuthModule {
 |--------|-----------|-------------|-------------|
 | `register()` | `params: RegisterParams` | `Promise<any>` | Create new user account |
 | `loginViaEmailPassword()` | `email: string, password: string, turnstileToken?: string` | `Promise<LoginResponse>` | Authenticate with email/password |
-| `loginWithProvider()` | `provider: Provider, fromUrl?: string` | `void` | Initiate OAuth login flow. Providers: `'google'` (default), `'microsoft'`, `'facebook'` (enable in app settings) |
+| `loginWithProvider()` | `provider: string, fromUrl?: string` | `void` | Initiate OAuth login flow. Providers: `'google'` (default), `'microsoft'`, `'facebook'`, `'apple'`, `'sso'` (all but Google must be enabled in app settings) |
 | `me()` | None | `Promise<User>` | Get current authenticated user |
-| `updateMe()` | `data: Partial<User>` | `Promise<User>` | Update current user's profile |
+| `updateMe()` | `data: Record<string, any>` | `Promise<User>` | Update current user's profile (subject to field-level security; `id`, `email`, `full_name`, `created_date`, `updated_date`, `created_by`, `collaborator_role` can't be changed this way; changing `role` requires editor access) |
 | `logout()` | `redirectUrl?: string` | `void` | Redirect to server-side logout (clears HTTP-only cookies and session), then to redirectUrl or current URL |
-| `redirectToLogin()` | `nextUrl: string` | `void` | ⚠️ **Avoid** - Prefer custom login UI with `loginViaEmailPassword()` or `loginWithProvider()` |
+| `redirectToLogin()` | `nextUrl: string` | `void` | ⚠️ **Avoid** - Prefer custom login UI with `loginViaEmailPassword()` or `loginWithProvider()`. Throws if not in a browser environment |
 | `isAuthenticated()` | None | `Promise<boolean>` | Check if user is logged in |
 | `setToken()` | `token: string, saveToStorage?: boolean` | `void` | Manually set auth token |
+| `hasToken()` | None | `boolean` | Whether an access token is currently set on the client — not whether it's still valid. A token held only in an HTTP-only cookie returns `false`. Use it to skip calls that can't succeed anonymously; use `isAuthenticated()` to confirm with the server |
 | `inviteUser()` | `userEmail: string, role: string` | `Promise<any>` | Send invitation email |
 | `verifyOtp()` | `params: VerifyOtpParams` | `Promise<any>` | Verify OTP code |
 | `resendOtp()` | `email: string` | `Promise<any>` | Resend OTP code |
@@ -213,9 +226,11 @@ try {
 }
 ```
 
+A `401` here automatically clears any token already stored on the client (the SDK calls `logout()` internally before rethrowing), so a failed login attempt never leaves a stale token behind.
+
 ### Login with OAuth Provider
 
-Supported providers: `'google'` (enabled by default), `'microsoft'`, and `'facebook'`. Enable Microsoft or Facebook in your app's authentication settings before using them.
+Supported providers: `'google'` (enabled by default), `'microsoft'`, `'facebook'`, `'apple'`, and `'sso'`. Enable Microsoft, Facebook, or Apple in your app's authentication settings before using them; `'sso'` requires setting up an SSO provider in app auth settings first.
 
 ```javascript
 // Redirect to Google OAuth
@@ -224,9 +239,13 @@ base44.auth.loginWithProvider('google');
 // Redirect to Google OAuth and return to current page after
 base44.auth.loginWithProvider('google', window.location.href);
 
-// Microsoft or Facebook (enable in app settings first)
+// Microsoft, Facebook, or Apple (enable in app settings first)
 base44.auth.loginWithProvider('microsoft');
 base44.auth.loginWithProvider('facebook', '/dashboard');
+base44.auth.loginWithProvider('apple', '/dashboard');
+
+// Enterprise SSO (requires an SSO provider configured in app auth settings)
+base44.auth.loginWithProvider('sso', '/dashboard');
 ```
 
 ### Get Current User
@@ -255,6 +274,8 @@ try {
 ```
 
 ### Update User Profile
+
+You can update custom fields defined in your User entity schema; field-level security write rules on custom fields apply here too — if `data` includes a field the user can't write, the call throws and no fields are updated. These fields can never be changed with `updateMe()`: `id`, `email`, `full_name`, `created_date`, `updated_date`, `created_by`, `collaborator_role`. Changing `role` requires editor access on the app.
 
 ```javascript
 try {
@@ -370,6 +391,15 @@ try {
 } catch (error) {
   console.error('Failed to set token:', error.message);
 }
+```
+
+### Check for a Token Without a Network Call
+
+`hasToken()` only checks whether a token is set on the client — it doesn't verify it's still valid, and returns `false` for a session held only in an HTTP-only cookie. Use it to skip calls that can't succeed anonymously; use `isAuthenticated()` when you need to confirm the session with the server.
+
+```javascript
+// Skip me() entirely for an anonymous visitor
+const user = base44.auth.hasToken() ? await base44.auth.me() : null;
 ```
 
 ### Invite User to Application
@@ -589,17 +619,22 @@ Configure authentication providers in your app dashboard:
 - **Google** - OAuth authentication
 - **Microsoft** - OAuth authentication
 - **Facebook** - OAuth authentication
+- **Apple** - Sign in with Apple
 
 **SSO Providers (Elite Plan):**
 - **Okta**
 - **Azure AD**
 - **GitHub**
 
+Use `loginWithProvider('sso', fromUrl?)` for enterprise SSO once a provider is configured in app auth settings.
+
 ### Using OAuth Providers
 
 - **Google** – enabled by default.
 - **Microsoft** – enable in your app's authentication settings before use.
 - **Facebook** – enable in your app's authentication settings before use.
+- **Apple** – enable in your app's authentication settings before use.
+- **SSO** – set up an SSO provider in your app's authentication settings first.
 
 ```javascript
 // Initiate OAuth login flow
@@ -608,7 +643,7 @@ base44.auth.loginWithProvider('google');
 // Return to specific page after authentication
 base44.auth.loginWithProvider('microsoft', '/dashboard');
 
-// Supported values: 'google', 'microsoft', 'facebook'
+// Supported values: 'google', 'microsoft', 'facebook', 'apple', 'sso'
 ```
 
 ---
