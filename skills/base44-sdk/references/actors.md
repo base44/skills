@@ -151,6 +151,8 @@ On the actor, `conn.identity` is the platform-verified principal: `{ type: "auth
 
 `conn.id` is client-chosen reconnect bookkeeping. Keep it out of broadcasts, public records, and author fields; use a separate server-assigned participant id for presence. A returning connection id alone must not grant access to another user's state or permissions.
 
+> **Note:** `@base44/sdk`'s published `Conn` type (`src/actor.ts`) is a type-only stub — the comment above it says the bundler swaps in the real compiled Durable Object implementation at deploy time — and that stub doesn't currently declare an `identity` field. If `conn.identity` isn't available in your deployed actor, treat this section as describing the intended/deployed contract and verify against a live actor rather than the npm package's shipped `.d.ts`.
+
 ## Writing an Actor
 
 Actors live in `base44/actors/<Name>/entry.ts` and default-export a class extending `Actor`:
@@ -187,6 +189,8 @@ export default class ChatRoom extends Actor {
 This example attributes signed-in authors with verified `userId`; guest messages have `authorUserId: null`. Connection IDs never enter the chat history or presence messages.
 
 Instance fields are lost when the room hibernates: persist in `this.storage` and rehydrate in `handleStart`. `this.broadcast()` sends room-wide state; `conn.send()` sends to one client. `this.client` uses the **anonymous** role, while `this.client.asServiceRole` provides admin-level access for validated, room-owned work. Persist canonical room results from the actor through `asServiceRole`, using an explicit field from authenticated `conn.identity.userId` when attribution is needed. Keep frontend writes limited to user-owned records.
+
+`this.client` always operates on production data: an actor runs server-side with no per-connection identity, so a Test DB preview selected in the app editor doesn't apply here.
 
 For the complete authoring contract — naming, lifecycle handlers, storage and hibernation, scheduled wakes, rooms and discovery, deployment — see [actors-create.md](../../base44-cli/references/actors-create.md) in base44-cli.
 
@@ -335,7 +339,8 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   /** The managed ticker's callback. Runs only while `shouldTick()` returns true. */
   abstract handleTick(): void | Promise<void>;
   handleStart(): void | Promise<void>;
-  handleWake(key: string): void | Promise<void>;
+  /** Declared `protected` in the base class — see note below. */
+  protected handleWake(key: string): void | Promise<void>;
   protected schedule(key: string, at: number | Date): Promise<void>;
   protected cancelSchedule(key: string): Promise<void>;
   protected broadcast(data: Outgoing): void;
@@ -344,14 +349,14 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   protected get storage(): Storage;
   /** Anonymous client with an asServiceRole client for validated, room-owned work. */
   protected get client(): Base44Client;
-  /** Override to opt into the managed ticker; must be cheap and side-effect free. */
-  shouldTick?(): boolean;
-  /** Ticker period in ms. Default 100. */
-  tickIntervalMs: number;
+  /** Override to opt into the managed ticker; must be cheap and side-effect free. Declared `protected` in the base class — see note below. */
+  protected shouldTick?(): boolean;
+  /** Ticker period in ms. Default 100. Declared `protected` in the base class — see note below. */
+  protected tickIntervalMs: number;
 }
 ```
 
-The members you **implement** (`handleConnect`, `handleMessage`, `handleClose`, `handleTick`, `handleStart`, `handleWake`, `shouldTick`, `tickIntervalMs`) are public — override them without a modifier. The members you only **call** (`broadcast`, `getConnections`, `schedule`, `cancelSchedule`, `instanceId`, `storage`, `client`) are `protected`: reachable via `this` inside your actor, invisible from outside it. Marking an override `protected` where the base declares it public is a compile error (`TS2416`), so don't add the modifier to a handler.
+The members you **implement as the actor's public lifecycle** (`handleConnect`, `handleMessage`, `handleClose`, `handleTick`, `handleStart`) are abstract or public with no modifier — override them without one. `handleWake`, `shouldTick`, and `tickIntervalMs` are declared `protected` in the base class, but TypeScript allows a subclass to *widen* an inherited member's visibility, so a plain (unmarked, i.e. public) override of any of these three still compiles — only the opposite direction, narrowing a public base member to `protected` in your override, is the compile error (`TS2416`). The members you only **call** (`broadcast`, `getConnections`, `schedule`, `cancelSchedule`, `instanceId`, `storage`, `client`) are `protected`: reachable via `this` inside your actor, invisible from outside it.
 
 `handleTick` is an abstract member, so a **TypeScript** actor has to declare it to compile — `handleTick() {}` is all it needs. Plain-JavaScript actors can omit it.
 

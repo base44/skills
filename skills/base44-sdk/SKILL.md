@@ -151,11 +151,16 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `actors` | Realtime rooms over WebSockets (multiplayer, collaboration, presence) | [actors.md](references/actors.md) |
 | `integrations` | AI, email, file uploads, custom APIs | [integrations.md](references/integrations.md) |
 | `aiGateway` | Base44's AI gateway: code agents, images, videos, speech, and structured evaluations (Jev) | [ai-gateway.md](references/ai-gateway.md) |
+| `payments` / `asServiceRole.payments` | Checkouts, purchases, refunds, and subscriptions (Stripe/PayPal/Base44 Payments) | [payments.md](references/payments.md) |
 | `analytics` | Track custom events and user activity | [analytics.md](references/analytics.md) |
 | `appLogs` | Log user activity in app | [app-logs.md](references/app-logs.md) |
+| `app` | Read the app's own public settings (visibility) | [app.md](references/app.md) |
 | `users` | Invite users to the app | [users.md](references/users.md) |
-| `asServiceRole.connectors` | App-scoped OAuth tokens (service role only) | [connectors.md](references/connectors.md) |
+| `connectors` | App user OAuth flows (start/disconnect the current user's own connection) | [connectors.md](references/connectors.md) |
+| `asServiceRole.connectors` | Shared/app-scoped OAuth tokens and metered connector calls (service role only) | [connectors.md](references/connectors.md) |
 | `asServiceRole.sso` | SSO token generation (service role only) | [sso.md](references/sso.md) |
+| `asServiceRole.browser` | Remote browser automation sessions (service role only) | [browser.md](references/browser.md) |
+| `asServiceRole.voice` | Live voice sessions, beta (service role only) | [voice.md](references/voice.md) |
 
 For client setup and authentication modes, see [client.md](references/client.md).
 
@@ -245,14 +250,26 @@ const base44 = createClient({
 - Just keeping a list of records live on screen → `entities.EntityName.subscribe()`, **not** an actor
 
 **External services?**
-- Send emails → `integrations.Core.SendEmail()`
+- Send emails (now with HTML/text/attachments) → `integrations.Core.SendEmail()`
 - Upload files → `integrations.Core.UploadFile()`
-- Custom APIs → `integrations.custom.call()`
-- App-scoped OAuth (app builder's account) → `asServiceRole.connectors.getConnection()` (backend only)
+- Custom APIs (OpenAPI-based) → `integrations.custom.call()`
+- Shared/app-scoped OAuth token (app builder's account) → `asServiceRole.connectors.getConnection()` (backend only)
+- Per-user OAuth (each app user's own account) → `connectors.connectAppUser()` (frontend) + `asServiceRole.connectors.getCurrentAppUserConnection()` (backend)
+- Metered third-party API calls (Base44 holds the credential) → `asServiceRole.connectors.callApi()` (backend only)
+- Remote browser automation (Playwright/Puppeteer over CDP) → `asServiceRole.browser.getSession()` (backend only)
+
+**Payments?**
+- Accept one-time payments or subscriptions → `asServiceRole.payments.createCheckout()` (backend, creates it) + `payments.mountCheckout()` (frontend, renders it) — see [payments.md](references/payments.md)
+- Look up the current user's own purchases → `payments.listPurchases()`
+- Refund a payment or change a subscription → `asServiceRole.payments.refund()` / `cancelSubscription()` / `pauseSubscription()` / `resumeSubscription()` (backend only)
+
+**Live voice?**
+- Voice conversation between an app user and an AI agent using the app's tools → `asServiceRole.voice.createSession()` (backend only, beta) — see [voice.md](references/voice.md)
 
 **Tracking and analytics?**
 - Track custom events → `analytics.track()`
 - Log page views/activity → `appLogs.logUserInApp()`
+- Check the app's visibility / whether the visitor can access it → `app.getPublicSettings()`
 
 ## Common Patterns
 
@@ -353,11 +370,17 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `actors` (connect to a room) | Yes | No — the actor *is* the server side |
 | `integrations` | Yes | Yes |
 | `aiGateway` | No | Yes |
+| `payments` (preload/mount/complete/list own purchases) | Yes | No |
+| `asServiceRole.payments` (create checkout/refund/subscriptions) | No | Yes |
 | `analytics` | Yes | Yes |
 | `appLogs` | Yes | Yes |
+| `app` (read public settings) | Yes | Yes |
 | `users` | Yes | Yes |
+| `connectors` (app user OAuth: connect/disconnect) | Yes | No |
 | `asServiceRole.*` | No | Yes |
-| `asServiceRole.connectors` (app OAuth) | No | Yes |
+| `asServiceRole.connectors` (shared/app OAuth, metered calls) | No | Yes |
 | `asServiceRole.sso` | No | Yes |
+| `asServiceRole.browser` | No | Yes |
+| `asServiceRole.voice` (beta) | No | Yes |
 
 Backend functions `export default` an async request handler and use `createClientFromRequest(req)` to get a properly authenticated client.
