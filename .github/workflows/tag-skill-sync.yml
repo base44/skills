@@ -1,0 +1,37 @@
+name: Tag merged skill-sync PRs
+
+# When a CLI / SDK skill-sync PR (label `auto-skill-update`) is merged, tag the merge commit
+# with the package release that triggered it, e.g. `base44-sdk/v0.8.60`. The version is read
+# from the PR title, which sync-cli-skill.yml / sync-sdk-skill.yml fix to
+# "Update base44-<cli|sdk> skill to <version> ...". Other titles (platform-skill PRs, manual
+# syncs against `main`) are skipped.
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged && contains(github.event.pull_request.labels.*.name, 'auto-skill-update')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Tag the merge commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ github.event.pull_request.title }}
+          SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          re='^Update (base44-(cli|sdk)) skill to (v[0-9][^ ]*)'
+          if [[ ! "$TITLE" =~ $re ]]; then
+            echo "Not a CLI / SDK release sync; nothing to tag."; exit 0
+          fi
+          tag="${BASH_REMATCH[1]}/${BASH_REMATCH[3]}"
+          if gh api "repos/${GITHUB_REPOSITORY}/git/ref/tags/${tag}" >/dev/null 2>&1; then
+            echo "::warning::${tag} already exists; leaving it."; exit 0
+          fi
+          gh api "repos/${GITHUB_REPOSITORY}/git/refs" -f ref="refs/tags/${tag}" -f sha="${SHA}" >/dev/null
+          echo "Tagged ${SHA} as ${tag}"
