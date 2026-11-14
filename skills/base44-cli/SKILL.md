@@ -68,6 +68,8 @@ RIGHT: `npx base44 login`
 
 **Workspace API key set?** If the `BASE44_API_KEY` environment variable is set to a workspace API key (prefixed `b44k_`), the CLI authenticates with it directly — `npx base44 whoami` and other commands succeed without an interactive login.
 
+**Running commands through the Base44 MCP server's `run_command` tool?** Then you are in the app's cloud workspace, where Base44 holds the code and applies saved changes itself. This check is for local development; here, continue with the MCP tools.
+
 ## Overview
 
 The Base44 CLI provides command-line tools for authentication, creating projects, managing entities, and deploying Base44 applications. It is framework-agnostic and works with popular frontend frameworks like Vite, Next.js, and Create React App, Svelte, Vue, and more.
