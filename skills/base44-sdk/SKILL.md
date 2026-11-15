@@ -148,7 +148,7 @@ Base44 SDK has unique method names. Do NOT assume patterns from Firebase, Supaba
 | `auth` | Login, register, user management | [auth.md](references/auth.md) |
 | `agents` | AI conversations and messages | [base44-agents.md](references/base44-agents.md) |
 | `functions` | Backend function invocation | [functions.md](references/functions.md) |
-| `actors` | Realtime rooms over WebSockets (multiplayer, collaboration, presence) | [actors.md](references/actors.md) |
+| `actors` / `asServiceRole.actors` | Realtime rooms over WebSockets (multiplayer, collaboration, presence); call an actor's `static callable` methods without connecting | [actors.md](references/actors.md) |
 | `integrations` | AI, email, file uploads, custom APIs | [integrations.md](references/integrations.md) |
 | `aiGateway` | Base44's AI gateway: code agents, images, videos, speech, and structured evaluations (Jev) | [ai-gateway.md](references/ai-gateway.md) |
 | `payments` / `asServiceRole.payments` | Checkouts, purchases, refunds, and subscriptions (Stripe/PayPal/Base44 Payments) | [payments.md](references/payments.md) |
@@ -368,6 +368,8 @@ const token = await base44.asServiceRole.connectors.getAccessToken("slack");
 | `functions.invoke()` | Yes | Yes |
 | `functions.fetch()` | Yes | Yes |
 | `actors` (connect to a room) | Yes | No — the actor *is* the server side |
+| `actors` (call a `static callable` method) | Yes | — |
+| `asServiceRole.actors` (call a `static callable` method) | No | Yes |
 | `integrations` | Yes | Yes |
 | `aiGateway` | No | Yes |
 | `payments` (preload/mount/complete/list own purchases) | Yes | No |
