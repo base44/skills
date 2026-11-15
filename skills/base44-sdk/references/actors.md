@@ -7,6 +7,7 @@ An **actor** is a stateful server room over WebSockets. There is one live instan
 ## Contents
 - [Methods](#methods)
 - [Connecting](#connecting) (React, vanilla, reconnects)
+- [Calling Methods](#calling-methods) (no connection needed, service role)
 - [Instance Ids](#instance-ids)
 - [Authentication](#authentication)
 - [Writing an Actor](#writing-an-actor)
@@ -23,7 +24,7 @@ base44.actors.ChatRoom(instanceId): ActorRef
 
 - `<ActorName>`: the deployed actor's name — a property on `base44.actors`, **not** a string argument
 - `instanceId`: the room id. Everyone who passes the same id shares one server instance
-- Returns an `ActorRef` — a handle, not yet a connection
+- Returns an `ActorRef` — a handle, not yet a connection. Besides `.connect()`, it exposes the actor's [callable methods](#calling-methods) by name
 
 ### `connect`
 
@@ -135,6 +136,50 @@ Persist that id in **`sessionStorage`** (per tab), not `localStorage` — two *l
 
 `base44.cleanup()` closes every live room, so a forgotten `close()` cannot leak a heartbeat timer.
 
+## Calling Methods
+
+Besides `connect()`, a ref also exposes the actor's **callable methods** by name — a request/response call that doesn't need a WebSocket connection:
+
+```javascript
+const { kicked } = await base44.actors.ChatRoom(roomId).kick({ userId });
+```
+
+- Only methods the actor lists in its `static callable` array are callable this way; anything else rejects with a 404
+- Works even when no client is connected to that room — it's a plain HTTP request under the hood, not a message over the socket
+- Resolves to whatever the actor's method returns; a method that throws an `ActorError(status, message)` rejects the call with that `status`
+- `connect`, `then`, `toJSON`, and `Object.prototype` members (`hasOwnProperty`, `constructor`, …) are never treated as callable method names, so a ref is safe to `await`, log, or pass to `JSON.stringify`
+
+**From server code (service role):**
+
+```javascript
+// base44/functions/notifyVideoReady.ts
+await base44.asServiceRole.actors.VideoRoom(userId).videoReady({ id: videoId });
+```
+
+`base44.asServiceRole.actors` mirrors `base44.actors` but only calls methods — server code can't hold a WebSocket connection, so there's no `.connect()` here. The actor sees this caller's identity as `{ type: "service" }` (see [Authentication](#authentication)).
+
+**On the actor**, declare which methods are callable and read the caller's identity from the second argument:
+
+```javascript
+import { Actor, ActorError } from "base44:runtime/actors";
+
+export default class ChatRoom extends Actor {
+  static callable = ["kick"];
+
+  async kick(args, { identity }) {
+    if (identity.type !== "authenticated") throw new ActorError(403, "Forbidden");
+    this.broadcast({ type: "left", userId: args.userId });
+    return { kicked: true };
+  }
+  // handleConnect / handleMessage / handleClose as usual
+}
+```
+
+- A method not named in `static callable`, or a hook-shaped name (`handle*`, `on*`, `_*`), is never callable — calling it from a client rejects with 404
+- The method runs as `method(args, context)`, where `context.identity` is the caller's verified identity (`authenticated`, `anonymous`, or `service`) and `context.request` carries the caller's own credential — pass it to `createClientFromRequest(context.request)` to act as the caller, as in a backend function. Don't store `context.request`
+- Throw `new ActorError(status, message)` to refuse the call with that HTTP status; any other thrown error surfaces as a generic failure
+- A method can `this.broadcast(...)` to notify connected clients, same as from `handleMessage`
+
 ## Instance Ids
 
 The instance id is what separates one room from another.
@@ -151,7 +196,7 @@ On the actor, `conn.identity` is the platform-verified principal: `{ type: "auth
 
 `conn.id` is client-chosen reconnect bookkeeping. Keep it out of broadcasts, public records, and author fields; use a separate server-assigned participant id for presence. A returning connection id alone must not grant access to another user's state or permissions.
 
-> **Note:** `@base44/sdk`'s published `Conn` type (`src/actor.ts`) is a type-only stub — the comment above it says the bundler swaps in the real compiled Durable Object implementation at deploy time — and that stub doesn't currently declare an `identity` field. If `conn.identity` isn't available in your deployed actor, treat this section as describing the intended/deployed contract and verify against a live actor rather than the npm package's shipped `.d.ts`.
+A [callable method](#calling-methods) sees the caller's identity the same way, via `context.identity` (the method's second argument) instead of `conn.identity` — with one addition: a call made through `base44.asServiceRole.actors` carries `{ type: "service" }`, since it's the app's own server code and not a connected client.
 
 ## Writing an Actor
 
@@ -192,6 +237,8 @@ Instance fields are lost when the room hibernates: persist in `this.storage` and
 
 `this.client` always operates on production data: an actor runs server-side with no per-connection identity, so a Test DB preview selected in the app editor doesn't apply here.
 
+To let callers run a request/response method on this actor without connecting — e.g. `kick({ userId })` from a client or from server code via `asServiceRole` — declare it in `static callable` and read the caller's identity from the second argument; see [Calling Methods](#calling-methods).
+
 For the complete authoring contract — naming, lifecycle handlers, storage and hibernation, scheduled wakes, rooms and discovery, deployment — see [actors-create.md](../../base44-cli/references/actors-create.md) in base44-cli.
 
 ## When to Use an Actor
@@ -219,18 +266,24 @@ declare module "@base44/sdk" {
         | { type: "message"; authorUserId: string | null; text: string }
         | { type: "joined" | "left" };
       toServer: { type: "message"; text: string };
+      methods: { kick: (args: { userId: string }) => { kicked: boolean } };
     };
   }
 }
 ```
 
-With that in place, `subscribe` callbacks and `send` payloads are typed:
+With that in place, `subscribe` callbacks, `send` payloads, and method calls are typed:
 
 ```typescript
-const room = base44.actors.ChatRoom("lobby").connect();
-room.subscribe((msg) => { /* msg is the toClient union */ });
-room.send({ type: "message", text: "hi" });   // checked against toServer
+const room = base44.actors.ChatRoom("lobby");
+const conn = room.connect();
+conn.subscribe((msg) => { /* msg is the toClient union */ });
+conn.send({ type: "message", text: "hi" });   // checked against toServer
+
+const { kicked } = await room.kick({ userId });   // checked against methods.kick
 ```
+
+Once `ChatRoom` declares a `methods` map, only the names listed there type-check as calls on `base44.actors.ChatRoom(...)` — add every `static callable` name to `methods` so a typo is caught at compile time instead of a 404 at runtime. An actor name with no `methods` field in `ActorRegistry` (or no registry entry at all) falls back to an untyped call signature, `(args?: unknown) => Promise<unknown>`, for any name.
 
 Type the actor class off the same registry so the two cannot drift:
 
@@ -247,7 +300,14 @@ export default class ChatRoom extends Actor<Reg["toServer"], Reg["toClient"]> { 
 
 ```typescript
 declare module "base44:runtime/actors" {
-  export { Actor, type Conn } from "@base44/sdk";
+  export {
+    Actor,
+    type Conn,
+    ActorError,
+    type ActorCallContext,
+    type ActorCallIdentity,
+    type ActorConnectionIdentity,
+  } from "@base44/sdk";
 }
 ```
 
@@ -296,24 +356,59 @@ interface Connection<N extends string = string> {
   close(): void;
 }
 
-/** A handle to one actor instance — `base44.actors.MyActor(id)`. */
-interface ActorRef<N extends string = string> {
+/** Resolve a name to its typed callable methods via ActorRegistry; an untyped call signature otherwise. */
+type ActorMethods<N extends string> = N extends keyof ActorRegistry
+  ? ActorRegistry[N] extends { methods: infer M }
+    ? { [K in keyof M]: (args: Parameters<M[K]>[0]) => Promise<ReturnType<M[K]>> }
+    : Record<string, (args?: unknown) => Promise<unknown>>
+  : Record<string, (args?: unknown) => Promise<unknown>>;
+
+/** The connect-only half of ActorRef. */
+interface ActorConnectable<N extends string = string> {
   /** Open the WebSocket and return the Connection. Idempotent. */
   connect(options?: ActorConnectOptions): Connection<N>;
 }
+
+/** A handle to one actor instance — `base44.actors.MyActor(id)`. Also exposes the actor's callable methods by name. */
+type ActorRef<N extends string = string> = ActorConnectable<N> & ActorMethods<N>;
 
 /** Client for a single named actor — call it with an instance id. */
 interface ActorClient<N extends string = string> {
   (instanceId: string): ActorRef<N>;
 }
+
+/** A reference for server code (service role): only calls methods, no connection. */
+type ServiceRoleActorRef<N extends string = string> = ActorMethods<N>;
+
+/** `base44.asServiceRole.actors`: selects a session whose methods to call. */
+type ServiceRoleActorsModule = {
+  [K in string]: (instanceId: string) => ServiceRoleActorRef<K>;
+};
 ```
 
 Server-side types (`Actor`, `Conn`, `Storage`) come from the actor base class:
 
 ```typescript
+/** Who a client is, verified by the platform: a logged-in user or an anonymous visitor. */
 type ActorConnectionIdentity =
   | Readonly<{ type: "authenticated"; userId: string }>
   | Readonly<{ type: "anonymous"; anonymousId: string }>;
+
+/** Who called one of the actor's callable methods: a client, or the app's server code (service role). */
+type ActorCallIdentity = ActorConnectionIdentity | Readonly<{ type: "service" }>;
+
+/** What a callable method receives besides its args. */
+interface ActorCallContext {
+  identity: ActorCallIdentity;
+  /** Carries the caller's own credential, so `createClientFromRequest(request)` acts
+   *  as the caller, as in a backend function. Don't store it. */
+  request: Request;
+}
+
+/** Throw from a callable method to refuse the call with a 4xx status. */
+class ActorError extends Error {
+  constructor(readonly status: number, message: string);
+}
 
 interface Conn<Send = unknown> {
   /** Unique per-connection id (one per socket/tab). */
@@ -339,6 +434,13 @@ abstract class Actor<Incoming = unknown, Outgoing = unknown> {
   /** The managed ticker's callback. Runs only while `shouldTick()` returns true. */
   abstract handleTick(): void | Promise<void>;
   handleStart(): void | Promise<void>;
+  /**
+   * The methods a caller may run on a session, as `base44.actors.<Name>(id).<method>(args)`
+   * from a client or `base44.asServiceRole.actors.<Name>(id).<method>(args)` from server code.
+   * Nothing else is callable, and a hook-shaped name (`handle*`, `on*`, `_*`) never is.
+   * Each runs as `this[method](args, context: ActorCallContext)`, even with no client connected.
+   */
+  static callable?: readonly string[];
   /** Declared `protected` in the base class — see note below. */
   protected handleWake(key: string): void | Promise<void>;
   protected schedule(key: string, at: number | Date): Promise<void>;
@@ -369,3 +471,4 @@ It only *runs* if you opt into the managed ticker by overriding `shouldTick()`: 
 - Messages are JSON in both directions; `type` values beginning with `__` are reserved by the platform
 - Actors are frontend-facing: the client connects from the browser, and the actor itself *is* the backend half
 - Actors do not run under `base44 dev` — verify against a deployed actor
+- `base44.asServiceRole.actors` is the one way server code reaches an actor — it only calls `static callable` methods, since server code can't hold a connection
