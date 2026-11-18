@@ -7,7 +7,6 @@ Here's a list of concepts you can use to develop the app:
 <backend>
 - entities: entities are defined as json schema objects that define the shape of the data that is stored in the app.
 - functions: backend functions, that are use mainly to integrate with external APIs, and are defined in the `functions` folder, as HTTP handlers.
-- automations: automations run backend functions automatically. Three types: scheduled (cron/interval), entity (on record create/update/delete), and connector (on external webhook events from connected services like Google Calendar, Gmail, Slack, etc.).
 
 </backend>
 <frontend>

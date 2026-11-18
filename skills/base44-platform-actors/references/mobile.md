@@ -85,7 +85,7 @@ export default class BoardRoom extends Actor {
 </actor_contract>
 
 <actor_rules>
-- Handlers: `handleConnect` / `handleMessage` / `handleClose`, plus optional `handleStart` (any wake) and `handleWake(key)` (scheduled wakes). Never override `onStart` or `onAlarm` — platform plumbing.
+- Handlers: `handleConnect` / `handleMessage` / `handleClose`, plus optional `handleStart` (any wake) and `handleWake(key)` (scheduled wakes). Never override `onStart` or `onAlarm` — platform plumbing. Code that must reach a room without a connection calls one of its methods (see actor_methods).
 - State: instance fields reset when the room idles out — a room hibernates after ~10s of quiet EVEN with clients connected; `this.storage` survives. Persist state you can't lose when it changes and rehydrate it in `handleStart()`; never write high-frequency churn (every pointer move, every keystroke) to storage. A hibernation wake keeps sockets ATTACHED and does NOT re-run `handleConnect`, so reconcile the rehydrated state against `this.getConnections()` — skip that and every connected client stays unrecognized until it reconnects. (`static options = { hibernate: false }` only makes the room non-hibernatable, NOT resident: it is still evicted after ~1-2 minutes idle, so storage is still the only durable answer. Rarely needed.)
 - `conn.id` is the per-connection identity. The SDK reuses it across auto-reconnects, and a persisted `connect({ id })` (see the client) makes reloads reclaim it too — key seats/roles by it and let a returning id RECLAIM its entry with its role and work intact. When a drop shouldn't discard that work, give the id a short grace before wiping its state; when the LAST client leaves mid-session, schedule the cleanup as a wake and cancel it on reconnect. conn.id is client-held: fine for seats and reconnects, NEVER attribution — that is `conn.identity`, platform-verified: `{ type: 'authenticated', userId }` or `{ type: 'anonymous', anonymousId }` (a visitor, not a user).
 - Scheduled wakes: `this.schedule(key, atEpochMs)` persists a named wake; `handleWake(key)` runs at/after it EVEN IF THE ROOM IS EMPTY AND ASLEEP. `cancelSchedule(key)` cancels; re-scheduling a key overwrites. Coarse (±seconds) and fires at most once — use for deadline timers (auction close, session expiry), delayed cleanup of abandoned rooms, absolute-time events; in-session countdowns stay timestamp-driven.
@@ -95,6 +95,34 @@ export default class BoardRoom extends Actor {
 - Actor auth is automatic. Never ask the user for `ACTOR_TOKEN_SECRET` or set it yourself; it is not readable from function or actor env.
 - Rooms and discovery: one room = one session (a drawing board, a chat channel, a document) — never funnel everyone into a single global room. For browsable rooms keep a registry ENTITY (e.g. Room: status, user_count) whose record id IS the actor instance id; the registry is advertising, the actor is truth — admission is decided in `handleConnect`, never from the row. List rooms by subscribing to the entity FIRST, then fetching and reconciling by id; filter to recently-updated rows (crashed rooms leave stale ones). PRIVATE rooms: there is no room-level auth — the instance id is the only admission control, so mint it with `crypto.randomUUID()` (record ids are guessable), never list it in a readable registry, and share it only as an invite link/code.
 </actor_rules>
+
+<actor_methods>
+A room's method runs without a connection. Use a method, never a connection, for every one-way call into a room: server code pushing into it (a backend function, a webhook, a workflow step, a finished job) and a page that only acts on it without showing its live state (an admin wipe, kick or close). Connect only from a page that renders the room live; connecting just to send one message takes a seat and presence in the room. Connected clients keep using `send`.
+```js
+import { Actor, ActorError } from 'base44:runtime/actors';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+
+export default class BoardRoom extends Actor {
+  static callable = ['clear'];   // the only methods callers can run — never list helpers
+  async clear(args, { identity, request }) {
+    // Any client can call any room it can name: check the caller first, as handleConnect does.
+    if (identity.type === 'anonymous') throw new ActorError(401, 'Sign in first');
+    const base44 = createClientFromRequest(request);   // acts as the caller, as in a backend function
+    const me = identity.type === 'service' ? null : await base44.auth.me();
+    if (me && me.role !== 'admin') throw new ActorError(403, 'Admins only');
+    this.items.clear();
+    await this.storage.put('items', []);
+    this.broadcast({ type: 'state', items: [] });
+    return { cleared: true };   // the caller's reply (JSON)
+  }
+}
+```
+- Call it: `await base44.actors.BoardRoom(roomId).clear()` from a page; `base44.asServiceRole.actors.BoardRoom(roomId).clear()` from server code (functions import `npm:@base44/sdk@0.8.62`; a page needs the app's `@base44/sdk` raised to `^0.8.62`). It resolves to the return value and rejects with the status of an `ActorError`; anything else thrown is a 500.
+- A call takes one argument, any JSON value: pass several values as an object (`.videoReady({ id, url })`) or an array, never as separate arguments (anything after the first is dropped). No `Date`, `Map`, function or `undefined` survives the trip (a `Date` arrives as a string); the request is at most 64 KB, rate-limited per caller, and the return value must be JSON too.
+- `identity` is `{ type: 'service' }` (the app's server code), `authenticated` (`userId`) or `anonymous`. The method runs even in an empty, sleeping room (a call that wakes it runs `handleStart` first) and can `broadcast`.
+- `request` carries the caller's own credential: `createClientFromRequest(request)` is the caller (the service role for server code), with their access rules. Never store `request` or its token. Hook names (`handle*`, `on*`, `_*`) never run, even when listed.
+- Server code picks the room id from trusted data (the signed-in user, a record it checked), never from raw client input.
+</actor_methods>
 
 <actor_client>
 ```js

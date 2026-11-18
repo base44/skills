@@ -21,7 +21,7 @@ What workflows can be built from; the authoring guide that follows documents eac
 - in_app_agent — Fires when a conversation starts with an in-app agent.
 - app_user_auth — Fires when an app user signs up or logs in.
 - app_publish — Fires when the app is published from the Base44 dashboard or builder, or through the publish API (`published_by` is null for API-key publishes); a prebuilt-site `deploy-dist` upload does not fire it.
-- app_payment — Fires when a payment succeeds or is refunded, or a subscription is canceled, in the app's payment provider.
+- app_payment — Fires when a payment succeeds or is refunded, or a subscription is canceled, paused or resumed, in the app's payment provider.
 
 ### Activities (what a `call` step can do)
 - app_security_scan — Security scan (same as the Security tab): `start` kicks it off, `results` reads the latest findings.
@@ -38,6 +38,12 @@ What workflows can be built from; the authoring guide that follows documents eac
 1. Read the authoring guide below. 2. Needed backend functions first. 3. Connector triggers: authorize first. 4. Write `base44/workflows/<Name>.jsonc` (the envelope). 5. Auto-validation on save — fix anything reported as WORKFLOW ERROR.
 Each write creates a new version; running workflows keep their starting version. Graph + run history: dashboard.
 </creating_workflows>
+
+<other_workflows>
+A request may need several workflows: new ones, plus existing ones it names or can't be done without (such as the one it extends). Change exactly those; leave every other workflow, and any function only it uses, as it is.
+- Activate, pause or archive a workflow only when the user asks for it; an earlier message never justifies undoing a pause. Saving an existing workflow keeps its status.
+- Something outside the request would help (a paused workflow it relies on, a shared helper, a fix): say so, with the reason the workflows list gives for a pause, and let the user decide.
+</other_workflows>
 
 <debugging_workflows>
 `base44 workflows runs --app-id <APP_ID> --status failed` lists failed runs with the failing task and its error; `base44 logs --function <name>` reads that function's own logs; the Workflows dashboard shows each run's steps.
@@ -106,11 +112,11 @@ Change lifecycle status (activate / deactivate / archive / unarchive) in the Wor
 ### switch — conditional branching
 ```json
 { "check": { "switch": [
-    { "when": "${ .fetch_data.status == \"active\" }", "then": "handle_active" },
+    { "when": "${ .fetch_data.status == \"active\" }", "then": "handle_active", "x-base44": { "title": "Active account" } },
     { "when": "${ true }", "then": "end" }
 ] } }
 ```
-Cases are evaluated in order — the first truthy `when` wins (transition rules above).
+Cases are evaluated in order — the first truthy `when` wins (transition rules above). Give each condition case a short `x-base44.title` in the user's language that describes when the branch is taken (e.g. "Base44 or Wix email"). The graph and details show this title while keeping the original `when` expression available. Keep these labels accurate when editing; the catch-all can keep its automatic "everything else" label.
 
 ### wait — durable time delay (survives restarts)
 ```json
@@ -136,7 +142,7 @@ The app's security scan — the same scan as the builder's Security tab (RLS, se
 - `action`: `start` to start a scan, or `results` to read the latest completed scan. Required.
 - `after`: results only, optional. ISO-8601 datetime; a scan completed before it is reported as `pending` rather than `ready`. Pass the `requested_at` returned by the `start` step.
 - `max_findings`: results only, optional. How many findings to include in `scan.findings`, severity-first (default 50, max 100); `scan.findings_truncated` says whether any were left out.
-- Returns: {"action": "start" | "results", "state": str, "scan": {...} | null, "requested_at": str (start only; the `after` for a follow-up results — when state is "ready" it is the returned scan's own scanned_at, so results accepts it)}. start states: "started" (scan spawned), "running" (a scan is already in flight), "ready" (nothing changed since the last scan; `scan` is current). results states: "ready" (`scan` set), "running", "pending" (latest scan predates `after`), "failed" (last scan failed), "not_scanned". `scan` is set only when state is "ready": {"scanned_at": str, "status": "up_to_date" | "out_of_date" (as the Security tab shows it), "rls_scan_failed": bool (RLS section did not complete — empty RLS findings are not a clean result), "risk_level": str, "total_findings": int, "counts_by_severity": {severity: int}, "counts_by_category": {category: {severity: int}}, "finding_categories": [str], "findings": [{"category": "rls" | "secrets" | "backend_functions" | "dependencies" | "code" | "core_integration", "severity": str, "title": str, "description": str, "file_path"?: str, "line"?: int, "recommendation"?: str, "package_name"?: str, "current_version"?: str, "fixed_version"?: str, "vulnerability_id"?: str}], "findings_truncated": bool}. `start` never returns findings (its `scan.findings` is empty).
+- Returns: {"action": "start" | "results", "state": str, "scan": {...} | null, "requested_at": str (start only; the `after` for a follow-up results — when state is "ready" it is the returned scan's own scanned_at, so results accepts it)}. start states: "started" (scan spawned), "running" (a scan is already in flight), "ready" (nothing changed since the last scan; `scan` is current). results states: "ready" (`scan` set), "running", "pending" (latest scan predates `after`), "failed" (last scan failed), "not_scanned". `scan` is set only when state is "ready": {"scanned_at": str, "status": "up_to_date" | "out_of_date" (as the Security tab shows it), "rls_scan_failed": bool (RLS section did not complete — empty RLS findings are not a clean result), "risk_level": str, "total_findings": int, "counts_by_severity": {severity: int}, "counts_by_category": {category: {severity: int}}, "finding_categories": [str], "findings": [{"category": "rls" | "secrets" | "backend_functions" | "dependencies" | "code" | "core_integration" | "creator_email", "severity": str, "title": str, "description": str, "file_path"?: str, "line"?: int, "recommendation"?: str, "package_name"?: str, "current_version"?: str, "fixed_version"?: str, "vulnerability_id"?: str}], "findings_truncated": bool}. `start` never returns findings (its `scan.findings` is empty).
 
 ### compute_seconds_until
 Compute seconds from now until a target datetime.
@@ -391,7 +397,7 @@ Condition examples:
 
 Requires a connected payment provider (Stripe, PayPal, Wix Payments, or Payments by Wix): activating a workflow with this trigger fails when none is connected. Connect a provider first, then create the workflow. The payload is normalized across providers; workflows never receive provider-shaped raw data.
 
-Valid events: `payment_succeeded` (a successful payment: a completed checkout and the first payment of a subscription), `payment_refunded` (an approved refund, including one made from the Payments dashboard or the provider's own site), `subscription_canceled` (a subscription stopped billing: canceled or ended on Stripe, PayPal and Wix, and paused/suspended on PayPal only, e.g. by the buyer in PayPal or after failed payments; a Stripe pause fires nothing; a PayPal subscription resumed outside the app fires nothing and `listPurchases` can't show it, so tell the user to restore that access by hand). Failed payment attempts do NOT fire this trigger.
+Valid events: `payment_succeeded` (a successful payment: a completed checkout and the first payment of a subscription), `payment_refunded` (an approved refund, including one made from the Payments dashboard or the provider's own site; on PayPal also a lost dispute, when PayPal takes the money back), `subscription_canceled` (a subscription stopped billing: canceled or ended on Stripe, PayPal and Wix, and paused/suspended on PayPal only (on Wix a pause is `subscription_paused`, never `subscription_canceled`), e.g. by the buyer in PayPal or after failed payments; a Stripe pause fires nothing; a PayPal subscription resumed outside the app fires nothing and `listPurchases` can't show it, so tell the user to restore that access by hand). `subscription_started` (PayPal only: a subscription became active, including a free trial with no payment yet, and one whose buyer left the page before it completed; the first payment still fires `payment_succeeded`). `subscription_paused` and `subscription_resumed` (Wix Payments only: a pause or resume that took effect, whoever made it, the app through the SDK or the merchant in the Wix dashboard; a scheduled pause fires when it starts; the same subscription can pause and resume many times, each one fires). Failed payment attempts do NOT fire this trigger.
 
 Use `payment_refunded` and `subscription_canceled` to revoke what a purchase granted: match the event to the purchase the app saved by whichever of `subscription_id`, `checkout_id` and `payment_id` it carries, and make the revoke idempotent.
 
@@ -402,9 +408,9 @@ When renewals do arrive, the payload does not distinguish them from a first subs
 app_payment fields live on `.trigger` directly — do NOT use `.trigger.data.*` for this trigger.
 
 Trigger payload fields (use `${ .trigger.<field> }` in conditions and `do` args):
-- `${ .trigger.event_type }`: "payment_succeeded", "payment_refunded" or "subscription_canceled"
+- `${ .trigger.event_type }`: "payment_succeeded", "payment_refunded", "subscription_canceled", "subscription_started", "subscription_paused" or "subscription_resumed"
 - `${ .trigger.provider }`: "stripe", "paypal", "wix_payments", or "payments_by_wix"
-- `${ .trigger.amount }`: integer amount in cents for most currencies (e.g. 2500 = $25.00), matching the platform's payment analytics representation; 0 on `subscription_canceled`
+- `${ .trigger.amount }`: integer amount in cents for most currencies (e.g. 2500 = $25.00), matching the platform's payment analytics representation; 0 on the subscription events (`subscription_canceled`, `subscription_started`, `subscription_paused`, `subscription_resumed`)
 - `${ .trigger.currency }` — lowercase ISO currency code (e.g. "usd")
 - `${ .trigger.is_live }` — false for test/sandbox payments; test payments DO fire this trigger
 - `${ .trigger.mode }`: "payment" (one-off checkout) or "subscription" (a subscription charge, first payment OR renewal, indistinguishable); null on refunds. Wix may report "payment" for a subscription charge
@@ -412,8 +418,8 @@ Trigger payload fields (use `${ .trigger.<field> }` in conditions and `do` args)
 - `${ .trigger.provider_customer_id }` — provider-side customer/contact ID, or null
 - `${ .trigger.provider_transaction_id }`: provider-side transaction/session/refund ID, for logs; look purchases up by the ids below instead
 - `${ .trigger.provider_event_id }` — provider webhook event ID (webhook redeliveries are already deduped on it — don't build your own guard)
-- `${ .trigger.checkout_id }`, `${ .trigger.subscription_id }`, `${ .trigger.payment_id }`: the same ids `base44.payments` returns on a purchase; each is null when the provider does not name it on that event (Wix events carry `subscription_id` when they belong to a subscription, including `subscription_canceled`, and never `checkout_id` or `payment_id`; a Stripe renewal carries only `subscription_id`; a refund carries `payment_id`, plus `subscription_id` when it refunds a subscription charge)
-- `${ .trigger.subscription_status }`: on `subscription_canceled`: "canceled" (canceled or ended) or "paused" (can resume); null otherwise
+- `${ .trigger.checkout_id }`, `${ .trigger.subscription_id }`, `${ .trigger.payment_id }`: the same ids `base44.payments` returns on a purchase; each is null when the provider does not name it on that event (Wix events carry `subscription_id` when they belong to a subscription, including the subscription events, and never `checkout_id` or `payment_id`; a Stripe renewal carries only `subscription_id`; a refund carries `payment_id`, plus `subscription_id` when it refunds a subscription charge)
+- `${ .trigger.subscription_status }`: on `subscription_canceled`: "canceled" (canceled or ended) or "paused" (can resume); "active" on `subscription_started` and `subscription_resumed`; "paused" on `subscription_paused`; null otherwise
 
 The payload carries no payer email or other PII. When needed, look the purchase up in a backend function, as service role, with `payments.listPurchases({ subscription_id })` when the event names one, else `({ checkout_id })`, which returns `buyer_email`. Never call `listPurchases` with neither id: unscoped it lists every buyer's purchases. Events that carry neither (a Wix one-off payment, or a Stripe payment made outside a checkout) are re-fetched by `provider_transaction_id` from the provider's API instead. Zero-amount payments and refunds (free checkouts, 100% discounts) do not fire.
 
