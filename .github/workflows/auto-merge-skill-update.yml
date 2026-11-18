@@ -35,7 +35,7 @@ jobs:
         run: |
           set -euo pipefail
           git diff --name-only "$BASE" "$HEAD" > changed.txt
-          if grep -vE '^(skills/base44-platform-[^/]+/|SOURCE_COMMIT$)' changed.txt; then
+          if grep -vE '^(skills/base44-platform-[^/]+/|skills/base44-platform-manifest\.json$|SOURCE_COMMIT$)' changed.txt; then
             echo "::error::the PR changes files outside the compiled tree; leaving it for a human"; exit 1
           fi
           echo "$(wc -l < changed.txt) generated files changed"
