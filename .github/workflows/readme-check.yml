@@ -10,6 +10,9 @@ on:
 
 jobs:
   readme-check:
+    # A compiled-skills sync PR may only change the compiled tree; a README commit here would
+    # stop it from auto-merging.
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'auto-skill-update') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
