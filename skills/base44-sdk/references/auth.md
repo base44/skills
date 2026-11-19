@@ -200,6 +200,8 @@ try {
 
 > **Important**: Users cannot log in until they complete OTP verification. Attempting to call `loginViaEmailPassword` before verification will fail.
 
+> **Existing accounts get no code.** `register()` returns the same success response whether or not the email already has an account. An account still waiting for verification gets a fresh code. An already-verified account gets **no code**. Since the app can't tell which case applies, the code screen should offer `resendOtp()` and tell users who already have an account to log in or reset their password with `resetPasswordRequest()`.
+
 ### Login with Email/Password
 
 ```javascript
@@ -439,16 +441,20 @@ try {
 } catch (error) {
   console.error('OTP verification failed:', error.message);
   if (error.status === 400) {
-    console.error('Invalid or expired OTP code');
+    // One error for every failure: wrong code, expired code, code out of tries,
+    // or no account waiting for verification. Offer a new code.
+    console.error('Invalid or expired code. Request a new one.');
   } else if (error.status === 429) {
-    console.error('Too many attempts. Please try again later.');
+    // The per-IP auth rate limit, not a lockout on this code
+    console.error('Too many requests. Please wait before trying again.');
   }
 }
 
 // Resend OTP if needed
 try {
   await base44.auth.resendOtp("user@example.com");
-  console.log('OTP resent successfully');
+  // Same response whether or not a code was sent
+  console.log('If this email is waiting for verification, a new code is on its way.');
 
 } catch (error) {
   console.error('Failed to resend OTP:', error.message);
@@ -457,6 +463,9 @@ try {
   }
 }
 ```
+
+- `verifyOtp()` gives each code 5 tries, but every failure returns the same `400` ("Invalid or expired verification code"). There is **no `429` lockout and no tries-left count**, so don't build UI that counts down attempts or waits out a lockout. On any `400`, offer `resendOtp()`.
+- `resendOtp()` always returns the same success response. It only sends a code to an account still waiting for verification, and sending a new code resets the 5 tries. A verified email or an email with no account gets nothing.
 
 ### Password Reset Flow
 
@@ -711,7 +720,7 @@ Control who can access your app in the app settings:
 Passwords must be at least 8 characters and at most 72 bytes. Emoji and non-English letters count as more than one byte. There's no complexity requirement, so a password of only lowercase letters is accepted. If a password breaks either rule, the request fails with a validation error that says which one.
 
 ### Rate Limiting
-Registration, OTP, login, and password reset requests share one rate limit for each IP address. Requests over the limit fail with a rate-limit error. There's no per-account lockout, so repeated failed logins for one account aren't blocked unless they come from the same IP address. Each OTP code allows 5 attempts. The `turnstileToken` and `turnstile_token` parameters have no effect, because Base44 doesn't verify Turnstile tokens for app users.
+Registration, OTP, login, and password reset requests share one rate limit for each IP address. Requests over the limit fail with a rate-limit error. There's no per-account lockout, so repeated failed logins for one account aren't blocked unless they come from the same IP address. Each OTP code allows 5 attempts, and running out returns the same `400` as a wrong code, not a `429`. The `turnstileToken` and `turnstile_token` parameters have no effect, because Base44 doesn't verify Turnstile tokens for app users.
 
 ### Token Management
 - JWTs are automatically stored in localStorage by default
@@ -761,7 +770,8 @@ base44.auth.setToken(token);
 ```javascript
 try {
   await base44.auth.register(params);
-  showSuccessMessage('Registration successful! Check your email for verification code.');
+  // Shown for new and existing emails alike. A verified account gets no code.
+  showSuccessMessage('Check your email for a verification code. Already have an account? Log in or reset your password.');
 } catch (error) {
   showErrorMessage('Registration failed: ' + error.message);
 }
