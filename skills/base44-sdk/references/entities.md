@@ -17,6 +17,8 @@ CRUD operations on data models. Access via `base44.entities.EntityName.method()`
 
 **Note:** The legacy `(sort, limit, skip, fields)` form of `list()`/`filter()` accepts up to 5,000 items per request. The cursor-based form (`EntityListOptions`) also caps at 5,000 per page but defaults to 100; the distinct-values form (`EntityDistinctOptions`) caps at 1,000 per page, defaulting to 100.
 
+**Tip:** For data migrations or bulk operations from local scripts, you can also use the [REST API](rest-api.md) directly.
+
 | Method | Signature | Description |
 |--------|-----------|-------------|
 | `create(data)` | `Promise<T>` | Create one record |
