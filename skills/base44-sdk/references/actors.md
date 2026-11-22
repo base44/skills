@@ -148,6 +148,7 @@ const { kicked } = await base44.actors.ChatRoom(roomId).kick({ userId });
 - Works even when no client is connected to that room — it's a plain HTTP request under the hood, not a message over the socket
 - Resolves to whatever the actor's method returns; a method that throws an `ActorError(status, message)` rejects the call with that `status`
 - `connect`, `then`, `toJSON`, and `Object.prototype` members (`hasOwnProperty`, `constructor`, …) are never treated as callable method names, so a ref is safe to `await`, log, or pass to `JSON.stringify`
+- Rate-limited to 300 calls a minute per caller per app, multiplied by the workspace plan's rate-limit multiplier; over the limit the call rejects with a 429. Don't call a method in a tight loop or once per client per tick — batch the work into one call, or `broadcast()` from inside the actor
 
 **From server code (service role):**
 
@@ -156,7 +157,7 @@ const { kicked } = await base44.actors.ChatRoom(roomId).kick({ userId });
 await base44.asServiceRole.actors.VideoRoom(userId).videoReady({ id: videoId });
 ```
 
-`base44.asServiceRole.actors` mirrors `base44.actors` but only calls methods — server code can't hold a WebSocket connection, so there's no `.connect()` here. The actor sees this caller's identity as `{ type: "service" }` (see [Authentication](#authentication)).
+Backend functions and server routes call methods this way, including the ones workflow steps run. `base44.asServiceRole.actors` mirrors `base44.actors` but only calls methods — server code can't hold a WebSocket connection, so there's no `.connect()` here. The actor sees this caller's identity as `{ type: "service" }` (see [Authentication](#authentication)).
 
 **On the actor**, declare which methods are callable and read the caller's identity from the second argument:
 
